@@ -1,4 +1,4 @@
-TARGETS = BellmanFordList BellmanFordMatrix WarshallFloydMatrix
+TARGETS = BellmanFordList BellmanFordMatrix WarshallFloydMatrix DijkstraList
 CFLAGS = -g -O2 -std=c++0x
 
 all: $(TARGETS)
@@ -11,4 +11,6 @@ BellmanFordList: BellmanFordList.cpp
 BellmanFordMatrix: BellmanFordMatrix.cpp
 	g++ $(CFLAGS) -o $@ $<
 WarshallFloydMatrix: WarshallFloydMatrix.cpp
+	g++ $(CFLAGS) -o $@ $<
+DijkstraList: DijkstraList.cpp
 	g++ $(CFLAGS) -o $@ $<

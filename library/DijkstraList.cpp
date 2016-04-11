@@ -5,15 +5,17 @@
 #include <utility>
 #include <algorithm>
 using namespace std;
+
+/* Begin Dijkstra */
 typedef pair<int, int> P;
-const int INF = 100000000;
-const int MAX_N = 10000;
+const int INF = 1e9;
+const int MAX_N = 1e5+5;
 struct edge{int to, dist;};
 
 int d[MAX_N]; // 最短距離
 vector<edge> roads[MAX_N]; // 頂点iからの辺集合。.toが行き先、.distがコスト
 int N;
-void dijkstra(int sp) // sp = start point
+void dijkstra(int sp, int N, vector<edge> *roads/*input*/, int* d/*output*/) // sp = start point
 {
     fill(d, d + N, INF);
     d[sp] = 0;
@@ -35,23 +37,27 @@ void dijkstra(int sp) // sp = start point
         }
     }
 }
+/* End Dijkstra */
 
 int main() {
-    // roadsの入力
     int M;
     cin >> N >> M;
+
+    // roadsの入力。uが始点、vが終点、dが距離
+    vector<edge> roads[MAX_N]; // 頂点iからの辺集合。.toが行き先、.distがコスト
     while (M--) {
-        int u, v, t;
-        cin >> u >> v >> t;
+        int u, v, d;
+        cin >> u >> v >> d;
         // 片方向なら
-        edge e1 = {v, t}; roads[u].push_back(e1);
+        roads[u].push_back(edge{v, d});
         // 両方向なら
-//        edge e2 = {u, t}; roads[v].push_back(e2);
+//        edge e2 = {u, d}; roads[v].push_back(e2);
     }
 
     // 最短距離dを更新
     int start_point = 0;
-    dijkstra(start_point);
+    int d[MAX_N]; // 最短距離
+    dijkstra(start_point, N, roads, d); // roadsを事前設定しておくと、dが計算される
 
     for (int i = 0; i < N; i++) {
         cout << d[i] << endl;
