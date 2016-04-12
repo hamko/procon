@@ -13,7 +13,7 @@ static const double EPS = 1e-5;
 typedef long long ll;
 typedef long double ld;
 typedef vector<int> vi;
-typedef pair<int, int> ii;
+typedef pair<int, int> P;
 typedef vector<string> vs;
 
 int main(void) {

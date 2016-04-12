@@ -1,0 +1,37 @@
+解答
+http://abc033.contest.atcoder.jp/submissions/693233
+
+罠
+・EPSをかっこ良く求めようとしたら間違えてて死んだ（角の最小を1/20000くらいだと思い込んだ）
+・push_backするfor文の条件に、sizeを使いかけた
+・C++11ではなくC++でコンパイルしていて、コンパイルエラーした
+・D問題ではなくA問題に提出した。
+
+勉強したこと
+push_backするfor文の条件は、静的なサイズを指定。
+EPSはできるだけ小さく。かっこつけない。
+この人の点のライブラリ使いやすそう（使ってないけど…）。 http://abc033.contest.atcoder.jp/submissions/680457
+
+方針
+三角形はめんどい
+
+三角形数と角数との関係性は？
+鋭角三角形a個、直角三角形b個、鈍角三角形c個に、
+鋭角acute=3a+2b+2c個、直角right=b個、鈍角obtuse=c個含まれる。
+
+ついでに、三角形には角が3つあるので、
+all_triangle_num = n*(n-1)*(n-2)/6
+acute+right+obtuse=all_triangle_num*3
+
+これらから、acute, right, obtuseのうち2つを数えれば良さそう→rightとacuteを数えることとする
+一次方程式を解くと
+a=acute - 2 * all_triangle_num
+b=right
+c=3 * all_triangle_num - right - acute
+
+で、角をどう数える？
+線分ijを固定すると、線分から見た他の点の角度が計算できる。
+線分から見た角度が0度から90度までの点が鋭角、90度ピッタリのものが直角
+これはソートすれば楽に求まる。
+
+
