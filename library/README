@@ -5,3 +5,8 @@ BellmanFordList
 BellmanFordMatrix
 WarshallFloydMatrix
 DijkstraList
+
+
+
+Searchは二分探索
+ソートからの二分探索はとても強い。ソートの向きによって地味にnot foundの条件が違うので、まとめた。
