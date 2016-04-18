@@ -65,8 +65,10 @@ void get_pruned_all_combination(vector<LP>& bag_pruned, int bag_n, int start_poi
         bag.push_back(LP(w_tmp, v_tmp));
     }
     sort(all(bag));
+    bag_pruned = bag;
 
     // いらないものを排除（今思えばここでやらなくても良かったな。upper_boundのところに1行追加すればこれと同等のことができるはず）
+    /*
     ll last_v = -1; 
     rep(i, bag.size()) {
         while (i != bag.size() - 1 && bag[i].first == bag[i+1].first) i++;
@@ -75,6 +77,7 @@ void get_pruned_all_combination(vector<LP>& bag_pruned, int bag_n, int start_poi
             last_v = bag[i].second; // これを2行下に書いてたせいで昇順になってなかった。昇順になっていなかったことに長い間気づかなかった。プロコンでもassertを使うべきだろうか
         }
     }
+    */
 }
 
 void solve_small_n_problem()
