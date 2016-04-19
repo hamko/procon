@@ -1,9 +1,5 @@
 #include "bits/stdc++.h"
 using namespace std;
-using ld = long double;
-template<class T>
-using Table = vector<vector<T>>;
-
 
 const int mod = 1000000007;
 class Mod {
