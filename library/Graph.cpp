@@ -204,28 +204,17 @@ pair<Weight, Edges> minimumSpanningTree(const Graph &g, int r = 0) {
     return pair<Weight, Edges>(total, T);
 }
 
-
-// Union Find
 struct UnionFind {
     vector<int> data;
     UnionFind(int size) : data(size, -1) { }
     bool unionSet(int x, int y) {
         x = root(x); y = root(y);
-        if (x != y) {
-            if (data[y] < data[x]) swap(x, y);
-            data[x] += data[y]; data[y] = x;
-        }
+        if (x != y) { if (data[y] < data[x]) swap(x, y); data[x] += data[y]; data[y] = x; }
         return x != y;
     }
-    bool findSet(int x, int y) {
-        return root(x) == root(y);
-    }
-    int root(int x) {
-        return data[x] < 0 ? x : data[x] = root(data[x]);
-    }
-    int size(int x) {
-        return -data[root(x)];
-    }
+    bool findSet(int x, int y) { return root(x) == root(y); }
+    int root(int x) { return data[x] < 0 ? x : data[x] = root(data[x]); }
+    int size(int x) { return -data[root(x)]; }
 };
 
 // Kruskal
@@ -613,7 +602,7 @@ Weight maximumFlowGomoryHu(const Graph &T, int u, int t, int p = -1, Weight w = 
 
 
 // 最小共通先祖 Tarjan 
-// O(E A(V))
+// 構築O(E A(V))、参照O(1)、のはずだがなぜかクエリ数にものすごく依存してる…
 struct Query {
     int u, v, w;
     Query(int u, int v) : u(u), v(v), w(-1) { }
@@ -641,7 +630,7 @@ void leastCommonAncestor(const Graph &g, int r, vector<Query> &qs) {
 
 
 
-// iを根とした時の木の高さ
+// 全頂点を根とした時の木の高さの最大値
 // O(E)
 Weight visitH(const Graph &g, Graph& T, int i, int j) {
     if (T[i][j].weight >= 0) return T[i][j].weight;
@@ -653,7 +642,7 @@ Weight visitH(const Graph &g, Graph& T, int i, int j) {
     }
     return T[i][j].weight;
 }
-vector<Weight> height(const Graph& g) {
+vector<Weight> heightMax(const Graph& g) {
     const int n = g.size();
     Graph T(g); // memoise on tree
     for (int i = 0; i < n; ++i)
