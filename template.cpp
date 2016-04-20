@@ -7,8 +7,7 @@ using namespace std;
 #define all(x) begin(x), end(x)
 #define Min(x) *min_element(all(x))
 #define Max(x) *max_element(all(x))
-using ll = long long; using vll = vector<ll>; using vi = vector<int>;
-using ld = long double;
+using ll = long long; using ld = long double; using vll = vector<ll>; using vi = vector<int>;
 template<class T>
 using Table = vector<vector<T>>;
 typedef pair<int, int> P;
