@@ -14,12 +14,10 @@ struct edge {
 vector<edge> G[MAX_V];
 bool used[MAX_V];
 
-//辺を追加。revは,相互参照できるようにしている。sizeで実現しているが、別のルールを用いても良い(i.e ハッシュ)。逆辺の逆辺は通常の辺である。
-    void
-add_edge(int from,int to,int cap)
+void add_edge(int from,int to,int cap)
 {
     G[from].push_back( (edge){ to,cap,(int)G[to].size() } );
-    G[to].push_back( (edge){ from,0,(int)G[from].size()-1});
+    G[to].push_back( (edge){ from,0,(int)G[from].size()-1}); // 相互参照できるように。これは必須なので消さないこと。
 }
 
 //sからtへ移動可能ならそのルートの最大流量を返し、不可能なら0を返す。
