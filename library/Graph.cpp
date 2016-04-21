@@ -62,7 +62,7 @@ void shortestPathFW(const Matrix &g,
     dist = g;
     inter.assign(n, vector<int>(n,-1));
     REP(k, n) REP(i, n) REP(j, n) {
-        if (dist[i][j] < dist[i][k] + dist[k][j]) {
+        if (dist[i][j] > dist[i][k] + dist[k][j]) {
             dist[i][j] = dist[i][k] + dist[k][j];
             inter[i][j] = k;
         }
@@ -81,6 +81,13 @@ vector<int> buildPathFW(
     path.push_back(t);
     return path;
 }
+void initFW(Matrix& m, int n){
+    m = Matrix(n, Array(n, INF));
+    REP(i, n) m[i][i] = 0;
+}
+void setFW(Matrix& m, int u, int v, int w){ m[u][v] = w; }
+void setUndirectedFW(Matrix& m, int u, int v, int w){ m[u][v] = m[v][u] = w; }
+
 
 
 // Johnson
@@ -459,7 +466,7 @@ Weight maximumFlowDinic(const Graph &g, int s, int t) {
 
 
 // Goldberg-Tarjan
-// O(V^2 sqrt(m))
+// O(V^2 sqrt(E))
 #undef RESIDUE
 #define RESIDUE(s,t) (capacity[s][t]-flow[s][t])
 #define GLOBAL_RELABELING() { \
