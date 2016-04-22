@@ -5,12 +5,11 @@ using ll = long long;
 
 /**********************************************************/
 // 前処理ありの素数判定
-// 素数の最大値が決まっているなら先にconstructPrimesList
+// 素数の最大値Mに対して先にconstructPrimesList(M)するといい
 /**********************************************************/
 // O(n log n)
-// primesは欲しい範囲のサイズを事前に確保しておくと早くなる。
-void sieve_of_eratosthenes(vector<ll>& primes) {
-    int n = primes.size();
+void sieve_of_eratosthenes(vector<ll>& primes, ll n) {
+    primes.resize(n);
     for (int i = 2; i < n; ++i)
         primes[i] = i;
     for (int i = 2; i*i < n; ++i)
@@ -20,20 +19,20 @@ void sieve_of_eratosthenes(vector<ll>& primes) {
 }
 void getPrimesList(int n, vector<ll>& primes_list) {
     vector<ll> tmpList;
-    tmpList.clear(); tmpList.resize(n);
     primes_list.clear(); primes_list.resize(0); primes_list.reserve(n / 5);
-    sieve_of_eratosthenes(tmpList);
+    sieve_of_eratosthenes(tmpList, n);
     rep(i, n) { 
         if (tmpList[i])
             primes_list.push_back(i);
     }
 }
 
-// O(n log n)で素数を覚えておく
-vector<ll> primesList;
+// 素数テーブル構築: O(n log n)
+vector<ll> primesList;      // 素数リスト（primesListMaxまで）。こいつ自体を使うことあるかも。
 set<ll> primesSet;
 ll primesListMax;
 void constructPrimesList(ll n) {
+    n++;
     if (primesListMax > n) 
         return;
     primesListMax = n;
@@ -42,16 +41,21 @@ void constructPrimesList(ll n) {
         primesSet.insert(primesList[i]);
     }
 }
+// constructされていないなら、O(n log n)
+// constructされているなら、O(log n)
 bool isPrimeLookup(ll n) {
+    constructPrimesList(n);
     return primesSet.count(n);
 }
 
-// O(sqrt(n) log n) くらい
+// constructされていないなら、O(sqrt(n) log n)
+// constructされているなら、O(log n)
+// Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
 void getDivisorsList(ll n, vector<ll>& divisors_list) {
     divisors_list.clear(); divisors_list.resize(0);
     constructPrimesList(sqrt(n)+1);
 
-    int i = 0, prime = primesList[i];
+    int i = 0, prime = 2;
     while (n >= prime * prime) {
         if (n % prime == 0) {
             divisors_list.push_back(prime);
@@ -62,6 +66,8 @@ void getDivisorsList(ll n, vector<ll>& divisors_list) {
     }
     divisors_list.push_back(n);
 }
+// constructされていないなら、O(sqrt(n) log n)
+// constructされているなら、O(log n)
 ll getDivisorsNum(ll n) {
     vector<ll> divisors_list; getDivisorsList(n, divisors_list);
     map<ll, int> num;
@@ -153,13 +159,18 @@ vector<ll> iterativeSieve() {
 
 
 ll n = 1000000;
-vector<ll> primes(n);
+vector<ll> primes;
 int main(void) {
+    // 構築しないで素数判定
+    cout << isPrimeLookup(2) << endl;
+    cout << isPrimeLookup(4) << endl;
+    cout << isPrimeLookup(17) << endl;
+
     int count;
 
     // O(n log n)
     count = 0;
-    sieve_of_eratosthenes(primes);
+    sieve_of_eratosthenes(primes, n);
     rep(i, n) { 
         if (primes[i])
             count++;
@@ -189,12 +200,13 @@ int main(void) {
     cout << count << endl;
 
     // 素因数分解
+    int m = 120;
     vector<ll> divisors;
-    getDivisorsList(120, divisors);
+    getDivisorsList(m, divisors);
     rep(i, divisors.size()) {
         cout << divisors[i] << " ";
     }
-    cout << "#" << getDivisorsNum(120) << " ";
+    cout << "#" << getDivisorsNum(m) << " ";
     cout << endl;
 
     return 0;
