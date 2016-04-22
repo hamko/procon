@@ -24,6 +24,32 @@ typedef vector<Edges> Graph;
 typedef vector<Weight> Array;
 typedef vector<Array> Matrix;
 
+void addDirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(Edge(src, dst, weight)); }
+void addUndirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(src, dst, weight)); }
+void addDirected(Graph& g, int src, int dst) { addDirected(g, src, dst, 0); }
+void addUndirected(Graph& g, int src, int dst) { addUndirected(g, src, dst, 0); }
+
+// rootからの連結頂点をrootに塗る
+// connectedはサイズ頂点数, -1で初期化。
+// O(V), UNTESTED, RUNTIME ERROR OCCURS
+void paintConnected(const Graph &g, int root, vector<int>& connected) {
+    int n = g.size();
+    if (!connected.size()) connected = vector<int>(n, -1);
+    if (n != connected.size()) connected.resize(n);
+
+    queue<Edge> Q;
+    Q.push( Edge(-1, root, 0) );
+    while (!Q.empty()) {
+        Edge e = Q.front(); Q.pop();
+        if (connected[e.dst] != -1) 
+            continue;
+        connected[e.dst] = root;
+        for(auto f : g[e.dst]) 
+            if (!connected[f.dst]) 
+                Q.push(f);
+    }
+}
+
 
 // Dijkstra
 // O(E log V)

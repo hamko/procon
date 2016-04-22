@@ -50,6 +50,28 @@ Mod modpowsum(const Mod a, const int b) {
     Mod result = modpowsum(a, b / 2);
     return result * (a ^ (b / 2)) + result;
 }
+Mod combination(const long long n, const long long k) {
+    if (n < 0) return 0;
+    if (k < 0) return 0;
+    Mod ret = 1;
+    for (int i = 0; i < k; i++) {
+        ret *= n - (Mod)i;
+        ret /= Mod(i+1);
+    }
+    return ret;
+}
+Mod factorial(const long long n) {
+    if (n < 0) return 0;
+    Mod ret = 1;
+    for (int i = 1; i <= n; i++) {
+        ret *= i;
+    }
+    return ret;
+}
+Mod combination3(const long long a, const long long b, const long long c) {
+    if (a < 0 || b < 0 || c < 0) return 0;
+    return factorial(a+b+c)/factorial(a)/factorial(b)/factorial(c);
+}
 
 // ------
 
@@ -57,47 +79,47 @@ Mod modpowsum(const Mod a, const int b) {
 
 // a x + b y = gcd(a, b)
 Int extgcd(Int a, Int b, Int &x, Int &y) {
-      Int g = a; x = 1; y = 0;
-        if (b != 0) g = extgcd(b, a % b, y, x), y -= (a / b) * x;
-          return g;
+    Int g = a; x = 1; y = 0;
+    if (b != 0) g = extgcd(b, a % b, y, x), y -= (a / b) * x;
+    return g;
 }
 
 // 線型連立合同式 a[i] x == b[i] (mod m[i]) (i = 0, ..., n-1) を解く．
 bool linearCongruences(const vector<Int> &a,
-                               const vector<Int> &b,
-                                                      const vector<Int> &m,
-                                                                             Int &x, Int &M) {
-      int n = a.size();
-        x = 0; M = 1;
-          REP(i, n) {
-                  Int a_ = a[i] % M, b_ = b[i] - a[i] * x, m_ = m[i];
-                      Int y, t, g = extgcd(a_, m_, y, t);
-                          if (b_ % g) return false;
-                              b_ /= g; m_ /= g;
-                                  x += M * (y * b_ % m_);
-                                      M *= m_;
-                                        }
-            x = (x + M) % M;
-              return true;
+        const vector<Int> &b,
+        const vector<Int> &m,
+        Int &x, Int &M) {
+    int n = a.size();
+    x = 0; M = 1;
+    REP(i, n) {
+        Int a_ = a[i] % M, b_ = b[i] - a[i] * x, m_ = m[i];
+        Int y, t, g = extgcd(a_, m_, y, t);
+        if (b_ % g) return false;
+        b_ /= g; m_ /= g;
+        x += M * (y * b_ % m_);
+        M *= m_;
+    }
+    x = (x + M) % M;
+    return true;
 }
 
 // オイラーのφ関数
 // LookUp Version
 const int N = 1000000;
 Int eulerPhi(Int n) {
-      static int lookup = 0, p[N], f[N];
-        if (!lookup) {
-                REP(i,N) p[i] = 1, f[i] = i;
-                    for (int i = 2; i < N; ++i) {
-                              if (p[i]) {
-                                          f[i] -= f[i] / i;
-                                                  for (int j = i+i; j < N; j+=i)
-                                                                p[j] = 0, f[j] -= f[j] / i;
-                                                        }
-                                  }
-                        lookup = 1;
-                          }
-          return f[n];
+    static int lookup = 0, p[N], f[N];
+    if (!lookup) {
+        REP(i,N) p[i] = 1, f[i] = i;
+        for (int i = 2; i < N; ++i) {
+            if (p[i]) {
+                f[i] -= f[i] / i;
+                for (int j = i+i; j < N; j+=i)
+                    p[j] = 0, f[j] -= f[j] / i;
+            }
+        }
+        lookup = 1;
+    }
+    return f[n];
 }
 
 
@@ -114,6 +136,9 @@ int main() {
     printf("long double x 1= %Lf\n", m);
     printf("long double x 2 = %Lf\n", m*2);
 
+    int R, C; cin >> R >> C;
+    Mod r(R), c(C);
+    cout << r + c + (Mod)1 << endl;
 
     return 0;
 }
