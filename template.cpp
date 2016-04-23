@@ -2,12 +2,10 @@
 using namespace std;
 
 #define rep(i,n) for(int i = 0; i < n; i++)
-#define print(v) for(auto x:(v)){cout<<x<<" ";}cout<<endl;
-#define printi(b,e) for(auto x=(b); x!=(e); x++)cout<<*x<<" ";cout<<endl;
-#define printa(a,n) rep(i,n)cout<<a[i]<<" ";cout<<endl;
 #define all(x) x.begin(), x.end()
 #define Min(x) *min_element(all(x))
 #define Max(x) *max_element(all(x))
+template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { if (!v.empty()) { o << '['; copy(v.begin(), v.end(), ostream_iterator<T>(o, ", ")); o << "\b\b]"; } return o; }
 using ll = long long; using ld = long double; using vll = vector<ll>; using vi = vector<int>;
 typedef pair<int, int> P;
 
