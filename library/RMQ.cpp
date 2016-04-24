@@ -32,9 +32,10 @@ int main() {
     for (int i = 0; i < N; i++) {
         a[i] = i + i % 5;
     }
+
     int* rmq = buildRMQ(a, N);
-    cout << minimum(25, 30, rmq, N) << endl;
-    cout << *min_element(a+25, a+31) << endl;
+    cout << minimum(25, 30, rmq, N) << endl;    // RMQ
+    cout << *min_element(a+25, a+31) << endl;   // 一致確認
 
     return 0;
 }

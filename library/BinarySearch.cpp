@@ -1,3 +1,5 @@
+// Atcoder ABC 23D
+
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -19,7 +21,6 @@ bool check(ll p)
     return true;
 }
 
-// Atcoder ABC 23D
 int main(void) {
     cin >> n; rep(i, n) cin >> h[i] >> s[i];
 

@@ -7,23 +7,27 @@ using namespace std;
 // メビウスのμ関数not yet
 // カーマイケルのλ関数 not yet
 
-const int mod = 1000000007;
 class Mod {
     public:
         int num;
+        int mod;
         Mod() : Mod(0) {}
-        Mod(long long int n) : num((n % mod + mod) % mod) {}
+        Mod(long long int n) : Mod(n, 1000000007) {}
+        Mod(long long int n, int m) { mod = m; num = (n % mod + mod) % mod;}
+        Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mod; num = tmp; }
         Mod(int n) : Mod(static_cast<long long int>(n)) {}
         operator int() { return num; }
+        void setmod(const int mod) { this->mod = mod; }
 };
-Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % mod); }
+istream &operator>>(istream &is, Mod &x) { long long int n; is >> n; x = n; return is; }
+Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % a.mod); }
 Mod operator+(const long long int a, const Mod b) { return Mod(a) + b; }
-Mod operator+(const Mod a, const long long int  b) { return b + a; }
+Mod operator+(const Mod a, const long long int b) { return b + a; }
 Mod operator++(Mod &a) { return a + Mod(1); }
-Mod operator-(const Mod a, const Mod b) { return Mod((mod + a.num - b.num) % mod); }
+Mod operator-(const Mod a, const Mod b) { return Mod((a.mod + a.num - b.num) % a.mod); }
 Mod operator-(const long long int a, const Mod b) { return Mod(a) - b; }
 Mod operator--(Mod &a) { return a - Mod(1); }
-Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % mod); }
+Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % a.mod); }
 Mod operator*(const long long int a, const Mod b) { return Mod(a)*b; }
 Mod operator*(const Mod a, const long long int b) { return Mod(b)*a; }
 Mod operator*(const Mod a, const int b) { return Mod(b)*a; }
@@ -55,10 +59,11 @@ Mod modpowsum(const Mod a, const int b) {
     return result * (a ^ (b / 2)) + result;
 }
 
+
 /*************************************/
 // 以下、modは素数でなくてはならない！
 /*************************************/
-Mod inv(const Mod a) { return a ^ (mod - 2); }
+Mod inv(const Mod a) { return a ^ (a.mod - 2); }
 Mod operator/(const Mod a, const Mod b) { assert(b.num != 0); return a * inv(b); }
 Mod operator/(const long long int a, const Mod b) { assert(b.num != 0); return Mod(a) * inv(b); }
 Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b); }
@@ -132,6 +137,7 @@ long long eulerPhi(long long n) {
 int main() {
     cout << __gcd(12, 18) << endl;
 
+    cout << ((Mod)2 + (Mod)10) << endl;
     cout << ((Mod)2 ^ 10) << endl;
     cout << ((Mod)3 ^ 1000000) << endl;
     Mod r(1000000), c(1000000);
@@ -144,6 +150,15 @@ int main() {
     long double m = n;
     printf("long double x 1= %Lf\n", m);
     printf("long double x 2 = %Lf\n", m*2);
+
+    string s = "10000000000000";
+    Mod mod_from_str(s);
+    cout << mod_from_str << "#from string" << endl;
+
+    cout << "Input also works" << endl;
+    Mod input;
+    cin >> input; // input 10000000000
+    cout << input << endl;
 
     return 0;
 }

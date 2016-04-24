@@ -1,6 +1,12 @@
 #include "bits/stdc++.h"
 using namespace std;
 
+// TODO
+// O(n)系の初期化をまとめたものが欲しい。Euler Tour, DFSで木の深さをメモるとか。
+// 木をGraphの子クラスとして実装？
+// FordFulkerson, Tarjan's OLCA, EulerTour, Treeをマージ
+// Graphなどを全部クラスにする
+
 #define REP(i,n) for(int i=0;i<(int)n;++i)
 #define FOR(i,c) for(__typeof((c).begin())i=(c).begin();i!=(c).end();++i)
 #define ALL(c) (c).begin(), (c).end()
@@ -26,8 +32,8 @@ typedef vector<Array> Matrix;
 
 void addDirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(Edge(src, dst, weight)); }
 void addUndirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(src, dst, weight)); }
-void addDirected(Graph& g, int src, int dst) { addDirected(g, src, dst, 0); }
-void addUndirected(Graph& g, int src, int dst) { addUndirected(g, src, dst, 0); }
+void addDirected(Graph& g, int src, int dst) { addDirected(g, src, dst, 1); }
+void addUndirected(Graph& g, int src, int dst) { addUndirected(g, src, dst, 1); }
 
 // rootからの連結頂点をrootに塗る
 // connectedはサイズ頂点数, -1で初期化。
@@ -117,7 +123,7 @@ void setUndirectedFW(Matrix& m, int u, int v, int w){ m[u][v] = m[v][u] = w; }
 
 
 // Johnson
-// 前処理 O(V E)． 中間処理 O(V E log V)． 後処理 O(V^2)．kkJu
+// 前処理 O(V E)． 中間処理 O(V E log V)． 後処理 O(V^2)．
 bool shortestPathJO(const Graph &g,
         Matrix &dist, vector<vector<int> > &prev) {
     int n = g.size();
@@ -716,29 +722,29 @@ Weight diameter(const Graph &g) {
 // 有効オイラー路判定
 // O(E)
 void visitE(Graph& g, int a, vector<int>& path) {
-      while (!g[a].empty()){
-              int b = g[a].back().dst;
-                  g[a].pop_back();
-                      visitE(g, b, path);
-                        }
-        path.push_back(a);
+    while (!g[a].empty()){
+        int b = g[a].back().dst;
+        g[a].pop_back();
+        visitE(g, b, path);
+    }
+    path.push_back(a);
 }
 bool eulerPath(Graph g, int s, vector<int> &path) {
-      int n = g.size(), m = 0;
-        vector<int> deg(n);
-          REP(u, n){
-                  m += g[u].size();
-                      FOR(e, g[u]) --deg[e->dst]; //  in-deg
-                          deg[u] += g[u].size();      // out-deg
-                            }
-            int k = n - count(ALL(deg), 0);
-              if (k == 0 || (k == 2 && deg[s] == 1)) {
-                      path.clear();
-                          visitE(g, s, path);
-                              reverse(ALL(path));
-                                  return path.size() == m + 1;
-                                    }
-                return false;
+    int n = g.size(), m = 0;
+    vector<int> deg(n);
+    REP(u, n){
+        m += g[u].size();
+        FOR(e, g[u]) --deg[e->dst]; //  in-deg
+        deg[u] += g[u].size();      // out-deg
+    }
+    int k = n - count(ALL(deg), 0);
+    if (k == 0 || (k == 2 && deg[s] == 1)) {
+        path.clear();
+        visitE(g, s, path);
+        reverse(ALL(path));
+        return path.size() == m + 1;
+    }
+    return false;
 }
 
 

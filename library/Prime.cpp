@@ -84,41 +84,77 @@ ll getDivisorsNum(ll n) {
 // 前処理なしの素数判定
 /**********************************************************/
 // Millar-Rabin Test
-// 確率的素数判定、2^32程度では大体の数に対して200ループで厳密な素数判定を実現。2^64も多分行けるかもたぶんね。
-// {2,7,61,-1}                 is for n < 4759123141 (= 2^32)
-// {2,3,5,7,11,13,17,19,23,-1} is for n < 10^16 (at least)
-ll powMod(ll base, ll exponent, ll mod)
-{
-    ll x = 1;
-    ll y = base;
-    while (exponent > 0)
-    {
-        if (exponent % 2 == 1)
-            x = (x * y) % mod;
-        y = (y * y) % mod;
-        exponent = exponent / 2;
+
+using ull = unsigned long long;
+bool isPrimeSmall(const ll &n){
+    if(n == 2) return true;
+    if(n < 2 || n%2 == 0) return false;
+    const ll m = n-1, d = m / (m & -m);
+    auto modpow = [&](ll a, ll b){
+        ll res = 1;
+        while(b){
+            if(b&1) res = res*a%n;
+            a = a*a%n;
+            b >>= 1;
+        }
+        return res;
+    };
+    auto suspect = [&](ll a, ll t){
+        a = modpow(a,t);
+        while(t != -1+n && a != 1 && a != -1+n){
+            a = a*a%n;
+            t *= 2;
+        }
+        return a == n-1 || t%2 == 1;
+    };
+    static const ll witness[] = {2,7,61,0}; // n <= 2^32
+    for(const ll *w = witness; *w < n && *w; w++){
+        if(!suspect(*w,d)) return false;
     }
-    return x % mod;
-}
-bool suspect(ll a, int s, ll d, ll n) {
-    ll x = powMod(a, d, n);
-    if (x == 1) return true;
-    for (int r = 0; r < s; ++r) {
-        if (x == n - 1) return true;
-        x = x * x % n;
-    }
-    return false;
-}
-// O(1) 200回演算程度
-bool isPrime(ll n) {
-    if (n <= 1 || (n > 2 && n % 2 == 0)) return false;
-    int test[] = {2,3,5,7,11,13,17,19,23,-1};
-    ll d = n - 1, s = 0;
-    while (d % 2 == 0) ++s, d /= 2;
-    for (int i = 0; test[i] < n && test[i] != -1; ++i)
-        if (!suspect(test[i], s, d, n)) return false;
     return true;
 }
+
+bool isPrimeLarge(const ll &n){
+    if(n == 2) return true;
+    if(n < 2 || n%2 == 0) return false;
+    const ll m = n-1, d = m / (m & -m);
+    auto modmul = [&](ll a, ll b){
+        ll res = 0;
+        while(b){
+            if(b&1) res = ((ull)res+a)%n;
+            a = ((ull)a+a)%n;
+            b >>= 1;
+        }
+        return res;
+    };
+    auto modpow = [&](ll a, ll b){
+        ll res = 1;
+        while(b){
+            if(b&1) res = modmul(res,a);
+            a = modmul(a,a);
+            b >>= 1;
+        }
+        return res;
+    };
+    auto suspect = [&](ll a, ll t){
+        a = modpow(a,t);
+        while(t != -1+n && a != 1 && a != -1+n){
+            a = modmul(a,a);
+            t *= 2;
+        }
+        return a == n-1 || t%2 == 1;
+    };
+    static const ll witness[] = {2,325,9375,28178,450775,9780504,1795265022,0}; // n <= 2^64
+    for(const ll *w = witness; *w < n && *w; w++){
+        if(!suspect(*w,d)) return false;
+    }
+    return true;
+}
+
+bool isPrime(const ll &n){
+    return n < INT_MAX ? isPrimeSmall(n) : isPrimeLarge(n);
+}
+
 // ガウス素数＝複素数の素数判定
 bool isGaussianPrime(ll a, ll b) {
     if (a < 0) a = -a;
