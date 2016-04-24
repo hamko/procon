@@ -1,7 +1,9 @@
 #include <bits/stdc++.h>
 using namespace std;
+
+// sumは閉区間なので注意！！
 // add O(log n), sum O(log n)
-// add(k, a) == v[k] = v[k] + a, sum(i, j) == v[i] + ... + v[j] （sumは閉区間なので注意！！）
+// add(k, a) == v[k] = v[k] + a, sum(i, j) == v[i] + ... + v[j] 
 // +は加群=結合・可換・可逆なら他のものでもOK
 template <class T>
 struct fenwick_tree {
@@ -26,6 +28,7 @@ int main(void) {
     fenwick_tree<int> f(1000);
     f.add(0, 10);
     f.add(1, 100);
+    f.add(1, -f[1] + 99); // assign
 
     cout << f.sum(0, 0) << endl;
     cout << f.sum(0, 1) << endl;
@@ -37,5 +40,6 @@ int main(void) {
     cout << f[1] << endl;
     cout << f[2] << endl;
     
+
     return 0;
 }
