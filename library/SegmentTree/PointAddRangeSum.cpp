@@ -21,7 +21,20 @@ struct fenwick_tree {
         for (; k < x.size(); k |= k+1) x[k] += a; // 加群なら+以外に
     }
     // O(log n)
-    T operator [] (const int &idx) { return sum(0, idx) - sum(0, idx - 1); }
+    T operator [] (const int &idx) { 
+        return sum(0, idx) - sum(0, idx - 1); 
+    }
+    // TODO どうやるの？
+    // fenwick_tree<int> f(1000); // vector<int>みたいなもの
+    // f[0] = 100; // これが実装できない！！f[idx] = val;
+    // f[1] = 2;
+    // cout << f.sum(0, 2) << endl; // 100 + 2
+    /*
+    T& operator[] (int idx, T val) { 
+        add(-operator[](idx)+val); 
+        return val; 
+    }
+    */
 };
 
 int main(void) {
