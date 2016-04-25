@@ -17,20 +17,20 @@ Pool pool;
 
 template<class T>
 struct SegmentTree {
-    T *maxi, *lazy;
+    T T0 = 1e8;
+
+    T *dat, *lazy;
     int n, ql, qr;
-    T inf;
     const size_t size_;
     SegmentTree(int n_) : size_(n_) {
-        inf = numeric_limits<T>::max();
         n = 1;
         while(n < n_) n <<= 1;
-        maxi = pool.fetch<T>(n+n);
+        dat = pool.fetch<T>(n+n);
         lazy = pool.fetch<T>(n+n);
-        fill_n(maxi, n*4, 0);
+        fill_n(dat, n*4, 0);
     }
     void pushdown(int v){
-        maxi[v] += lazy[v];
+        dat[v] += lazy[v];
         if(v < n){
             lazy[v<<1] += lazy[v];
             lazy[v<<1|1] += lazy[v];
@@ -38,7 +38,7 @@ struct SegmentTree {
         lazy[v] = 0;
     }
     void pullup(int v){
-        maxi[v] = std::max(maxi[v<<1], maxi[v<<1|1]);
+        dat[v] = std::max(dat[v<<1], dat[v<<1|1]);
     }
     void add(int n, int nl, int nr, const T &x){
         pushdown(n);
@@ -61,9 +61,9 @@ struct SegmentTree {
     T max(int n, int nl, int nr){
         pushdown(n);
         if(nr <= ql || qr <= nl){
-            return -inf;
+            return -T0;
         } else if(ql <= nl && nr <= qr){
-            return maxi[n];
+            return dat[n];
         } else {
             int m = (nl + nr) / 2;
             T l = max(n<<1, nl, m);

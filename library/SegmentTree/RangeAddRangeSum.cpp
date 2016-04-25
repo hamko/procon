@@ -1,6 +1,8 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+// 開区間！！！なので注意
+
 struct Pool {
     int pos;
     char mem[20000000]; // 20MB

@@ -8,10 +8,10 @@ using namespace std;
 template <class T>
 struct fenwick_tree {
     vector<T> x;
-    fenwick_tree(int n) : x(n, 0) { }
+    fenwick_tree(int n) : x(n, 0/*初期値*/) { }
     // O(log n)
     T sum(int i, int j) {
-        if (i) return sum(0, j) - sum(0, i-1);
+        if (i) return sum(0, j) - sum(0, i-1); /*逆演算を使ってる*/
         T S = 0;
         for (j; j >= 0; j = (j & (j + 1)) - 1) S += x[j]; // 加群なら+以外に
         return S;
