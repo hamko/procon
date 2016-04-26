@@ -15,7 +15,6 @@ static const long long INF = 1e18;
 #define MAX_N 100005
 
 int main(void) {
-    cin.tie(0);
-    ios::sync_with_stdio(false);
+    cin.tie(0); ios::sync_with_stdio(false);
     return 0;
 }
