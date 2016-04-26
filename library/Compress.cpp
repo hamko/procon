@@ -1,37 +1,26 @@
-#include <iostream>
-#include <map>
-#include <vector>
-#define ll long long
+#include <bits/stdc++.h>
 using namespace std;
 
-long long compress(vector<ll>& ary)
-{
-    map<ll, int> m;
-    for(ll x : ary) m[x] = 0;
-    int order = 0; 
-    for(auto &x : m) x.second = order++;
-    for(auto &x : ary) x = m[x];
-    return m.size();
-}
+#define MAP 100010
+map<int,int> zip;
+int unzip[MAP];
 
-// Uを座標圧縮 {(100, P(11, 10)), (200, P(10, 38)), (50, P(2, 20) }など
-template<class T, class U>
-long long compress(vector<pair<U, T>>& ary)
-{
-    map<U, ll> m;
-    for(auto x : ary) m[x.first] = 0;
-    ll order = 0;
-    for(auto &x : m) x.second = order++;
-    for(auto &x : ary) x.first = m[x.first];
-    return m.size();
+int compress(vector<int> &x) {
+    sort(x.begin(), x.end());
+    x.erase(unique(x.begin(),x.end()),x.end());
+    for(int i = 0; i < x.size(); i++){
+        zip[x[i]] = i;
+        unzip[i] = x[i];
+    }
+    return x.size();
 }
-
 
 int main(void)
 {
-    vector<ll> ary = {1000, 200, 100, 300, 500};
-    compress(ary);
-    for(auto x : ary) cout << x << endl;
+    vector<int> ary = {1000, 300, 100, 300, 500};
+    compress(ary); // aryの重複成分を副作用で削除するので注意！！
+    for(auto x : ary) cout << x << " "; cout << endl;
+    for(auto x : ary) cout << zip[x] << " "; cout << endl;
 
     return 0;
 }
