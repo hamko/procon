@@ -39,22 +39,20 @@ public:
     // 以下は、範囲更新クエリのために必要。点更新しかしないなら、そもそも呼ばれないので、適当な値を返してよい。
     T L0; // 単位操作
     virtual T op_lazy(T a, T b) = 0; // 遅延更新クエリの結合二項演算。元の値がaで、今新しく来たの値がb。
-    virtual T resolve_lazy(T d, T l, int nl, int nr) = 0; // 頂点(量d)が、その子ら[nl, nr)の遅延更新クエリlを解消した時の、頂点の量
+    virtual T resolve_lazy(T d, T l, int nl, int nr) = 0; // 頂点(量d)が、その子ら[nl, nr)の全遅延更新クエリlを解消した時の、頂点の量
 };
 
 template<class T>
 class AssosiativeOperatorSum : public AssosiativeOperator<T> {
 public:
-    AssosiativeOperatorSum(void) { }
-    T T0 = 0;
+    AssosiativeOperatorSum(void) { AssosiativeOperator<T>::T0 = 0; AssosiativeOperator<T>::L0 = 0; }
     virtual T op(T a, T b) { return a + b; } // Range Sum
-    T L0 = 0; // 単位操作
     virtual T op_lazy(T a, T b) { return a + b; } // Range Add
     virtual T resolve_lazy(T d, T l, int nl, int nr) { return d + l * (nr - nl); }  // 子の数だけ総和が増える
 };
 
 /*
-   レンジアサインってどうすればいいの？
+   レンジアサインsumってどうすればいいの？
 template<class T>
 class AssosiativeOperatorSumAssign : public AssosiativeOperator<T> {
 public:
@@ -71,10 +69,8 @@ public:
 template<class T>
 class AssosiativeOperatorMax : public AssosiativeOperator<T> {
 public:
-    AssosiativeOperatorMax(void) { }
-    T T0 = std::numeric_limits<T>::min();
+    AssosiativeOperatorMax(void) { AssosiativeOperator<T>::T0 = std::numeric_limits<T>::min(); AssosiativeOperator<T>::L0 = 0; }
     virtual T op(T a, T b) { return max(a, b); } // Range Max
-    T L0 = 0; // 単位操作
     virtual T op_lazy(T a, T b) { return a + b; } // Range Add
     virtual T resolve_lazy(T d, T l, int nl, int nr) { return d + l; } // 全部上がってるので、子によらず増える
 };
@@ -82,20 +78,19 @@ public:
 template<class T>
 class AssosiativeOperatorMin : public AssosiativeOperator<T> {
 public:
-    AssosiativeOperatorMin(void) { }
-    T T0 = std::numeric_limits<T>::max();
+    AssosiativeOperatorMin(void) { AssosiativeOperator<T>::T0 = std::numeric_limits<T>::max(); AssosiativeOperator<T>::L0 = 0; }
     virtual T op(T a, T b) { return min(a, b); } // Range Min
-    T L0 = 0; // 単位操作
     virtual T op_lazy(T a, T b) { return a + b; } // Range Add
     virtual T resolve_lazy(T d, T l, int nl, int nr) { return d + l; } // 全部上がってるので、子によらず増える
 };
 
-class AssosiativeOperatorLinearFunction : public AssosiativeOperator<P> {
+template<class T>
+class AssosiativeOperatorLinearFunction : public AssosiativeOperator<pair<T, T>> {
 public:
+    AssosiativeOperatorLinearFunction(void) { AssosiativeOperator<pair<T, T>>::T0 = P(1, 0); }
     virtual P op(P a, P b) { return P(b.first * a.first, b.second + b.first * a.second); }
     virtual P op_lazy(P a, P b) { return P(0, 0); } // not valid
     virtual P resolve_lazy(P d, P l, int nl, int nr) { return P(0, 0); } // not valid
-    AssosiativeOperatorLinearFunction(void) { T0 = P(1, 0); } // not valid
 };
 
 
