@@ -24,12 +24,17 @@ bool check(ll p)
 int main(void) {
     cin >> n; rep(i, n) cin >> h[i] >> s[i];
 
-    // 構造は000000000000000111111111111111111
+    // 構造は00000011111なら、check(mid)
+    // 構造は11111000000なら、!check(mid)
     // lは最大の満たさない場所、rは最小の満たす場所。
-    ll l = -1, r = INF; // lが満たさないことを確認！
 
-    while (r - l != 1) { ll mid = (l + r) / 2; if (check(mid)) r = mid; else l = mid; }
-    cout << r << endl;
+    ll lo = -1, ro = (ll)1e20; // lが満たさないことを確認！
+    while (ro - lo != 1) { 
+        ll mid = (lo + ro) / 2; 
+        // check関数が単純ならここに書いてもいい
+        check(mid)?ro=mid:lo=mid; 
+    }
+    cout << ro << endl;
 
     return 0;
 }
