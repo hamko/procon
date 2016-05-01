@@ -46,13 +46,13 @@ Mod factorial(const long long n) {
     }
     return ret;
 }
-Mod operator^(const Mod a, const int n) {
+Mod operator^(const Mod a, const long long n) {
     if (n == 0) return Mod(1);
     Mod res = (a * a) ^ (n / 2);
     if (n % 2) res = res * a;
     return res;
 }
-Mod modpowsum(const Mod a, const int b) {
+Mod modpowsum(const Mod a, const long long b) {
     if (b == 0) return 0;
     if (b % 2 == 1) return modpowsum(a, b - 1) * a + Mod(1);
     Mod result = modpowsum(a, b / 2);

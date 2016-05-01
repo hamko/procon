@@ -10,14 +10,14 @@ using ll = long long;
 // O(n log n)
 void sieve_of_eratosthenes(vector<ll>& primes, ll n) {
     primes.resize(n);
-    for (int i = 2; i < n; ++i)
+    for (ll i = 2; i < n; ++i)
         primes[i] = i;
-    for (int i = 2; i*i < n; ++i)
+    for (ll i = 2; i*i < n; ++i)
         if (primes[i])
-            for (int j = i*i; j < n; j+=i)
+            for (ll j = i*i; j < n; j+=i)
                 primes[j] = 0;
 }
-void getPrimesList(int n, vector<ll>& primes_list) {
+void getPrimesList(ll n, vector<ll>& primes_list) {
     vector<ll> tmpList;
     primes_list.clear(); primes_list.resize(0); primes_list.reserve(n / 5);
     sieve_of_eratosthenes(tmpList, n);
@@ -37,7 +37,7 @@ void constructPrimesList(ll n) {
         return;
     primesListMax = n;
     getPrimesList(n, primesList);
-    for (int i = 0; i < primesList.size(); i++) {
+    for (ll i = 0; i < primesList.size(); i++) {
         primesSet.insert(primesList[i]);
     }
 }
@@ -51,11 +51,12 @@ bool isPrimeLookup(ll n) {
 // constructされていないなら、O(sqrt(n) log n)
 // constructされているなら、O(log n)
 // Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
-void getDivisorsList(ll n, vector<ll>& divisors_list) {
+void getPrimeFactorizationList(ll n, vector<ll>& divisors_list) {
     divisors_list.clear(); divisors_list.resize(0);
+    if (n <= 1) return;
     constructPrimesList(sqrt(n)+1);
 
-    int i = 0, prime = 2;
+    ll prime = 2;
     while (n >= prime * prime) {
         if (n % prime == 0) {
             divisors_list.push_back(prime);
@@ -66,12 +67,38 @@ void getDivisorsList(ll n, vector<ll>& divisors_list) {
     }
     divisors_list.push_back(n);
 }
+
+// constructされていないなら、O(sqrt(n) log n)
+// constructされているなら、O(log n)
+// Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
+void getDivisorsList(ll n, vector<ll>& divisors_list) {
+    divisors_list.clear(); divisors_list.resize(0);
+    constructPrimesList(sqrt(n)+1);
+
+    vector<ll> fac_list;
+    getPrimeFactorizationList(n, fac_list);
+    map<ll, ll> counter;
+    for (auto x : fac_list) 
+        counter[x]++;
+    divisors_list.push_back(1);
+    for (auto x : counter) {
+        ll tmp_size = divisors_list.size();
+        ll p = 1;
+        for (ll i = 0; i < x.second; i++) {
+            p *= x.first;
+            for (ll j = 0; j < tmp_size; j++) 
+                divisors_list.push_back(divisors_list[j] * p);
+        }
+    }
+    sort(divisors_list.begin(), divisors_list.end());
+}
+
 // constructされていないなら、O(sqrt(n) log n)
 // constructされているなら、O(log n)
 ll getDivisorsNum(ll n) {
-    vector<ll> divisors_list; getDivisorsList(n, divisors_list);
-    map<ll, int> num;
-    for (int i = 0; i < divisors_list.size(); i++) {
+    vector<ll> divisors_list; getPrimeFactorizationList(n, divisors_list);
+    map<ll, ll> num;
+    for (ll i = 0; i < divisors_list.size(); i++) {
         num[divisors_list[i]]++;
     }
     ll p = 1;
@@ -166,22 +193,22 @@ bool isGaussianPrime(ll a, ll b) {
 
 // 区間篩
 // O( n log n )．
-const int N = 100000000; // MAXPRIME 
-const int M = 10000;     // SQRT(N)
-const int K = 6000000;   // NUMBER OF PRIMES, CHOOSE 9/8 * N / LOG(N)
+const ll N = 100000000; // MAXPRIME 
+const ll M = 10000;     // SQRT(N)
+const ll K = 6000000;   // NUMBER OF PRIMES, CHOOSE 9/8 * N / LOG(N)
 vector<ll> iterativeSieve() {
-    static int p[K], table[M];
-    for (int i = 2; i < M; ++i) p[i] = i;
-    for (int i = 2; i*i < M; ++i)
+    static ll p[K], table[M];
+    for (ll i = 2; i < M; ++i) p[i] = i;
+    for (ll i = 2; i*i < M; ++i)
         if (p[i])
-            for (int j = i*i; j < M; j += i)
+            for (ll j = i*i; j < M; j += i)
                 p[j] = 0;
     p[0] = p[1] = 0;
-    int num = remove(p, p+M, 0) - p;
-    for (int m = M; m < N; m += M) {
-        for (int x = m; x < m+M; ++x)
+    ll num = remove(p, p+M, 0) - p;
+    for (ll m = M; m < N; m += M) {
+        for (ll x = m; x < m+M; ++x)
             table[x-m] = x;
-        for (int i = 0, j; p[i]*p[i] < m+M; ++i) {
+        for (ll i = 0, j; p[i]*p[i] < m+M; ++i) {
             if (p[i] >= m)          j = p[i] * p[i];
             else if (m % p[i] == 0) j = m;
             else                    j = m - (m % p[i]) + p[i];
@@ -237,11 +264,19 @@ int main(void) {
 
     // 素因数分解
     int m = 120;
-    vector<ll> divisors;
-    getDivisorsList(m, divisors);
-    rep(i, divisors.size()) {
-        cout << divisors[i] << " ";
+    vector<ll> prime_factorization;
+    getPrimeFactorizationList(m, prime_factorization);
+    rep(i, prime_factorization.size()) {
+        cout << prime_factorization[i] << " ";
     }
+    cout << endl;
+
+    vector<ll> divisors_list;
+    getDivisorsList(m, divisors_list);
+    rep(i, divisors_list.size()) {
+        cout << divisors_list[i] << " ";
+    }
+
     cout << "#" << getDivisorsNum(m) << " ";
     cout << endl;
 

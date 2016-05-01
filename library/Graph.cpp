@@ -31,7 +31,7 @@ typedef vector<Weight> Array;
 typedef vector<Array> Matrix;
 
 void addDirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(Edge(src, dst, weight)); }
-void addUndirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(src, dst, weight)); }
+void addUndirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(dst, src, weight)); }
 void addDirected(Graph& g, int src, int dst) { addDirected(g, src, dst, 1); }
 void addUndirected(Graph& g, int src, int dst) { addUndirected(g, src, dst, 1); }
 
@@ -909,4 +909,5 @@ bool isomorphism(const Matrix &g, const Matrix &h) {
 
 main(void)
 {
+    g = Graph(n); // ちゃんとnで初期化しないとaddUndirectedとかできない
 }
