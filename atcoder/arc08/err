@@ -1,0 +1,15 @@
+d.cpp: In function ‘int main()’:
+d.cpp:206:61: error: no matching function for call to ‘SegmentTree<std::pair<double, double> >::SegmentTree(int, AssosiativeOperatorMax<int>*)’
+     SegmentTree<P> s(100050, new AssosiativeOperatorMax<int>);
+                                                             ^
+d.cpp:206:61: note: candidates are:
+d.cpp:108:5: note: SegmentTree<T>::SegmentTree(int, AssosiativeOperator<T>*) [with T = std::pair<double, double>]
+     SegmentTree(int n_, AssosiativeOperator<T>* op) : size_(n_) {
+     ^
+d.cpp:108:5: note:   no known conversion for argument 2 from ‘AssosiativeOperatorMax<int>*’ to ‘AssosiativeOperator<std::pair<double, double> >*’
+d.cpp:91:8: note: constexpr SegmentTree<std::pair<double, double> >::SegmentTree(const SegmentTree<std::pair<double, double> >&)
+ struct SegmentTree {
+        ^
+d.cpp:91:8: note:   candidate expects 1 argument, 2 provided
+d.cpp:91:8: note: constexpr SegmentTree<std::pair<double, double> >::SegmentTree(SegmentTree<std::pair<double, double> >&&)
+d.cpp:91:8: note:   candidate expects 1 argument, 2 provided
