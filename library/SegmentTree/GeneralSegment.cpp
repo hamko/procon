@@ -94,8 +94,6 @@ public:
 };
 
 
-// 範囲更新はデフォルトOFFなので、範囲更新が必要ならenableRangeUpdate(true)して*_lazyを実装すること。
-// 点更新はデフォルト代入なので、opを累積させたいならenablePointUpdateWithOp(true)すること。
 template<class T>
 class SegmentTree {
 public:
@@ -146,7 +144,7 @@ public:
     // 点更新
     void update(int v, const T &x){
         v += n;
-        if (enable_range_update_flag) 
+        if (enable_point_update_with_op_flag) 
             dat[v] = op->op(dat[v], x);
         else
             dat[v] = x;
@@ -234,7 +232,12 @@ int main(void) {
         //    SegmentTree<int> s(n, new AssosiativeOperatorMin<int>());
         SegmentTree<int> s(n, new AssosiativeOperatorSum<int>());
 
-        s.enableRangeUpdate(true); // これを切ると、op_lazy, resolve_lazyが定義不要になる。範囲更新しようとするとassertで落ちる。
+        // 範囲更新はデフォルトOFFなので、範囲更新が必要ならenableRangeUpdate(true)して*_lazyを実装すること。
+        // これを切ると、op_lazy, resolve_lazyが定義不要になる。そして、範囲更新しようとするとassertで落ちる。
+        s.enableRangeUpdate(true); 
+
+        // 点更新の時、デフォルトはPointAssignなので、PointAddのようにopで更新したいなら以下をtrueにする。
+        s.enablePointUpdateWithOp(true);
 
         // 範囲
         for (int i = 0; i < n; i++) 

@@ -7,6 +7,11 @@ using namespace std;
 // FordFulkerson, Tarjan's OLCA, EulerTour, Treeをマージ
 // Graphなどを全部クラスにする
 
+
+/***********************/
+// 共通部分
+/***********************/
+
 #define REP(i,n) for(int i=0;i<(int)n;++i)
 #define FOR(i,c) for(__typeof((c).begin())i=(c).begin();i!=(c).end();++i)
 #define ALL(c) (c).begin(), (c).end()
@@ -34,6 +39,18 @@ void addDirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(E
 void addUndirected(Graph& g, int src, int dst, Weight weight) { g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(dst, src, weight)); }
 void addDirected(Graph& g, int src, int dst) { addDirected(g, src, dst, 1); }
 void addUndirected(Graph& g, int src, int dst) { addUndirected(g, src, dst, 1); }
+void printGraph(Graph& g) {
+    REP(i, g.size()) {
+        if (!g[i].size())
+            continue;
+        REP(j, g[i].size()) 
+            cout << "(" << i << ", " << g[i][j].dst << "), ";
+        cout << endl;
+    }
+}
+/***********************/
+// 共通部分おわり
+/***********************/
 
 // rootからの連結頂点をrootに塗る
 // connectedはサイズ頂点数, -1で初期化。
@@ -189,6 +206,38 @@ vector<int> buildPathBE(const vector<int> &prev, int t) {
     return path;
 }
 
+void visitStronglyConnectedComponents(const Graph &g, int v, vector< vector<int> >& scc,
+        stack<int> &S, vector<bool> &inS,
+        vector<int> &low, vector<int> &num, int& time) {
+    low[v] = num[v] = ++time;
+    S.push(v); inS[v] = true;
+    FOR(e, g[v]) {
+        int w = e->dst;
+        if (num[w] == 0) {
+            visitStronglyConnectedComponents(g, w, scc, S, inS, low, num, time);
+            low[v] = min(low[v], low[w]);
+        } else if (inS[w])
+            low[v] = min(low[v], num[w]);
+    }
+    if (low[v] == num[v]) {
+        scc.push_back(vector<int>());
+        while (1) {
+            int w = S.top(); S.pop(); inS[w] = false;
+            scc.back().push_back(w);
+            if (v == w) break;
+        }
+    }
+}
+void stronglyConnectedComponents(const Graph& g,
+        vector< vector<int> >& scc) {
+    const int n = g.size();
+    vector<int> num(n), low(n);
+    stack<int> S;
+    vector<bool> inS(n);
+    int time = 0;
+    REP(u, n) if (num[u] == 0)
+        visitStronglyConnectedComponents(g, u, scc, S, inS, low, num, time);
+}
 
 // k-shortest
 // O(k E log V)
@@ -907,7 +956,33 @@ bool isomorphism(const Matrix &g, const Matrix &h) {
     return permTest(0, g, h, gs, hs);
 }
 
+#define rep(i,n) for(int i = 0; i < n; i++)
 main(void)
 {
-    g = Graph(n); // ちゃんとnで初期化しないとaddUndirectedとかできない
+    // 基本的な使い方
+    {
+        Graph g(6);
+//        Graph g; // 先に頂点数nで初期化しないとaddUndirectedとかできない
+        addDirected(g, 0, 3);       // 有向辺。重みは自動で1に
+        addDirected(g, 2, 3, 5);    // 有向辺。重みを明示的に指定
+        addUndirected(g, 1, 4);     // 無向辺。重みは自動で1に
+        addUndirected(g, 4, 2, 5);  // 無向辺。重みを明示的に指定
+//        addDirected(g, -1, 0) // 0未満を使ってはならない。
+//        addDirected(g, 0, 6) // サイズ以上を使ってはならない。
+    }
+    // 強連結分解
+    {
+        Graph g = Graph(6); // ちゃんとnで初期化しないとaddUndirectedとかできない
+        addDirected(g, 0, 1), addDirected(g, 1, 2), addDirected(g, 2, 0); // 強連結
+        addDirected(g, 2, 3);
+        addDirected(g, 3, 4), addDirected(g, 4, 3); // 強連結
+        addDirected(g, 4, 5);
+
+        vector<vector<int>> scc;
+        stronglyConnectedComponents(g, scc);
+        rep(i, scc.size()) {
+            rep(j, scc[i].size()) cout << scc[i][j] << " ";
+            cout << endl;
+        }
+    }
 }

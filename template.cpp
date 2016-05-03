@@ -8,7 +8,7 @@ using namespace std;
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { if (!v.empty()) { o << '['; copy(v.begin(), v.end(), ostream_iterator<T>(o, ", ")); o << "\b\b]"; } return o; }
 using ll = long long; using ld = long double; using vll = vector<ll>; using vi = vector<int>;
-typedef pair<int, int> P;
+typedef pair<ll, ll> P;
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
