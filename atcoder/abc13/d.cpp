@@ -17,40 +17,26 @@ static const long long INF = 1e18;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
 
-    int n, m, d; cin >> n >> m >> d;
+    ll n, m, d; cin >> n >> m >> d;
+    const ll logd = 100;
+    vector<vll> f(logd, vll(n));
+
     vi a(m); rep(i, m) { cin >> a[i]; a[i]--; }
-
     vi c(n); rep(i, n) c[i] = i;
-    rep(i, m) swap(c[a[i]], c[a[i+1]]);
+    rep(i, m) swap(c[a[m-1-i]], c[a[m-1-i]+1]);
+    rep(i, n) f[0][i] = c[i];
 
-    // カラー毎にvectorに突っ込んで検索が必要だったかな…間に合わなそうだったらそうしよう
-    vi done(n, -1);
-    int color = 0;
-    while (1) {
-        int index;
-        for (index = 0; index < n; index++) 
-            if (done[index] == -1) 
-                break;
-        if (index == n)
-            break;
-     
-        rep(i, n) {
-            done[index] = color;
-            index = c[index];
+    rep(i, logd - 1) rep(j, n) {
+        f[i+1][j] = f[i][f[i][j]];
+    }
+    rep(i, n) {
+        ll ret = i;
+        rep(j, 32) {
+            if (!(d & (1 << j)))
+                continue;
+            ret = f[j][ret];
         }
-        color++;
-    }
-
-    vi count(color, 0);
-    rep(i, n) {
-        count[done[i]]++;
-    }
-
-    rep(i, n) {
-        int r = d % count[done[i]]; 
-        int index = i;
-        rep(j, r) index = c[index];
-        cout << index + 1 << endl;
+        cout << ret + 1 << endl;
     }
 
     return 0;

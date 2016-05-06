@@ -32,8 +32,7 @@ vector<ll> primesList;      // 素数リスト（primesListMaxまで）。こい
 set<ll> primesSet;
 ll primesListMax;
 void constructPrimesList(ll n) {
-    n++;
-    if (primesListMax > n) 
+    if (primesListMax >= n) 
         return;
     primesListMax = n;
     getPrimesList(n, primesList);
