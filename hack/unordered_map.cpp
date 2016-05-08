@@ -34,7 +34,7 @@ int main(void) {
         if (a.bucket_count() < 30000) {
             hack_index = i;
         } else {
-            hack_index = a.bucket_count() * max(0, min(i - 30000, 20000));
+            hack_index = a.bucket_count() * max(0, min(i, 20000));
         }
         a[hack_index] = 1;
         cout << i << " " << a.bucket_count() << " " <<  hack_index << endl;
