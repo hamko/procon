@@ -24,8 +24,22 @@ int main(void) {
        vll b(m); rep(i, m) { cin >> b[i]; b[i]--; }
        vll c(m); rep(i, m) { cin >> c[i]; c[i]--; }
        */
-    ll n = 100000;
-    vll a(n); rep(i, n) { a[i] = 107897 * (i * 1); }
+    ll n = 46794;
+    vll a(n);
+    int i = 0;
+    for (int j = 0; i < 11; i++, j++) a[i] = 11 * (j+1);
+    for (int j = 0; i < 23; i++, j++) a[i] = 23 * (j+1);
+    for (int j = 0; i < 47; i++, j++) a[i] = 47 * (j+1);
+    for (int j = 0; i < 97; i++, j++) a[i] = 97 * (j+1);
+    for (int j = 0; i < 199; i++, j++) a[i] = 199 * (j+1);
+    for (int j = 0; i < 409; i++, j++) a[i] = 409 * (j+1);
+    for (int j = 0; i < 823; i++, j++) a[i] = 823 * (j+1);
+    for (int j = 0; i < 1741; i++, j++) a[i] = 1741 * (j+1);
+    for (int j = 0; i < 3739; i++, j++) a[i] = 3739 * (j+1);
+    for (int j = 0; i < 7517; i++, j++) a[i] = 7517 * (j+1);
+    for (int j = 0; i < 15173; i++, j++) a[i] = 15173 * (j+1);
+    for (int j = 0; i < 30727; i++, j++) a[i] = 30727 * (j+1);
+    for (int j = 0; i < n; i++, j++) a[i] = 62233 * (j+1);
     ll m = 1;
     vll b(m); b[0] = 1;
     vll c(m); c[0] = 2;
