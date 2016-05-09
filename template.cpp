@@ -1,9 +1,9 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#define rep(i,n) for(int i = 0; i < n; i++)
+#define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define pb push_back
-#define all(x) x.begin(), x.end()
+#define all(x) (x).begin(), (x).end()
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
