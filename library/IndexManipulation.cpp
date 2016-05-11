@@ -13,11 +13,13 @@ typedef pair<ll, ll> P;
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
-#define MAX_N 100005
 
 int main(void) {
-    cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
-    return 0;
+    // 最大連続長(prevはいらない！)
+    vll a = {1, 7, 3, 4, 4, 6, 7, 6};
+    ll ret = 0, m = 0; 
+    rep(i, a.size()) { 
+        m = (day[i] % 2 == 0 ? m + 1 : 0);
+        chmax(ret, m);
+    }      
 }

@@ -62,6 +62,18 @@ void dfs(Graph& g, bool* visited, ll s, ll t) {
     }
 }
 
+// 木の深さ優先探索のテンプレート
+// O(V)
+// gはグラフ, visitedはg.size()の配列, sは直前の頂点(根なら-1), tは今処理している頂点
+ll dfs(Graph& g, ll s, ll t) {
+    ll ret = 0;
+    rep(j, g[t].size()) {
+        ll dst = g[t][j].dst;
+        if (dst == s) continue;
+        ret += g[i][j].weight;
+        ret += dfs(g, visited, t, dst); 
+    }
+}
 /***********************/
 // 共通部分おわり
 /***********************/
