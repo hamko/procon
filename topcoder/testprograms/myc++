@@ -14,10 +14,10 @@ typedef pair<int, int> P;
 #define MAX_N 100005
 
 class <%:class-name%> {
-public:
-	<%:return-type%> <%:method-name%>(<%:param-list%>) {
-		<%:set-caret%>
-	}
+    public:
+        <%:return-type%> <%:method-name%>(<%:param-list%>) {
+            <%:set-caret%>
+        }
 };
 
 <%:testing-code%>
