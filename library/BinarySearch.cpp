@@ -19,7 +19,7 @@ static const long long INF = 1e18;
 // 整数二分探索
 // O(log(range))
 // f: 単調増加関数. 000111, 111111, 000000を許容する（11110000で探索したい場合は、自分でfを反転すること）
-// 閉区間[rl, rr]から単調関数fを満たす整数を探し、trueとなる最小の数を返す。
+// 閉区間[rl, rr]から単調関数fを満たす最小の数を返す。
 // 全て0ならrr+1を返す！
 ll BinarySearch(ll rl, ll rr, function<bool(ll)> f) { 
     ll lo = rl-1, ro = rr+1;
@@ -57,22 +57,19 @@ ld BinarySearchReal(ld rl, ld rr, function<bool(ld)> f) {
 }
 
 int main(void) {
-    /**********上限値のある整数の二分探索**********/
+    /**********整数の二分探索**********/
     {
-        // a[n-1]が必ず1で、01構造
         vector<ll> a = {0, 0, 0, 0, 1, 1};
         auto f = [&](ll x){return !!a[x];};
         BinarySearchPrint(0, a.size()-1, f);
         cout << BinarySearch(0, a.size()-1, f) << endl;
     }
     {
-        // a[n-1]が必ず1で、01構造
         vector<ll> a = {1, 1, 1, 1, 1, 1};
         BinarySearchPrint(0, a.size()-1, [&](ll x){return !!a[x];});
         cout << BinarySearch(0, a.size()-1, [&](ll x){return !!a[x];}) << endl;
     }
     {
-        // a[n-1]が必ず1で、01構造
         vector<ll> a = {0, 0, 0, 0, 0, 0};
         BinarySearchPrint(0, a.size()-1, [&](ll x){return !!a[x];});
         cout << BinarySearch(0, a.size()-1, [&](ll x){return !!a[x];}) << endl;
