@@ -8,7 +8,7 @@ template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, t
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { if (!v.empty()) { o << '['; copy(v.begin(), v.end(), ostream_iterator<T>(o, ", ")); o << "\b\b]"; } return o; }
-using ll = long long; using ld = long double; using vll = vector<ll>; using vi = vector<int>;
+using ll = long long; using ld = long double; using vll = vector<ll>; using vld = vector<ld>;
 typedef pair<ll, ll> P;
 
 static const double EPS = 1e-14;

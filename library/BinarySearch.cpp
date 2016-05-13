@@ -55,8 +55,26 @@ ld BinarySearchReal(ld rl, ld rr, function<bool(ld)> f) {
     rep(i, 200) { ld m = (rl + rr) / 2; f(m)?rr=m:rl=m; }
     return rl;
 }
+void BinarySearchRealInteractive(ld rl, ld rr, function<bool(ld)> f) { 
+    while (1) {
+        cout << "####" << endl;
+        ld tmp; cin >> tmp;
+        if (rl > tmp) {cout << "Out of range: too small" << endl; continue; }
+        if (rr < tmp) {cout << "Out of range: too large" << endl; continue; }
+        ld ret = f(tmp); cout << tmp << " : " << ret << endl;
+    }
+}
 
 int main(void) {
+    /**********テンプレート**********/
+    {
+        auto f = [&](ll x){
+            return c - 10 * x <= A;
+        };
+        BinarySearchPrint(0, INF, f);
+//        BinarySearchInteractive(0, INF, f);
+        ll ret = BinarySearch(0, INF, f);
+    }
     /**********整数の二分探索**********/
     {
         vector<ll> a = {0, 0, 0, 0, 1, 1};
@@ -87,7 +105,7 @@ int main(void) {
     {
         ll A = 13, B = 7, c = 42;
         auto f = [&](ll x){return c - 10 * x <= A;};
-        BinarySearchPrint(0, min(c / 10, B), f);
+        BinarySearchPrint(0, min(c / 10, B), f); // [0, min(c/10, B)]に範囲を限定して初めて単調増加になる！
         ll ret = BinarySearch(0, min(c / 10, B), f);
 
         cout << "a + 10 * b = " << c << " (a in [0, " << A << "], b in [0, " << B << "]" << endl;
