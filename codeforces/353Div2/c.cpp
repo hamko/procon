@@ -4,8 +4,6 @@ using namespace std;
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
-#define fi first
-#define se second
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -15,12 +13,25 @@ typedef pair<ll, ll> P;
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
-static const long long mo = 1e9+7;
 #define MAX_N 100005
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
     vll a(n); rep(i, a.size()) cin >> a[i];
+    rep(i, n-1) {
+        a[i+1] += a[i];
+    }
+    map<ll, ll> memo;
+    rep(i, n) {
+        memo[a[i]]++;
+    }
+    ll m = 0;
+    for (auto x : memo) {
+        chmax(m, x.second);
+    }
+    cout << n - m << endl;
+
+
     return 0;
 }
