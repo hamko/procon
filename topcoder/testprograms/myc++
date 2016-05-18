@@ -19,6 +19,7 @@ static const long long INF = 1e18;
 class <%:class-name%> {
     public:
         <%:return-type%> <%:method-name%>(<%:param-list%>) {
+            ll n = a.size();
             <%:set-caret%>
         }
 };
