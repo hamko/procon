@@ -50,6 +50,28 @@ bool isValidParentheses(string& s) {
 ll countOpenParentheses(string& s) { ll sum = 0; rep(i, s.length()) sum += s[i] == ')'; return sum; }
 ll countClosingParentheses(string& s) { ll sum = 0; rep(i, s.length()) sum += s[i] == '('; return sum; }
 
+// sの括弧列の全列挙
+// O(2^n), n = 32までは現実的な時間で終わる
+// 0 1 // 2 1 // 4 2 // 6 5 // 8 14 // 10 42 // 12 132 // 14 429 // 16 1430 // 18 4862 // 20 16796
+// 22 58786 // 24 208012 // 26 742900 // 28 2674440 // 30 9694845 // 32 35357670 // 34 129644790
+void numerateParentheses(int n, vector<ll>& q_next) {
+    q_next.clear();
+    if (n < 0 || n % 2) return;
+    vector<ll> q;
+    q_next.pb(0);
+    ll t = 0;
+    while (t < n && !q_next.empty()) {
+        q.swap(q_next);
+        while (!q.empty()) {
+            ll tmp = q.back(); q.pop_back();
+            if (__builtin_popcount(tmp) > t / 2) // if 011->2,3/2=1 ->OK, 0011->2, 4/2=2->NG
+                q_next.pb(tmp); // Down
+            if (__builtin_popcount(tmp) < n / 2)
+                q_next.pb(tmp | (1ll << t)); // Up
+        }
+        t++;
+    }
+}
 
 int main(void) {
     string s = "))()())(()";
@@ -62,6 +84,12 @@ int main(void) {
 
     s = "((())()())";
     cout << isValidParentheses(s) << endl;
+
+    rep(i, 15) {
+        vector<ll> p;
+        numerateParentheses(i * 2, p);
+        cout << i * 2 << " " << p.size() << endl;
+    }
 
     return 0;
 }
