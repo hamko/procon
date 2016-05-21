@@ -85,7 +85,7 @@ int main(void) {
     s = "((())()())";
     cout << isValidParentheses(s) << endl;
 
-    rep(i, 15) {
+    rep(i, 20) {
         vector<ll> p;
         numerateParentheses(i * 2, p);
         cout << i * 2 << " " << p.size() << endl;
