@@ -5,7 +5,7 @@ using ll = long long;
 
 /**********************************************************/
 // 前処理ありの素数判定
-// 素数の最大値Mに対して先にconstructPrimesList(M)するといい
+// 素数の最大値Mに対して先にconstructPrimesList(M)が必須！
 /**********************************************************/
 // O(n log n)
 void sieve_of_eratosthenes(vector<ll>& primes, ll n) {
@@ -43,7 +43,6 @@ void constructPrimesList(ll n) {
 // constructされていないなら、O(n log n)
 // constructされているなら、O(log n)
 bool isPrimeLookup(ll n) {
-    constructPrimesList(n);
     return primesSet.count(n);
 }
 
@@ -53,7 +52,6 @@ bool isPrimeLookup(ll n) {
 void getPrimeFactorizationList(ll n, vector<ll>& divisors_list) {
     divisors_list.clear(); divisors_list.resize(0);
     if (n <= 1) return;
-    constructPrimesList(sqrt(n)+1);
 
     ll prime = 2;
     while (n >= prime * prime) {
@@ -72,7 +70,6 @@ void getPrimeFactorizationList(ll n, vector<ll>& divisors_list) {
 // Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
 void getDivisorsList(ll n, vector<ll>& divisors_list) {
     divisors_list.clear(); divisors_list.resize(0);
-    constructPrimesList(sqrt(n)+1);
 
     vector<ll> fac_list;
     getPrimeFactorizationList(n, fac_list);
