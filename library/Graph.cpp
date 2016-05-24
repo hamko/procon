@@ -70,8 +70,8 @@ ll dfs(Graph& g, ll s, ll t) {
     rep(j, g[t].size()) {
         ll dst = g[t][j].dst;
         if (dst == s) continue;
-        ret += g[i][j].weight;
-        ret += dfs(g, visited, t, dst); 
+        ret += g[t][j].weight;
+        ret += dfs(g, t, dst); 
     }
 }
 /***********************/
@@ -978,19 +978,58 @@ bool isomorphism(const Matrix &g, const Matrix &h) {
     return permTest(0, g, h, gs, hs);
 }
 
+// 二部マッチング
+// O(V (V + E))
+// 入力：
+// g : 二部グラフ．0 ... L-1 が左側頂点，L ... g.size()-1 が右側頂点に対応する．
+// L : 二部グラフの左側の頂点の数．
+// 出力：matching : マッチングに用いられる辺集合．
+bool augment(const Graph& g, int u,
+        vector<int>& matchTo, vector<bool>& visited) {
+    if (u < 0) return true;
+    FOR(e, g[u]) if (!visited[e->dst]) {
+        visited[e->dst] = true;
+        if (augment(g, matchTo[e->dst], matchTo, visited)) {
+            matchTo[e->src] = e->dst;
+            matchTo[e->dst] = e->src;
+            return true;
+        }
+    }
+    return false;
+}
+int bipartiteMatching(const Graph& g, int L, Edges& matching) {
+    const int n = g.size();
+    vector<int> matchTo(n, -1);
+    int match = 0;
+    rep(u, L) {
+        vector<bool> visited(n);
+        if (augment(g, u, matchTo, visited)) ++match;
+    }
+    rep(u, L) if (matchTo[u] >= 0) // make explicit matching
+        matching.push_back( Edge(u, matchTo[u], 1) );
+    return match;
+}
+// 二部マッチングの入力グラフを特性関数から構築
+// bool f(i, j) : 左のi in [0, L)から右のj in [0, R)との辺があれば1, なければ0
+template<class Function>
+void constructBiparitate(Graph& g, int L, int R, Function f) {
+    g = Graph(L + R);
+    rep(l, L) rep(r, R) if (f(l, r)) addDirected(g, l, L + r);
+}
+
 int main(void)
 {
     // 基本的な使い方
     {
         cout << "########Basic Usage" << endl;
         Graph g(6);
-//        Graph g; // 先に頂点数nで初期化しないとaddUndirectedとかできない
+        //        Graph g; // 先に頂点数nで初期化しないとaddUndirectedとかできない
         addDirected(g, 0, 3);       // 有向辺。重みは自動で1に
         addDirected(g, 2, 3, 5);    // 有向辺。重みを明示的に指定
         addUndirected(g, 1, 4);     // 無向辺。重みは自動で1に
         addUndirected(g, 4, 2, 5);  // 無向辺。重みを明示的に指定
-//        addDirected(g, -1, 0) // 0未満を使ってはならない。
-//        addDirected(g, 0, 6) // サイズ以上を使ってはならない。
+        //        addDirected(g, -1, 0) // 0未満を使ってはならない。
+        //        addDirected(g, 0, 6) // サイズ以上を使ってはならない。
         printGraph(g);
     }
 
@@ -1009,6 +1048,23 @@ int main(void)
             rep(j, scc[i].size()) cout << scc[i][j] << " ";
             cout << endl;
         }
+    }
+
+    // 二部マッチング
+    {
+        cout << "########Bipartite Matching" << endl;
+        Graph g;
+        auto f = [&](int i, int j) { 
+//            return (i == 0 && j == 0) || (i == 2 && j == 1) || (i == 0 && j == 1);
+            return (i == 0 && j == 0) || (i == 0 && j == 1);
+        };
+        int L = 3, R = 2;
+        constructBiparitate(g, L, R, f);
+        printGraph(g);
+
+        Edges matching;
+        int ret = bipartiteMatching(g, L, matching);
+        cout << ret << endl;
     }
     return 0;
 }
