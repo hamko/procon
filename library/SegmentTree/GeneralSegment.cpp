@@ -100,23 +100,25 @@ public:
     // dat, lazyのデータ構造
     // 0123456789ABCDEF // インターフェースの添字
     // ################
-    // 1--------------- // datの添字
+// 1--------------- // datの添字, 0は使わない！！
     // 2-------3-------
     // 4---5---6---7---
     // 8-9-A-B-C-D-E-F-
     // GHIJKLMNOPQRSTUV
 
     // v<<1, v<<1|1は子どもたちを表している
-    T *dat, *lazy;
+    // lazy[v]: vとその子供たち[nl, nr)の全員はquery(lazy[v])を遅延しているという意味
+    T *dat, *lazy; 
     AssosiativeOperator<T>* op;
     int n = 1; // 確保しているサイズ！
+    int bits = 0; // n == 1 << bits
     const size_t size_; // 確保しているサイズではない！！
     int ql, qr;
     bool enable_range_update_flag = false;
     bool enable_point_update_with_op_flag = false;
     SegmentTree(int n_, AssosiativeOperator<T>* op) : size_(n_) {
         this->op = op;
-        while(n < n_) n <<= 1;
+        while(n < n_) { n <<= 1; bits++; }
         dat = pool.fetch<T>(n+n);
         lazy = pool.fetch<T>(n+n);
         fill_n(dat, n*4, this->op->T0);
@@ -124,7 +126,7 @@ public:
     void enableRangeUpdate(bool flag) { enable_range_update_flag = flag; }
     void enablePointUpdateWithOp(bool flag) { enable_point_update_with_op_flag = flag; }
     // 親→子
-    // lazy[v]: vとその子供たち[nl, nr)の全員はquery(lazy[v])を遅延しているという意味
+    // これが呼ばれると、必ずvが正しい状態になる！
     // 親のlazyを解消して子に押し付ける
     // 子がいなければ押し付けない
     void inline pushdown(int v, int nl, int nr){
@@ -154,39 +156,45 @@ public:
         }
     }
     // 範囲更新
+    // 範囲番号nの区間[nl, nr)にop(x)を演算する
     void update(int n, int nl, int nr, const T &x){
+        // この関数は、[ql, qr)より上のノードとその子の全てにHITする
         assert(enable_range_update_flag);
-        if(nr <= ql || qr <= nl)
-            return;
+        pushdown(n, nl, nr);
+        if(nr <= ql || qr <= nl) return;
         if(ql <= nl && nr <= qr) {
+            // 一回の区間更新に付き最大3回、した区間が小さい順にHitする。
             lazy[n] = op->op_lazy(lazy[n], x);
             pushdown(n, nl, nr);
             return;
         }
         int m = (nl + nr) / 2;
-        update(n<<1, nl, m, x);
-        update(n<<1|1, m, nr, x);
+        update(n<<1, nl, m, x);     // 子供1
+        update(n<<1|1, m, nr, x);   // 子供2
         pullup(n);
     }
+    // [l, r)にop(x)の演算を行う。
     void update(int l, int r, const T &x){
         ql = l; qr = r;
         return update(1, 0, size(), x);
     }
+    // 範囲クエリ
+    // 範囲番号nの区間[nl, nr)にop(x)を演算結果を返す
     T query(int n, int nl, int nr){
-        if (enable_range_update_flag)
-            pushdown(n, nl, nr);
+        // この関数は、[ql, qr)より上のノードとその子の全てにHITする
+        if (enable_range_update_flag) pushdown(n, nl, nr);
         if(nr <= ql || qr <= nl) return op->T0;
-        if(ql <= nl && nr <= qr) return dat[n];
-
-        if (enable_range_update_flag)
-            pullup(n);
+        if(ql <= nl && nr <= qr) return dat[n]; // 一回の区間更新に付き最大3回、した区間が小さい順にHitする。
+        if (enable_range_update_flag) pullup(n);
         int m = (nl + nr) / 2;
         return op->op(query(n<<1, nl, m), query(n<<1|1, m, nr));
     }
+    // [l, r)の演算結果を出力
     T query(int l, int r){
         ql = l; qr = r;
         return query(1, 0, size());
     }
+    // lの値を出力
     T query(int l){
         return query(l, l + 1);
     }
@@ -195,15 +203,19 @@ public:
         rep(i, size()) { cout << query(i) << " "; } cout << endl;
     }
     void printAll(void) {
-        for (int i = 1; i < 2*size(); i++) { 
-            cout << dat[i] << " "; 
+        for (int i = 1; i < n * 2; i++) { 
+            cout << dat[i];
+            int j = i, count = 0; while (j) { j /= 2; count++; } 
+            for (int j = 0; j < (1 << (bits - count + 1)); j++) cout << "\t"; 
             if (__builtin_popcount(i+1) == 1) cout << endl; 
         } 
         cout << endl;
     }
     void printLazy(void) {
-        for (int i = 1; i < 2*size(); i++) { 
-            cout << lazy[i] << " "; 
+        for (int i = 1; i < n * 2; i++) { 
+            cout << lazy[i];
+            int j = i, count = 0; while (j) { j /= 2; count++; } 
+            for (int j = 0; j < (1 << (bits - count) + 1); j++) cout << "\t"; 
             if (__builtin_popcount(i+1) == 1) cout << endl; 
         } 
         cout << endl;
@@ -212,20 +224,8 @@ public:
     size_t size() const { return size_; }
 };
 
-// Uを座標圧縮
-template<class T, class U>
-long long compress(vector<pair<U, T>>& ary)
-{
-    map<U, ll> m;
-    for(auto x : ary) m[x.first] = 0;
-    ll order = 0;
-    for(auto &x : m) x.second = order++;
-    for(auto &x : ary) x.first = m[x.first];
-    return m.size();
-}
-
 int main(void) {
-    int n = 16;
+    int n = 8;
 
     {
         //    SegmentTree<int> s(n, new AssosiativeOperatorMax<int>());
@@ -239,16 +239,27 @@ int main(void) {
         // 点更新の時、デフォルトはPointAssignなので、PointAddのようにopで更新したいなら以下をtrueにする。
         s.enablePointUpdateWithOp(true);
 
+        /*
         // 範囲
         for (int i = 0; i < n; i++) 
             s.update(i, i+1, i);
         // 点
         for (int i = 0; i < n; i++) 
             s.update(i, i);
+            */
 
-        s.print();
-        s.printAll();
+        while (1) {
+            cout << "[ruq] l r val" << endl;
+            char mode; cin >> mode;
+            int a, b, c; cin >> a >> b >> c;
+            if (mode == 'r') // resolve lazy 
+                s.print();
+            else if (mode == 'u')
+                s.update(a, b, c);
+            else if (mode == 'q')
+                cout << s.query(a, b) << "#query" << endl;
+            s.printAll();
+            s.printLazy();
+        }
     }
-
-    return 0;
 }
