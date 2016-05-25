@@ -176,7 +176,7 @@ public:
     // [l, r)にop(x)の演算を行う。
     void update(int l, int r, const T &x){
         ql = l; qr = r;
-        return update(1, 0, size(), x);
+        return update(1, 0, n, x);
     }
     // 範囲クエリ
     // 範囲番号nの区間[nl, nr)にop(x)を演算結果を返す
@@ -192,7 +192,7 @@ public:
     // [l, r)の演算結果を出力
     T query(int l, int r){
         ql = l; qr = r;
-        return query(1, 0, size());
+        return query(1, 0, n);
     }
     // lの値を出力
     T query(int l){
@@ -225,7 +225,7 @@ public:
 };
 
 int main(void) {
-    int n = 8;
+    int n = 7;
 
     {
         //    SegmentTree<int> s(n, new AssosiativeOperatorMax<int>());

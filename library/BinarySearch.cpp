@@ -25,7 +25,7 @@ ll BinarySearch(ll rl, ll rr, function<bool(ll)> f) {
     ll lo = rl-1, ro = rr+1;
     while (ro - lo != 1) {
         ll m = (lo + ro) / 2; 
-        (m!=rl-1&&f(m))?ro=m:lo=m; 
+        ((m!=rl-1&&f(m))?ro:lo)=m; 
     }
     return ro;
 }
