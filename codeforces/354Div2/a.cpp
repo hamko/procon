@@ -27,7 +27,6 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, 
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
-#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
@@ -37,5 +36,23 @@ int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
     vll a(n); rep(i, a.size()) cin >> a[i];
+    if (n == 2) { cout << 1 << endl; return 0; }
+    ll mi = (int)(find(all(a), 1) - a.begin());
+    ll Mi = (int)(find(all(a), a.size()) - a.begin());
+    if (n == 3) {
+        if (abs(mi - Mi) == 2) {
+            cout << 1 << endl;
+        } else {
+            cout << 2 << endl;
+        }
+    } else {
+        ll ret = 0;
+        chmax(ret, abs(mi - Mi));
+        chmax(ret, abs(0 - Mi));
+        chmax(ret, abs(mi - 0));
+        chmax(ret, abs(n-1 - Mi));
+        chmax(ret, abs(mi - (n-1)));
+        cout << ret << endl;
+    }
     return 0;
 }

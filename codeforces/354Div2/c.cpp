@@ -27,15 +27,68 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, 
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
-#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+// 整数二分探索
+// O(log(range))
+// f: 単調増加関数. 000111, 111111, 000000を許容する（11110000で探索したい場合は、自分でfを反転すること）
+// 閉区間[rl, rr]から単調関数fを満たす最小の数を返す。
+// 全て0ならrr+1を返す！
+ll BinarySearch(ll rl, ll rr, function<bool(ll)> f) { 
+    ll lo = rl-1, ro = rr+1;
+    while (ro - lo != 1) {
+        ll m = (lo + ro) / 2; 
+        ((m!=rl-1&&f(m))?ro:lo)=m; 
+    }
+    return ro;
+}
+void BinarySearchInteractive(ll rl, ll rr, function<bool(ll)> f) { 
+    while (1) {
+        cout << "####" << endl;
+        ll tmp; cin >> tmp;
+        if (rl > tmp) {cout << "Out of range: too small" << endl; continue; }
+        if (rr < tmp) {cout << "Out of range: too large" << endl; continue; }
+        ll ret = f(tmp); cout << tmp << " : " << ret << endl;
+    }
+}
+void BinarySearchPrint(ll rl, ll rr, function<bool(ll)> f) { 
+    for (int i = rl; i <= rr; i++) cout << f(i); cout << endl;
+}
+void BinarySearchAssert(ll rl, ll rr, function<bool(ll)> f) { 
+    bool p = false;
+    for (int i = rl; i <= rr; i++) {
+        bool t = f(i);
+        if (p && !t) cerr << i << ": F NOT MONOTONIC INCREASE" << endl, exit(1);
+        p |= t;
+    }
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n, m; cin >> n >> m;
+    string s; cin >> s;
+    ll ret = 0;
+    for (int i = 'a'; i <= 'z'; i++) {
+        vector<ll> b(n+1);
+        rep(j, n) {
+            b[j+1] += b[j] + (s[j] == i);
+        }
+//        cout << b << endl;
+        function<bool(ll)> f = [&](ll x) {
+            rep(k, n + 1 - x) {
+//                cout << k << " " << b[k+x] << " " << b[k] << endl;
+                if (x - (b[k+x] - b[k]) <= m)
+                    return false;
+            }
+            return true;
+        };
+        ll l = BinarySearch(0, n, f) - 1;
+//        BinarySearchInteractive(0, n, f);
+        chmax(ret, l);
+    }
+    cout << ret << endl;
     return 0;
 }

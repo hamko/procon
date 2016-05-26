@@ -27,7 +27,6 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, 
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
-#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
@@ -35,7 +34,10 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    vld v(3); rep(i, 3) cin >> v[i];
+    sort(all(v));
+    ld r = max<ld>(0, v[2] - v[1] - v[0]);
+    ld R = v[2] + v[1] + v[0];
+    cout << setprecision(40) << R * R * M_PI - r * r * M_PI << endl;
     return 0;
 }

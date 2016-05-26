@@ -27,7 +27,6 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, 
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
-#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
@@ -35,7 +34,41 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
-    return 0;
+    ll n, k; cin >> n >> k;
+    vector<string> memo(n+1);
+    ll last = -1;
+    rep(i, n + 1) {
+        string s; cin >> s;
+        if ( s == "?")
+            last = i;
+        memo[i] = s;
+    }
+    if (k == 0) {
+        if (memo[0] == "0") {
+            cout << "Yes" << endl;
+            return 0;
+        } else {
+            cout << "No" << endl;
+            return 0;
+        }
+    }
+    if (last >= 0 && last % 2 == 0) {
+        cout << "No" << endl;
+        return 0;
+    } else if (last == -1) {
+        ld sum = 0;
+        rep(i, n+1) {
+            sum += ((ld)stoi(memo[i])) * pow(k, i);
+        }
+        if (abs<ld>(sum) < EPS) {
+            cout << "Yes" << endl;
+            return 0;
+        } else {
+            cout << "No" << endl;
+            return 0;
+        }
+    } else {
+        cout << "Yes" << endl;
+        return 0;
+    }
 }

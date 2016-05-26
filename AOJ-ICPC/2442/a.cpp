@@ -36,6 +36,19 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    vld x(n), y(n); rep(i, x.size()) cin >> x[i] >> y[i];
+    if (n % 2) { cout << "NA" << endl; return 0; }
+    ld xc = x[0] + x[n/2], yc = y[0] + y[n/2];
+    rep(i, n/2) {
+        if (abs(xc - (x[i] + x[i+n/2])) > EPS || abs(yc - (y[i] + y[i+n/2])) > EPS) {
+            cout << "NA" << endl; 
+            return 0;
+        }
+        xc = (x[i] + x[i+n/2]);
+        yc = (y[i] + y[i+n/2]);
+    }
+
+    cout << ldout << xc/2 << " " << yc/2 << endl;
+
     return 0;
 }

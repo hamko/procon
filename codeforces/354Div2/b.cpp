@@ -27,15 +27,36 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, 
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
-#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+vld g(1000);
+void f(ld x, ll p) { 
+    int i;
+    for (i = 0; i * (i + 1) / 2 <= p; i++) {} i--;
+    g[p] += x;
+    if (g[p] >= 1.0) {
+        x = g[p] - 1.0;
+        g[p] = 1.0;
+        f(x / 2, p + i + 1);
+        f(x / 2, p + i + 2);
+    }
+}
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n, t; cin >> n >> t;
+    rep(i, t) {
+        f(1.0, 0); // 0に1.0を注ぐ
+    }
+    ll ret = 0;
+    rep(i, g.size()) { // TODO 高さ考慮
+        if (g[i] == 1.0) {
+            ret++;
+        }
+    }
+    cout << ret << endl;
+
     return 0;
 }

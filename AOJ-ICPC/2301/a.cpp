@@ -35,7 +35,15 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll K, R, L; ld p, e, t; cin >> K >> R >> L >> p >> e >> t; swap(R, L);
+    function<ld(ll, ld, ld)> f = [&](ll k, ld l, ld r) { 
+        ld h = (l + r) / 2;
+        if (!k) return (ld)(t - e <= h && h <= t + e);
+        if (t - e <= l && r <= t + e) return 1.0l;
+        if (t - e > r || t + e < l) return 0.0l;
+        ld P = ((l + r) / 2 <= t + EPS ? 1 - p : p);
+        return f(k-1, h, r) * P + f(k-1, l, h) * (1 - P);
+    };
+    cout << ldout << f(K, L, R) << endl;
     return 0;
 }
