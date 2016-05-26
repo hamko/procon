@@ -39,20 +39,12 @@ int main(void) {
     if (n == 2) { cout << 1 << endl; return 0; }
     ll mi = (int)(find(all(a), 1) - a.begin());
     ll Mi = (int)(find(all(a), a.size()) - a.begin());
-    if (n == 3) {
-        if (abs(mi - Mi) == 2) {
-            cout << 1 << endl;
-        } else {
-            cout << 2 << endl;
-        }
-    } else {
-        ll ret = 0;
-        chmax(ret, abs(mi - Mi));
-        chmax(ret, abs(0 - Mi));
-        chmax(ret, abs(mi - 0));
-        chmax(ret, abs(n-1 - Mi));
-        chmax(ret, abs(mi - (n-1)));
-        cout << ret << endl;
-    }
+    ll ret = 0;
+    chmax(ret, abs(mi - Mi));
+    chmax(ret, abs(0 - Mi));
+    chmax(ret, abs(mi - 0));
+    chmax(ret, abs(n-1 - Mi));
+    chmax(ret, abs(mi - (n-1)));
+    cout << ret << endl;
     return 0;
 }

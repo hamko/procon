@@ -32,29 +32,27 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-vld g(1000);
-void f(ld x, ll p) { 
-    int i;
-    for (i = 0; i * (i + 1) / 2 <= p; i++) {} i--;
-    g[p] += x;
-    if (g[p] >= 1.0) {
-        x = g[p] - 1.0;
-        g[p] = 1.0;
-        f(x / 2, p + i + 1);
-        f(x / 2, p + i + 2);
-    }
-}
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n, t; cin >> n >> t;
-    rep(i, t) {
-        f(1.0, 0); // 0に1.0を注ぐ
-    }
-    ll ret = 0;
-    rep(i, g.size()) { // TODO 高さ考慮
-        if (g[i] == 1.0) {
-            ret++;
+    if (t == 0) { cout << 0 << endl; return 0; }
+
+    ll m = 11;
+    vll now(m), next(m);
+    ll cap = 1ll<<12;
+    next[0] = t*cap;
+    
+    ll ret = 1;
+    rep(i, n - 1) {
+        swap(now, next); fill(all(next), 0);
+        rep(i, m-1) {
+            ll r = max<ll>(0ll, now[i] - cap);
+            next[i+0] += r / 2;
+            next[i+1] += r / 2;
         }
+        rep(i, m) 
+            if (next[i] >= cap) 
+                ret++;
     }
     cout << ret << endl;
 

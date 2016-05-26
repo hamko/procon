@@ -56,17 +56,25 @@ int main(void) {
         cout << "No" << endl;
         return 0;
     } else if (last == -1) {
-        ld sum = 0;
-        rep(i, n+1) {
-            sum += ((ld)stoi(memo[i])) * pow(k, i);
+        rep(counter, 50) {
+            ll sum = 0;
+            ll mo = 851730982+rand()%100000;
+            rep(i, n+1) {
+                //  sum += ((ld)stoi(memo[i])) * pow(k, i);
+                ll tmp = 1;
+                rep(j, i) {
+                    (sum *= k) %= mo;
+                }
+                sum = ((ld)stoi(memo[i])) * tmp;
+                sum %= mo;
+            }
+            if (sum) {
+                cout << "No" << endl;
+                return 0;
+            }
         }
-        if (abs<ld>(sum) < EPS) {
-            cout << "Yes" << endl;
-            return 0;
-        } else {
-            cout << "No" << endl;
-            return 0;
-        }
+        cout << "Yes" << endl;
+        return 0;
     } else {
         cout << "Yes" << endl;
         return 0;
