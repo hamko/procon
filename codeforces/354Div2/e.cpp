@@ -37,36 +37,40 @@ int main(void) {
     ll n, k; cin >> n >> k;
     vector<string> memo(n+1);
     ll last = -1;
+    ll qcnt = 0;
     rep(i, n + 1) {
         string s; cin >> s;
-        if ( s == "?")
+        if (s == "?") {
             last = i;
+            qcnt++;
+        }
         memo[i] = s;
     }
     if (k == 0) {
-        if (memo[0] == "0") {
+        if (memo[0] == "?") {
+            cout << (((n+1-qcnt)%2)?"Yes":"No") << endl;
+            return 0;
+        } else if (memo[0] == "0") {
             cout << "Yes" << endl;
             return 0;
         } else {
             cout << "No" << endl;
             return 0;
-        }
+        } 
     }
-    if (last >= 0 && last % 2 == 0) {
+    if (last >= 0 && (n + 1) % 2) {
         cout << "No" << endl;
         return 0;
     } else if (last == -1) {
         rep(counter, 50) {
             ll sum = 0;
             ll mo = 851730982+rand()%100000;
+            ll tmp = 1;
             rep(i, n+1) {
                 //  sum += ((ld)stoi(memo[i])) * pow(k, i);
-                ll tmp = 1;
-                rep(j, i) {
-                    (sum *= k) %= mo;
-                }
-                sum = ((ld)stoi(memo[i])) * tmp;
+                sum += ((ld)stoi(memo[i])) * tmp;
                 sum %= mo;
+                (tmp *= k) %= mo;
             }
             if (sum) {
                 cout << "No" << endl;
