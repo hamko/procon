@@ -37,15 +37,18 @@ int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
 
     ll n; cin >> n;
-    vector<P> a(n); rep(i, a.size()) cin >> a[i].fi >> a[i].se;
+    vector<P> a(n); rep(i, a.size()) { cin >> a[i].fi >> a[i].se; a[i].se *= -1; }
     sort(all(a));
 
-    ll dp[2][100010] = {};
+    vll dp;
     rep(i, n) {
-        ll now = i % 2; ll prev = (i + 1) % 2;
-        rep(j, 100010) dp[now] = 0;
+        auto it = lower_bound(all(dp), -a[i].se);
+        if (it == dp.end()) 
+            dp.pb(-a[i].se);
+        else
+            *it = -a[i].se;
     }
  
-    cout << (int)(lower_bound(dp, dp+n, P(INF, INF), f) - dp) << endl;
+    cout << dp.size() << endl;
     return 0;
 }
