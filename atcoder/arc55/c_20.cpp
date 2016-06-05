@@ -25,7 +25,6 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
@@ -36,7 +35,31 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    string s; cin >> s;
+    ll n = s.length();
+    if (n > 2000)
+        return 1;
+
+    ll ret = 0;
+    rep(i, n+1) {
+        ll xn = i, yn = n-i;
+        if (xn <= yn) continue;
+        if (xn < 3) continue;
+        if (yn < 2) continue;
+
+        ll pref = 0;
+        while (i+pref<n && pref<yn-1 && s[pref] == s[i+pref]) 
+            pref++;
+        ll suff = 0;
+        while (i-1-suff>=0 && suff<yn-1 && s[i-1-suff] == s[n-1-suff]) 
+            suff++;
+
+        ll diff = max<ll>(suff + pref - yn + 1, 0);
+//        ll diff = min<ll>(yn-1, min<ll>(suff, pref));
+//        cout << s.substr(0, xn) << " " << s.substr(i, yn) << " : " << suff << " " << pref << " " << diff << endl;
+        ret += diff;
+    }
+    cout << ret << endl;
+    
     return 0;
 }

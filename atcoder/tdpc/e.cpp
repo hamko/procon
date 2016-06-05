@@ -25,7 +25,6 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
@@ -34,9 +33,29 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+// 状態: 上の桁からi桁未満をみた時、N以下であることの確定フラグj, この時点でのmod Dがkである場合の数
+ll dp[10010][2][110] = {};
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll d; cin >> d;
+    string s; cin >> s;
+    ll n = s.length();
+
+    dp[0][0][0] = 1;
+    rep(i, n) rep(j, 2) rep(k, d) {
+        if (!dp[i][j][k])
+            continue;
+        // 遷移
+        // j == 1   絶対N以下なら、次につける数字は何でもいい
+        // j == 0   絶対N以下とは限らないなら、sを超えるものはつけてはいけない。また、sと一致するものを付けた場合はj = 0のまま。
+        rep(l, 10) {
+            if (!j && (s[i] - '0' < l))
+                continue;
+            (dp[i+1][j||(s[i]-'0'>l)][(k+l)%d] += dp[i][j][k]) %= mo;
+        }
+    }
+    cout << (dp[n][0][0] + dp[n][1][0] + (mo - 1)) % mo << endl;
+
+
     return 0;
 }

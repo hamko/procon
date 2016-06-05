@@ -25,7 +25,6 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
@@ -36,7 +35,21 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
+    ll n,k,h; cin >> n>>k>>h;
     vll a(n); rep(i, a.size()) cin >> a[i];
+    ll ret= 0;
+    ll rem=0;
+    rep(i, n-1) {
+        if (a[i] > h) {
+            ret += (a[i] - 1) / h + 1;
+        } else {
+            ret += a[i]/h;
+            rem = a[i]%h;
+            cout << i << " " <<  ret<< " " << rem << endl;
+            a[i+1] += rem;
+        }
+    }
+    ret += (a[n-1]+rem)/h;
+    cout << ret << endl;
     return 0;
 }

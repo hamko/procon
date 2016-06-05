@@ -25,7 +25,6 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
@@ -34,9 +33,54 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+ld factorial(ll n) {
+    ld ret = 1;
+    rep(i, n) {
+        ret *= i + 1;
+    }
+    return ret;
+}
+ld combination(ll n, ll r) {
+    if (n < r || r < 0 || n < 0) 
+        return 0;
+    ld ret = 1;
+    ret *= factorial(n);
+    ret /= factorial(r);
+    ret /= factorial(n-r);
+    return ret;
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n, k; cin >> n >> k; // [0, n)
+    ld ret = 0;
+    cout << factorial(5) << endl;
+    cout << combination(5, 3) << endl;
+    for (ll x = 0; x <= n-k; x++) { // x枚無視
+        ld tmp = 0;
+        if (x == 0) {
+            // todo
+        } else {
+            // yが抜いた中で最大
+            for (ll y = 1; y <= n; y++) {
+                // p=x!(y-1Cx-1)/n!
+                ld p = 1;
+                p *= factorial(x);
+                p *= factorial(n-x);
+                p /= factorial(n);
+                p *= combination(y-1, x-1);
+                cout << "#" << y << " " << p << endl;
+                // x抜いた中でnが入っている
+                ll i = n - x;
+                ld pp = 1;
+                pp *= factorial(i);
+                pp /= factorial(n);
+                pp *= combination(i-1, k-1);
+
+
+            }
+        }
+        chmax(ret, tmp);
+    }
     return 0;
 }

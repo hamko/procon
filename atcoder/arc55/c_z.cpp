@@ -25,18 +25,65 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
 
-static const double EPS = 1e-14;
-static const long long INF = 1e18;
-static const long long mo = 1e9+7;
+// Z Algorithm
+// 構築 O(n)
+// 最長共通Suffix計算 O(1)
+//
+// 各iについて「S と S[i:|S|-1] の最長共通接頭辞の長さ」を計算
+class ZAlgorithm {
+public:
+    string s;
+    vector<ll> z;
+    
+    ZAlgorithm(string& s_) {
+        s = s_;
+        ll n = s.size();
+        z.assign(n, 0);
+
+        z[0] = n;
+        int i = 1, j = 0;
+        while (i < n) {
+            while (i+j < n && s[j] == s[i+j]) ++j;
+            z[i] = j;
+            if (j == 0) { ++i; continue;}
+            int k = 1;
+            while (i+k < n && k+z[k] < j) z[i+k] = z[k], ++k;
+            i += k; j -= k;
+        }
+    }
+    ll lcp(ll i) {
+        return z[i];
+    }
+};
+
+
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
-    return 0;
+    string s; cin >> s;
+    ll n = s.length();
+
+    ZAlgorithm z(s);
+    reverse(s.begin(), s.end());
+    ZAlgorithm zinv(s);
+
+    int64_t ans = 0;
+    for (int i = 0; i < n + 1; i++) {
+        ll xn = i, yn = n-i;
+        if (xn <= yn) continue;
+        if (xn < 3) continue;
+        if (yn < 2) continue;
+
+        int pref = min<ll>(z.lcp(i), yn-1);
+        int suff = min<ll>(zinv.lcp(n-i), yn-1);
+
+        ll diff = max<ll>(suff + pref - yn + 1, 0);
+        ans += diff;
+    }
+
+    cout << ans << endl;
 }
