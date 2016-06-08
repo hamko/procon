@@ -25,6 +25,7 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define VN(v) # v
 #define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
@@ -35,30 +36,7 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n, m; cin >> n >> m;
-    vector<vll> e(16);
-    rep(i, m) {
-        ll u, v; cin >> u >> v; u--, v--;
-        e[u].pb(v);
-        e[v].pb(u);
-    }
-
-    ll ret = 0;
-    rep(mask, 1ll << n) {
-        ll visited = 0;
-        function<void(ll)> f = [&](ll prev) { 
-            for (auto x : e[prev]) {
-                if (!(visited & (1ll << x)) && ((!!(mask & (1ll << prev))) ^ !!(mask & (1ll << x)))) {
-                    visited |= (1ll << x);
-                    f(x);
-                }
-            }
-        };
-        visited |= (1ll << 0);
-        f(0);
-        if (__builtin_popcount(visited) == n) 
-            ret++;
-    }
-    cout << ret / 2 << endl;
+    ll n; cin >> n;
+    vll a(n); rep(i, a.size()) cin >> a[i];
     return 0;
 }

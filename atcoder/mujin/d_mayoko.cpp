@@ -49,11 +49,6 @@ struct ST {
     T query(int a, int b) {
         return query(a, b, 0, 0, size);
     }
-    void print(void) {
-        rep(i, size)
-            cout << seg[size+i-1] << " ";
-        cout << endl;
-    }
 };
 
 int main() {
@@ -76,16 +71,12 @@ int main() {
         if (s[i] == '?') qp[i+1]++, lt++, rt--;
         segl.update(i+1, lt); segr.update(i+1, rt);
     }
-    segr.print();
-    cout << qp << endl;
     auto f = [&] (int l, int r) {
         int num = r-l;
         if (num%2) return false;
         int ln = num/2 - (lp[r]-lp[l]), rn = num/2 - (rp[r]-rp[l]); // 足りない(, )の数。
-        cout << ln << " " << rn << "#lnrn" << endl;
         if (ln < 0 || rn < 0) return false; // 余ってるのはむりぽ
         if (ln == 0) { // (はちょうど。?を全部)にして、どこかがマイナスにならなければOK
-            cout << ln << " " << "#ln=0" << endl;
             if (segr.query(l, r+1) >= segr.query(r, r+1))  // 数が同じかつ最後が最小ならOK, 途中だとシフトしてる可能性があるので、0でなく最後
                 return true;
             else 
@@ -101,9 +92,7 @@ int main() {
                 lh = med;
         }
         // この時点で、((??とか(((?とか)))?とかは含まれていない！
-        cout << rn << " " << N << "#rnN" << endl;
         if (rh == N) { // ?だけではlnが賄えない=)の数がピッタリ？
-            cout << "HIT" << endl;
             if (segl.query(l, r+1) >= segl.query(l, l+1)) return true;
             else return false;
         }
