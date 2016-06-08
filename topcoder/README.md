@@ -20,6 +20,9 @@ Save problem statement to external file
 Languages C++ ComplileCommandに-std=c++11をつける
 Use c++11 feature in tester codeにチェック
 
+Temeplate->Open->testprogram/myc++.ket
+save ->cpp.ketに上書き
+もしそれでテンプレートが変わっていないように見えたら、Generate Codeボタンを押す
 
 
 
