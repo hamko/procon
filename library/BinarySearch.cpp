@@ -117,6 +117,48 @@ int main(void) {
         cout << "Let's check f!" << endl;
         BinarySearchInteractive(0, min(c / 10, B), f);
     }
+
+    // 状態付き二分探索
+    // 二分探索内の全探索の場合、逆にすると枝刈りできて高速に
+    // 具体的には、探索範囲n状態数sとするとO(s log n)がO(s + log n log s)
+    {
+        vector<vector<ll>> data = {
+            {0, 2, 6, 4, 4, 1, 3, 7, 3},
+            {0, 4, 3, 5, 9, 1, 3, 7, 5},
+            {0, 4, 6, 4, 4, 2, 8, 0, 5},
+        };
+        vector<ll> states = {0, 1, 2};
+
+        ll s;
+        auto f = [&](ll x) { 
+            return data[s][x] % 2;
+        };
+
+        // there exists
+        {
+            ll r = 0; // 最大のupper bound
+            for (auto s_ : states) {
+                s = s_;
+                if (f(data[s][r-1])) continue; // rを伸ばすためには少なくとも今までの最高と同じところまでは満たしているべき
+                ll tmp = BinarySearch(0, data[0].size(), f);
+                chmax(r, tmp);
+            }
+            cout << r << endl;
+        }
+
+        // for all
+        {
+            ll r = data[0].size(); // 最大のupper bound
+            for (auto s_ : states) {
+                s = s_;
+                if (!f(data[s][r-1])) continue; // rを狭めるためには少なくとも今までの最高と同じところは満たしていないべき
+                ll tmp = BinarySearch(0, data[0].size(), f);
+                chmin(r, tmp);
+            }
+            cout << r << endl;
+        }
+    }
+
     return 0;
 }
 
