@@ -118,9 +118,10 @@ int main(void) {
         BinarySearchInteractive(0, min(c / 10, B), f);
     }
 
-    // 状態付き二分探索
+    // 状態付き枝刈り二分探索
+    // O(s + log n log s)
     // 二分探索内の全探索の場合、逆にすると枝刈りできて高速に
-    // 具体的には、探索範囲n状態数sとするとO(s log n)がO(s + log n log s)
+    // 枝刈りなしだとO(s log n)
     {
         vector<vector<ll>> data = {
             {0, 2, 6, 4, 4, 1, 3, 7, 3},
