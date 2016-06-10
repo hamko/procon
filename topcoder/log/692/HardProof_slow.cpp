@@ -141,7 +141,7 @@ class HardProof {
             ll ret = 200001; // there exists
             rep(i_, n) rep(j_, n) if (i_ != j_) {
                 i = i_, j = j_;
-                if (!f(ret-1)) continue;
+//                if (!f(ret-1)) continue;
                 ll tmp = BinarySearch(0, 200000, f);
                 chmin(ret, tmp);
             }

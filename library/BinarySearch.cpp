@@ -137,7 +137,7 @@ int main(void) {
 
         // there exists
         {
-            ll r = 0; // 最大のupper bound
+            ll r = 1; // 最大のupper bound
             for (auto s_ : states) {
                 s = s_;
                 if (f(data[s][r-1])) continue; // rを伸ばすためには少なくとも今までの最高と同じところまでは満たしているべき
