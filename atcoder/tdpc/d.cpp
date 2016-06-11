@@ -10,7 +10,7 @@ using namespace std;
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
-using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
+using ll = long long; using ld = double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
 using P = pair<ll, ll>;
 
