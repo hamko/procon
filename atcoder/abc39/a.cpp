@@ -35,7 +35,6 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
 int main(void) {
-    cin.tie(0); ios::sync_with_stdio(false);
     ll a, b, c; cin >> a >> b >> c;
 
 	cout << 2ll * (a * b + b * c + a * c) << endl;
