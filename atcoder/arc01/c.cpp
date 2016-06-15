@@ -12,7 +12,6 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 
 using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
-vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -27,15 +26,64 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define VN(v) # v
+#define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+bool check(vector<P>& s) {
+    rep(i, s.size()) for (int j = i+1; j < s.size(); j++) {
+        if (s[i].fi == s[j].fi) return 0; 
+        if (s[i].se == s[j].se) return 0; 
+        if (s[i].fi + s[i].se == s[j].fi + s[j].se) return 0; 
+        if (s[i].fi - s[i].se == s[j].fi - s[j].se) return 0; 
+    }
+    return 1;
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n = 8;
+    vector<string> b(n);
+    rep(i, n) cin >> b[i];
+    vector<P> s;
+    rep(i, n) rep(j, n) 
+        if (b[i][j] == 'Q')
+            s.pb(P(i, j));
+
+    vector<vector<P>> q;
+    vector<vector<P>> q_next; q_next.pb(s);
+    rep(_, 5) {
+        swap(q, q_next); 
+        while (q.size()) {
+            vector<P> t = q.back();
+            rep(i, n) rep(j, n) if (find(all(t), P(i, j)) == t.end()) {
+                t.pb(P(i, j));
+                if (check(t)) {
+                    q_next.pb(t);
+                }
+                t.pop_back();
+            }
+
+            q.pop_back();
+        }
+    }
+
+    if (!q_next.size()) {
+        cout << "No Answer" << endl;
+        return 0;
+    }
+    rep(i, n) {
+        rep(j, n) 
+            if (find(all(q_next[0]), P(i, j)) == q_next[0].end())
+                cout << '.';
+            else 
+                cout << 'Q';
+        cout << endl;
+    }
+
     return 0;
 }

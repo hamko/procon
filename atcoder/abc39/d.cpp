@@ -12,7 +12,6 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 
 using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
-vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -27,6 +26,8 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define VN(v) # v
+#define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
@@ -35,7 +36,52 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll ni, nj; cin >> ni >> nj;
+	vector<string> b(ni);
+	rep(i, ni)
+		cin >> b[i];
+
+	vector<string> b_cand(ni, string(nj, '.'));
+	ll di[9] = {1, 1, 1, 0, 0, 0, -1, -1, -1};
+	ll dj[9] = {1, -1, 0, 1, 0, -1, 1, -1, 0};
+	rep(i, ni) {
+		rep(j, nj) {
+			int faf = 1;
+			rep(d, 9) {
+				if (i+di[d] < 0 || i+di[d] >= ni || j+dj[d] < 0 || j+dj[d] >= nj)
+					continue;
+				if (b[i+di[d]][j+dj[d]] == '.')
+					faf = 0;
+			}
+			if (faf)
+				b_cand[i][j] = '#';
+		}
+	}
+
+	vector<string> b_ret(ni, string(nj, '.'));
+	rep(i, ni) {
+		rep(j, nj) {
+			if (b_cand[i][j] == '.')
+				continue;
+			rep(d, 9) {
+				if (i+di[d] < 0 || i+di[d] >= ni || j+dj[d] < 0 || j+dj[d] >= nj)
+					continue;
+				b_ret[i+di[d]][j+dj[d]] = '#';
+
+			}
+		}
+	}
+
+	rep(i, ni) {
+		if (b[i] != b_ret[i]) {
+			cout << "impossible" << endl;
+			return 0;
+		}
+	}
+
+	cout << "possible" << endl;
+	rep(i, ni) {
+		cout << b_cand[i] << endl;
+	}
     return 0;
 }

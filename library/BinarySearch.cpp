@@ -20,7 +20,7 @@ static const long long INF = 1e18;
 // O(log(range))
 // f: 単調増加関数. 000111, 111111, 000000を許容する（11110000で探索したい場合は、自分でfを反転すること）
 // 閉区間[rl, rr]から単調関数fを満たす最小の数を返す。
-// 全て0ならrr+1を返す！
+// 全て0ならrr+1を返す、全て1なら0を返す！
 ll BinarySearch(ll rl, ll rr, function<bool(ll)> f) { 
     ll lo = rl-1, ro = rr+1;
     while (ro - lo != 1) {
@@ -117,6 +117,49 @@ int main(void) {
         cout << "Let's check f!" << endl;
         BinarySearchInteractive(0, min(c / 10, B), f);
     }
+
+    // 状態付き枝刈り二分探索
+    // O(s + log n log s)
+    // 二分探索内の全探索の場合、逆にすると枝刈りできて高速に
+    // 枝刈りなしだとO(s log n)
+    {
+        vector<vector<ll>> data = {
+            {0, 2, 6, 4, 4, 1, 3, 7, 3},
+            {0, 4, 3, 5, 9, 1, 3, 7, 5},
+            {0, 4, 6, 4, 4, 2, 8, 0, 5},
+        };
+        vector<ll> states = {0, 1, 2};
+
+        ll s;
+        auto f = [&](ll x) { 
+            return data[s][x] % 2;
+        };
+
+        // there exists
+        {
+            ll r = 1; // 最大のupper bound
+            for (auto s_ : states) {
+                s = s_;
+                if (f(data[s][r-1])) continue; // rを伸ばすためには少なくとも今までの最高と同じところまでは満たしているべき
+                ll tmp = BinarySearch(0, data[0].size(), f);
+                chmax(r, tmp);
+            }
+            cout << r << endl;
+        }
+
+        // for all
+        {
+            ll r = data[0].size(); // 最大のupper bound
+            for (auto s_ : states) {
+                s = s_;
+                if (!f(data[s][r-1])) continue; // rを狭めるためには少なくとも今までの最高と同じところは満たしていないべき
+                ll tmp = BinarySearch(0, data[0].size(), f);
+                chmin(r, tmp);
+            }
+            cout << r << endl;
+        }
+    }
+
     return 0;
 }
 

@@ -124,8 +124,30 @@ vector<ll> buildPathDI(const vector<ll> &prev, ll t) {
 
 // Floyd Warshall
 // O(V^3)
-void shortestPathFW(const Matrix &g,
-        Matrix &dist, vector< vector<ll> > &inter) {
+// 入力
+// g: 隣接行列表記された有向グラフのコスト。辺と逆辺の異なる重みは許容する
+// 出力
+// dist: dist[i][j]がiからjへの有向最短経路。未初期化の変数を渡して答えを副作用で取得。 
+//
+// モノイドなら動く（演算子と初期値の変更で実装可能）
+void shortestPathFW(const Matrix &g, Matrix &dist) {
+    ll n = g.size();
+    dist = g;
+    rep(k, n) rep(i, n) rep(j, n)
+        if (dist[i][j] > dist[i][k] + dist[k][j])
+            dist[i][j] = dist[i][k] + dist[k][j];
+}
+// O(V^2)
+// 未初期化のmとサイズnを与えると
+void initFW(Matrix& m, ll n){
+    m = Matrix(n, Array(n, INF));
+    rep(i, n) m[i][i] = 0;
+}
+
+// Floyd Warshall with 経路復元
+// O(V^3)
+// inter: これなんだろう？
+void shortestPathFW(const Matrix &g, Matrix &dist, vector< vector<ll> > &inter) {
     ll n = g.size();
     dist = g;
     inter.assign(n, vector<ll>(n,-1));
@@ -149,14 +171,6 @@ vector<ll> buildPathFW(
     path.push_back(t);
     return path;
 }
-void initFW(Matrix& m, ll n){
-    m = Matrix(n, Array(n, INF));
-    rep(i, n) m[i][i] = 0;
-}
-void setFW(Matrix& m, ll u, ll v, ll w){ m[u][v] = w; }
-void setUndirectedFW(Matrix& m, ll u, ll v, ll w){ m[u][v] = m[v][u] = w; }
-
-
 
 // Johnson
 // 前処理 O(V E)． 中間処理 O(V E log V)． 後処理 O(V^2)．
@@ -1020,6 +1034,7 @@ void constructBiparitate(Graph& g, int L, int R, Function f) {
 int main(void)
 {
     // 基本的な使い方
+    // リスト表記
     {
         cout << "########Basic Usage" << endl;
         Graph g(6);
@@ -1033,6 +1048,16 @@ int main(void)
         printGraph(g);
     }
 
+    // ワーシャルフロイド without 経路復元
+    {
+        cout << "########Warshall Floyd without inter" << endl;
+        Matrix g; initFW(g, 3);
+        g[0][1] = 3; g[1][2] = 4; g[0][2] = 1;
+
+        Matrix dist;
+        shortestPathFW(g, dist);
+        cout << dist << endl;
+    }
     // 強連結分解
     {
         cout << "########Strongly Connected Component" << endl;
