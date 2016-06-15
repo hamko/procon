@@ -158,10 +158,11 @@ vector<P> upper_hull(vector<P> &ps) {
     return a;
 }
 
+// Convex hull trick
 // 上側凸包から、q*x+yの最大値を求める
 // O(log n)
 //
-// Upper convex hullを左から見ていくと、yも山形だが、q*x+yも山形になっている！（要証明）
+// Upper convex hullを左から見ていくと、yも山形だが、q*x+yも山形になっている！
 // 1 2 3 4 5 4 3 2 1みたいな感じ
 // ここで、5を探したいので微分値を二分探索する
 long long maximum(vector<P> &hull, long long q) {
