@@ -26,8 +26,6 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
-#define VN(v) # v
-#define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
@@ -36,16 +34,27 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
+    ll a = 1234567, b=123456, c=1234;
+    ll bc = b * c / __gcd(b, c);
     ll n; cin >> n;
-    ll ret = 0;
-    while (n) {
-        ll d = 1;
-        while (d*d*d <= n)  
-            d++;
-        d--;
-        n -= d * d * d;
-        ret++;
+    while (n >= 0) {
+        if (n % 2 == 0) {
+            ll tmpn = n - n / (b * c) * (b * c);
+            tmpn /= 2;
+            // 617*61728
+            rep(i, 620) {
+                if (61728ll * i > tmpn)
+                    break;
+                rep(j, 61730)
+                if (617ll * j + 61728ll * i == tmpn) {
+                    cout << "YES" << endl;
+                    return 0;
+                }
+            }
+        }
+        n -= a;
     }
-    cout << ret << endl;
+    cout << "NO" << endl;
+
     return 0;
 }

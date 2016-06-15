@@ -26,15 +26,33 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define VN(v) # v
+#define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+bool isleap(ll i) {
+        return (i % 400 == 0 || (i % 4 == 0 && i % 100 != 0));
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll w = 0;
+    ll memo = -1;
+    rep(i, 10000000) {
+        if (w % 7 == memo % 7 && isleap(i) == isleap(n)) {
+            cout << i << endl;
+            return 0;
+        }
+        if (i == n)
+            memo = w;
+        w++;
+        if (isleap(i))
+            w++;
+    }
     return 0;
 }

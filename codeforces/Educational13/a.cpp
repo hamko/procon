@@ -34,7 +34,8 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll a, b; cin >> a >> b;
+    cout << ((a / b) + 1) * b << endl; 
+    
     return 0;
 }

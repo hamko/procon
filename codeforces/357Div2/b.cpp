@@ -32,9 +32,23 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+bool f(int n) {
+    for (int i = 0; i < 100; i++) {
+        for (int j = 0; j < 100; j++) {
+            if ((n-(i*1234567+j*123456))%1234==0&&(i*1234567+j*123456)<=n) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 int main(void) {
-    cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    rep(i, 100000) {
+        if (!f(i*123456)) {
+            cout << i << endl;
+        }
+    }
+
     return 0;
 }

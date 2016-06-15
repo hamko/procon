@@ -32,9 +32,46 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+#define MAP 100010
+map<ll,ll> zip;
+ll unzip[MAP];
+
+ll compress(vector<ll> &x) {
+    sort(x.begin(), x.end());
+    x.erase(unique(x.begin(),x.end()),x.end());
+    for(ll i = 0; i < x.size(); i++){
+        zip[x[i]] = i;
+        unzip[i] = x[i];
+    }
+    return x.size();
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+
+    vector<char> c(100010);
+    vector<ll> v(100010);
+    rep(i, n) {
+        string s; cin >> s; c[i] = s[0];
+        if (c[i] != r)
+            cin >> v[i];
+    }
+
+    vector<ll> vtmp = v;
+    compress(vtmp);
+    cout << zip << endl;
+
+    priority_queue<ll, vector<ll>, greater<ll>> q;
+    rep(i, n) {
+        if (c[i] == 'i') {
+            q.push(zip[v[i]]);
+        } else if (c[i] == 'r') {
+            ll tmp = q.top(); q.pop();
+            s.query(zip[tmp], -1);
+        } else { // g
+        }
+    }
+
     return 0;
 }

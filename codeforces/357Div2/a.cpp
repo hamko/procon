@@ -35,6 +35,14 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    rep(i, n) {
+        string s; ll a, b;
+        cin >> s >> a >> b;
+        if (a >= 2400 && a < b) {
+            cout << "YES" << endl;
+            return 0;
+        }
+    }
+    cout << "NO" << endl;
     return 0;
 }

@@ -4,7 +4,7 @@ using namespace std;
 using ld = long double;
 using ll = long long;
 
-ld factrial(ll n) {
+ld factorial(ll n) {
     ld ret = 1;
     rep(i, n) {
         ret *= i + 1;
