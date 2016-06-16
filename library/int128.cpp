@@ -47,7 +47,8 @@ double get_clock_now(void)
 }
 
 
-    std::ostream&
+// int128_tの描画
+std::ostream&
 operator<<( std::ostream& dest, __int128_t value )
 {
     std::ostream::sentry s( dest );
@@ -82,6 +83,20 @@ void printbits(__int128_t n) {
     cout << endl;
 }
 
+// int128_tの計算
+// int, long longに比べて、計算時間は
+// +, -, bit        125%
+// *                150%
+// /, %             400%
+
+// int, long longの計算時間は同じ
+
+// int, long longの中では、以下。
+// +, -             100%
+// *                125%
+// /                180%
+// %                250%
+// bit              100%
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     {
@@ -124,17 +139,17 @@ int main(void) {
     cout << "+" << endl;
     {
         stopwatch_start(0);
-        int a = 0; for (int i = 0; i < n; i++) { a + 5; }
+        int a = 0; for (int i = 0; i < n; i++) { a = a + 5; }
         cout << stopwatch_end(0) << endl;
     }
     {
         stopwatch_start(0);
-        long long a = 0; for (int i = 0; i < n; i++) { a + 5; }
+        long long a = 0; for (int i = 0; i < n; i++) { a = a + 5; }
         cout << stopwatch_end(0) << endl;
     }
     {
         stopwatch_start(0);
-        __int128_t a = 0; for (int i = 0; i < n; i++) { a + 5; }
+        __int128_t a = 0; for (int i = 0; i < n; i++) { a = a + 5; }
         cout << stopwatch_end(0) << endl;
     }
 
