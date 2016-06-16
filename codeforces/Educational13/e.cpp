@@ -12,7 +12,6 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 
 using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
-vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -27,15 +26,54 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define VN(v) # v
+#define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+ld factorial(ll n) {
+    ld ret = 1;
+    rep(i, n) {
+        ret *= i + 1;
+    }
+    return ret;
+}
+ld combination(ll n, ll r) {
+    if (n < r || r < 0 || n < 0) 
+        return 0;
+    ld ret = 1;
+    ret *= factorial(n+r);
+    ret /= factorial(r);
+    ret /= factorial(n-r);
+    return ret;
+}
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    if (n == 1) {
+        cout << 1 << endl;
+        return 0;
+    } 
+    vector<vector<ld>> p(n, vector<ld>(n, 0));
+    rep(i, n) rep(j, n) cin >> p[i][j];
+    if (n == 2) {
+        cout << ldout << p[0][1] << endl;
+        return 0;
+    }
+
+    ld ret = 0;
+    ld s = 0;
+    rep(i, n) if (i) {
+        ld tmp = 1;
+        rep(j, n) if (i != j && j != 0) {
+            tmp *= p[i][j];
+        }
+        s += p[0][i] * tmp;
+    }
+    ret += s;
+    cout << ldout << ret << endl;
     return 0;
 }

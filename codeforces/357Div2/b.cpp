@@ -12,7 +12,6 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 
 using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
-vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -33,9 +32,23 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+bool f(int n) {
+    for (int i = 0; i < 100; i++) {
+        for (int j = 0; j < 100; j++) {
+            if ((n-(i*1234567+j*123456))%1234==0&&(i*1234567+j*123456)<=n) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 int main(void) {
-    cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    rep(i, 100000) {
+        if (!f(i*123456)) {
+            cout << i << endl;
+        }
+    }
+
     return 0;
 }

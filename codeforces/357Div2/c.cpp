@@ -12,7 +12,6 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 
 using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
-vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -33,9 +32,84 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+vector<char> c(100010);
+vector<ll> v(100010);
+vector<char> cret; 
+vector<ll> vret; 
+priority_queue<ll, vector<ll>, greater<ll>> q;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+
+    rep(i, n) {
+        string s; cin >> s; c[i] = s[0];
+        if (c[i] != 'r')
+            cin >> v[i];
+    }
+
+    cret.reserve(1000000);
+    vret.reserve(1000000);
+    rep(i, n) {
+        if (c[i] == 'i') {
+            q.push(v[i]);
+            cret.pb('i');
+            vret.pb(v[i]);
+        } else if (c[i] == 'r') {
+            if (q.size()) {
+                q.pop();
+                cret.pb('r');
+                vret.pb('0');
+            } else {
+                cret.pb('i');
+                vret.pb(0);
+                cret.pb('r');
+                vret.pb('0');
+            }
+        } else { // g
+            if (!q.size()) {
+                cret.pb('i');
+                vret.pb(v[i]);
+                q.push(v[i]);
+                cret.pb('g');
+                vret.pb(v[i]);
+            } else {
+                while (q.size() && q.top() < v[i]) {
+                    cret.pb('r');
+                    vret.pb('0');
+                    q.pop();
+                }
+                if (q.size() && q.top() == v[i]) {
+                    cret.pb('g');
+                    vret.pb(v[i]);
+                } else {
+                    cret.pb('i');
+                    vret.pb(v[i]);
+                    q.push(v[i]);
+                    cret.pb('g');
+                    vret.pb(v[i]);
+                }
+            }
+        }
+    }
+
+    cout << cret.size() << endl;
+    rep(i, cret.size()) {
+        if (cret[i] == 'i') 
+            cout << "insert";
+        else if (cret[i] == 'g') 
+            cout << "getMin";
+        else 
+            cout << "removeMin";
+
+        cout << " ";
+
+        if (cret[i] == 'i') 
+            cout << vret[i];
+        else if (cret[i] == 'g') 
+            cout << vret[i];
+
+        cout << endl;
+    }
+
     return 0;
 }

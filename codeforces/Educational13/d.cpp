@@ -12,7 +12,6 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 
 using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
-vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -27,6 +26,8 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define VN(v) # v
+#define print(a) cout << a << "#" << VN(a) << endl;
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
@@ -35,7 +36,21 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll A, B, n, x; cin >> A >> B >> n >> x;
+    vll a(100), b(100); 
+    a[0] = A, b[0] = B;
+    rep(i, a.size() - 1) {
+        (a[i+1] = a[i] * a[i]) %= mo;
+        (b[i+1] = a[i] * b[i] + b[i]) %= mo;
+    }
+
+    ll ta = 1, tb = 0;
+    rep(i, 64) {
+        if (!(n & (1ll << i))) continue;
+        (ta *= a[i]) %= mo;
+        (tb = tb * a[i] + b[i]) %= mo;
+    }
+
+    cout << ((ta % mo) * (x % mo) + (tb % mo)) % mo << endl;
     return 0;
 }
