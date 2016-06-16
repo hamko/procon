@@ -15,16 +15,38 @@ static const long long INF = 1e18;
 #define MAX_N 100005
 
 #include <sys/time.h>
- struct stop_watch {
-    chrono::high_resolution_clock::time_point start;
-    stop_watch() 
-        : start(chrono::high_resolution_clock::now()) {}
-    ~stop_watch() {
-        chrono::duration<double> duration = chrono::high_resolution_clock::now() - start;
-        cout << duration.count() << " ";
-    }  
-};
-   
+#define MAX_TIMER_NUM 256
+static double s_tmptime[MAX_TIMER_NUM] = {}; // [s]
+void stopwatch_start(int index)
+{
+    if (index >= MAX_TIMER_NUM) {
+        cout << "INVALID TIMER NUM, IGNORED: MAX_TIMER_NUM is " << MAX_TIMER_NUM<< endl;
+        return;
+    }
+    struct timeval tim;  
+    gettimeofday(&tim, NULL);  
+    s_tmptime[index] = tim.tv_sec+(tim.tv_usec / 1000000.0);  
+}
+
+double stopwatch_end(int index)
+{
+    if (index >= MAX_TIMER_NUM) {
+        cout << "INVALID TIMER NUM, IGNORED: MAX_TIMER_NUM is " << MAX_TIMER_NUM<< endl;
+        return -1;
+    }
+    struct timeval tim;  
+    gettimeofday(&tim, NULL);  
+    return tim.tv_sec+(tim.tv_usec / 1000000.0) - s_tmptime[index];
+}
+
+double get_clock_now(void)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + (double)tv.tv_usec*1e-6;
+}
+
+
     std::ostream&
 operator<<( std::ostream& dest, __int128_t value )
 {
@@ -50,41 +72,158 @@ operator<<( std::ostream& dest, __int128_t value )
     }
     return dest;
 }
+void printbits(__int128_t n) {
+    rep(i, 128) {
+        if (n & ((__int128_t)1 << (127 - i))) 
+            cout << 1;
+        else 
+            cout << 0;
+    }
+    cout << endl;
+}
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     {
-        __int128_t a = 10;
         cout << ((__int128_t)1 << 80) << endl;
+
+        __int128_t a = 1;
+        cout << a << endl;
+        printbits(a);
+        a *= -1;
+        cout << a << endl;
+        printbits(a);
     }
 
+    int n = 1e8;
+
+    cout << "Nothing" << endl;
     {
-        stop_watch sw;
-        int a = 0;
-        for (int i = 0; i < 1e9; i++) {
-            a = a * 3 + 5;
-            a /= 2;
-        }
-        cout << a << endl;
+        stopwatch_start(0);
+        int a = 0; for (int i = 0; i < n; i++) { }
+        cout << stopwatch_end(0) << endl;
+    }
+
+    cout << "=" << endl;
+    {
+        stopwatch_start(0);
+        int a = 1; for (int i = 0; i < n; i++) { a = a; }
+        cout << stopwatch_end(0) << endl;
     }
     {
-        stop_watch sw;
-        long long a = 0;
-        for (int i = 0; i < 1e9; i++) {
-            a = a * 3 + 5;
-            a /= 2;
-        }
-        cout << a << endl;
+        stopwatch_start(0);
+        long long a = 1; for (int i = 0; i < n; i++) { a = a; }
+        cout << stopwatch_end(0) << endl;
     }
     {
-        stop_watch sw;
-        __int128_t a = 0;
-        for (int i = 0; i < 1e9; i++) {
-            a = a * 3 + 5;
-            a /= 2;
-        }
-        cout << a << endl;
+        stopwatch_start(0);
+        __int128_t a = 1; for (int i = 0; i < n; i++) { a = a; }
+        cout << stopwatch_end(0) << endl;
     }
+
+    cout << "+" << endl;
+    {
+        stopwatch_start(0);
+        int a = 0; for (int i = 0; i < n; i++) { a + 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        long long a = 0; for (int i = 0; i < n; i++) { a + 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        __int128_t a = 0; for (int i = 0; i < n; i++) { a + 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+
+    cout << "-" << endl;
+    {
+        stopwatch_start(0);
+        int a = 0; for (int i = 0; i < n; i++) { a = a - 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        long long a = 0; for (int i = 0; i < n; i++) { a = a - 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        __int128_t a = 0; for (int i = 0; i < n; i++) { a = a - 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+
+
+    cout << "*" << endl;
+    {
+        stopwatch_start(0);
+        int a = 1; for (int i = 0; i < n; i++) { a = a * 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        long long a = 1; for (int i = 0; i < n; i++) { a = a * 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        __int128_t a = 1; for (int i = 0; i < n; i++) { a = a * 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+
+    cout << "/" << endl;
+    {
+        stopwatch_start(0);
+        int a = 1; for (int i = 0; i < n; i++) { a = a / 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        long long a = 1; for (int i = 0; i < n; i++) { a = a / 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        __int128_t a = 1; for (int i = 0; i < n; i++) { a = a / 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+
+    cout << "%" << endl;
+    {
+        stopwatch_start(0);
+        int a = 1; for (int i = 0; i < n; i++) { a = a % 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        long long a = 1; for (int i = 0; i < n; i++) { a = a % 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        __int128_t a = 1; for (int i = 0; i < n; i++) { a = a % 5; }
+        cout << stopwatch_end(0) << endl;
+    }
+
+    cout << "&" << endl;
+    {
+        stopwatch_start(0);
+        int a = 1; for (int i = 0; i < n; i++) { a = a & (1 << 15); }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        long long a = 1; for (int i = 0; i < n; i++) { a = a & (1ll << 30); }
+        cout << stopwatch_end(0) << endl;
+    }
+    {
+        stopwatch_start(0);
+        __int128_t a = 1; for (int i = 0; i < n; i++) { a = a & ((__int128_t)1 << 70); }
+        cout << stopwatch_end(0) << endl;
+    }
+
 
     return 0;
 }
