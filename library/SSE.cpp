@@ -59,11 +59,11 @@ using namespace std;
 // [ a_0, a_1 ], [ b_0, b_1 ]
 //   => [ -(a_0==b_0), -(a_1==b_1) ]
 static inline __m128i __attribute__((always_inline)) _mm_cmpgt_epi64(__m128i a, __m128i b) {
-	__asm__("pcmpgtq %1, %0" : "+x" (a) : "xm" (b));
-	return a;
+    __asm__("pcmpgtq %1, %0" : "+x" (a) : "xm" (b));
+    return a;
 }
 static inline __m128i __attribute__((always_inline)) _mm_cmpeq_epi64(__m128i a, __m128i b) {
-	__asm__("pcmpeqq %1, %0" : "+x" (a) : "xm" (b));
+    __asm__("pcmpeqq %1, %0" : "+x" (a) : "xm" (b));
     return a;
 }
  
@@ -74,8 +74,8 @@ static inline __m128i __attribute__((always_inline)) _mm_cmpeq_epi64(__m128i a, 
 // _mm_mul_epu32はSSE2からある
 static inline __m128i __attribute__((always_inline))
 _mm_mul_epi32(__m128i a, __m128i b){
-	__asm__("pmuldq %1, %0" : "+x" (a) : "xm" (b));
-	return a;
+    __asm__("pmuldq %1, %0" : "+x" (a) : "xm" (b));
+    return a;
 }
 
 //-----------------------------------------------------------------------------
@@ -108,15 +108,15 @@ int main(void)
         // Aの中身確認
         print_epi32(A);
 
-		// X = [ a[3], a[2], a[1], a[0] ]
-		print_epi32(_mm_set_epi32(a[0], a[1], a[2], a[3]));  // 逆に入るので注意！！
-		print_epi16(_mm_set_epi16(a[0], a[1], a[2], a[3], a[0], a[1], a[2], a[3]));  // 逆に入るので注意！！
-		print_epi8(_mm_set_epi8(a[0], a[1], a[2], a[3], a[0], a[1], a[2], a[3], a[0], a[1], a[2], a[3], a[0], a[1], a[2], a[3]));  // 逆に入るので注意！！
-//		print_epi64(_mm_set_epi64(sa, ta); // __m64を要求するのでダメ
+        // X = [ a[3], a[2], a[1], a[0] ]
+        print_epi32(_mm_set_epi32(a[0], a[1], a[2], a[3]));  // 逆に入るので注意！！
+        print_epi16(_mm_set_epi16(a[0], a[1], a[2], a[3], a[0], a[1], a[2], a[3]));  // 逆に入るので注意！！
+        print_epi8(_mm_set_epi8(a[0], a[1], a[2], a[3], a[0], a[1], a[2], a[3], a[0], a[1], a[2], a[3], a[0], a[1], a[2], a[3]));  // 逆に入るので注意！！
+//        print_epi64(_mm_set_epi64(sa, ta); // __m64を要求するのでダメ
 
-		// X = [ x, x, x, x ]
+        // X = [ x, x, x, x ]
         int32_t x = 100;
-		Int X = _mm_set1_epi32(x);
+        Int X = _mm_set1_epi32(x);
         // Xをretに移して表示
         int32_t ret[4] al;
         _mm_store_si128((Int*)ret, X);
@@ -125,7 +125,7 @@ int main(void)
         cout << endl;
 
         // X = [0, 0, 0, 0]
-		Int Y = _mm_setzero_si128();
+        Int Y = _mm_setzero_si128();
         print_epi32(Y);
 
     }
@@ -207,7 +207,7 @@ int main(void)
         // X * Y    = [a*c , b*d ]
         Int XmulY = _mm_mul_epi32(X, Y);
         print_epi64(XmulY);
-
+    
         int64_t ret[2] al;
         _mm_store_si128((Int*)ret, XmulY);
     }
