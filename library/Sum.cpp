@@ -30,7 +30,7 @@ public:
 };
 
 // 二次元累積和の計算
-// 構築O(n)
+// 構築O(n^2)
 // クエリO(1)
 const function<bool(ll, ll)> f2_default = [](ll x, ll y) { return 1; };
 class Sum2d {
