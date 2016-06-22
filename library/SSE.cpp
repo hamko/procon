@@ -345,7 +345,7 @@ int main(void)
         printbits(_mm_andnot_si128(A, B)); // (not a) & b
         
         // bit反転は？
-//        printbits(_mm_not_si128(A)); // (not a) & b
+        printbits(_mm_andnot_si128(A, _mm_set1_epi32(-1))); // (not a) & b
     }
 
 
