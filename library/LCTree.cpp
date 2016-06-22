@@ -1,6 +1,7 @@
 // pekempeyさんのLCTree
 // iwiwi先生のLCTree解説 http://www.slideshare.net/iwiwi/2-12188845
 // Masaki HaraのSpaceship解説 http://www.slideshare.net/qnighy/2013-spaceships2
+// もうちょっと厳密な資料 http://www.lab2.kuis.kyoto-u.ac.jp/fswikiout/wiki.cgi?action=ATTACH&page=2009%C7%AF%C5%D9%B7%D7%BB%BB%CE%CC%CD%FD%CF%C0&file=lecture4.pdf
 //
 // Splay木
 // 平衡二分探索木（ランダムに入力されることを前提としてO(log n), 昇順でO(n)）
