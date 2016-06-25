@@ -742,6 +742,8 @@ public:
 	int numVertices() const { return numVertices_m; }
 	int numMaxEdges() const { return edgeLevel.size(); }
  
+    // n: 最大頂点数
+    // m: 最大エッジ数
 	void init(int N, int M) {
 		numVertices_m = N;
  
@@ -775,6 +777,9 @@ public:
 		edgeVisited.assign(M, false);
 	}
  
+    // vからwを張る添字eiエッジを張る
+    //
+    // O(log n)
 	bool insertEdge(int ei, int v, int w) {
 		assert(0 <= ei && ei < numMaxEdges() && 0 <= v && v < numVertices() && 0 <= w && w < numVertices());
 		assert(edgeLevel[ei] == -1);
@@ -797,6 +802,10 @@ public:
 		return treeEdge;
 	}
  
+    // エッジの添字eiを削除する。
+    // 二重して削除するとassertで落ちる。
+    //
+    // O((log n)^2)
 	bool deleteEdge(int ei) {
 		assert(0 <= ei && ei < numMaxEdges() && edgeLevel[ei] != -1);
  
@@ -830,6 +839,9 @@ public:
 		return splitted;
 	}
  
+    // v, wの結合性を判定する
+    //
+    // O(log n / log log n)
 	bool isConnected(int v, int w) const {
 		return forests[0].isConnected(v, w);
 	}
