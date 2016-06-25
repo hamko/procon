@@ -1,5 +1,8 @@
 // HolmDeLichtenbergThorup
 //
+// Union-Findの1.5倍くらい遅い（要するにめっちゃ早い）
+// 40万クエリで2秒くらい。
+// 
 // edgeを番号で管理する
 //  insertEdge(edge_index, u, v)
 //  deleteEdge(edge_index)
