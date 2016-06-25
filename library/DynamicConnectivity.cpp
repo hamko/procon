@@ -870,45 +870,42 @@ namespace std {
 
 #include <bits/stdc++.h>
 int main() {
-    ll n, m, s; scanf("%d %d %d", &n, &m, &s); s--;
+    ll n = 5;
 
-    static vector<vector<P>> edges(n);
-    static set<P> unique;
-    unordered_map<P, ll> edgesIndex;
-    //    unordered_map<P, ll> edgesIndex;
-    ll edge_index = 0;
-    rep(i, m) {
-        ll u, v;
-        scanf("%d %d", &u, &v); u--, v--;
-
-        if (unique.count(P(u, v)) || unique.count(P(v, u))) 
-            continue;
-        edges[min(u, v)].pb(P(u, v));
-        edgesIndex[P(u, v)] = edge_index;
-        edge_index++;
-        unique.insert(P(u, v));
-    }
-    unique.clear();
+    vector<P> edges = {P(0, 1), P(1, 2), P(2, 3), P(3, 4), };
 
     typedef HolmDeLichtenbergThorup FullyDynamicConnectivity;
     static FullyDynamicConnectivity fdc;
-    fdc.init(n, edge_index);
-    //    fdc.init(n, 100000); // 余分にedgeを管理しても良い。
-    for (auto x : edgesIndex) {
-        fdc.insertEdge(x.se, x.fi.fi, x.fi.se);
-    }
 
-    vll ret;
-    rep(i, n) {
-        if (fdc.isConnected(s, i))
-            ret.pb(i);
-        rep(j, edges[i].size()) {
-            auto p = P(edges[i][j].fi, edges[i][j].se);
-            fdc.deleteEdge(edgesIndex[p]);
-        }
-    }
-    rep(i, ret.size()) {
-        printf("%d\n", ret[i] + 1);
-    }
+    fdc.init(n, edges.size());
+    // o o o o o
+    cout << "########" << endl;
+    cout << fdc.isConnected(0, 1) << endl;
+    cout << fdc.isConnected(0, 2) << endl;
+
+    fdc.insertEdge(0, edges[0].first, edges[0].second);
+    // o-o o o o
+    cout << "########" << endl;
+    cout << fdc.isConnected(0, 1) << endl;
+    cout << fdc.isConnected(0, 2) << endl;
+ 
+    fdc.insertEdge(1, edges[1].first, edges[1].second);
+    // o-o-o o o
+    cout << "########" << endl;
+    cout << fdc.isConnected(0, 1) << endl;
+    cout << fdc.isConnected(0, 2) << endl;
+    
+    fdc.insertEdge(2, edges[2].first, edges[2].second);
+    // o-o-o-o o
+    cout << "########" << endl;
+    cout << fdc.isConnected(0, 1) << endl;
+    cout << fdc.isConnected(0, 2) << endl;
+
+    fdc.deleteEdge(0);
+    // o o-o-o o
+    cout << "########" << endl;
+    cout << fdc.isConnected(0, 1) << endl;
+    cout << fdc.isConnected(0, 2) << endl;
+
     return 0;
 }
