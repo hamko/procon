@@ -1,20 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef _WIN32
-#define scanfll(x) scanf("%I64d", x)
-#else
-#define scanfll(x) scanf("%lld", x)
-#endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
-#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
-#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -44,6 +36,21 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    vector<P> a(n); rep(i, a.size()) {cin >> a[i].fi; a[i].se = i; } ;
+
+    rep(i, n) {
+        vector<P> dis = a;
+        sort(dis.begin()+i, dis.end());
+        cout << dis[i].se << " " << i << endl;
+        for (int j = dis[i].se; j > i; j--) {
+            swap(a[j], a[j-1]);
+//            cout << j - 1 + 1 << " " << j + 1 << endl;
+        }
+        cout << a << endl;
+    }
+
+    cout << a << endl;
+
+
     return 0;
 }

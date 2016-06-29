@@ -31,6 +31,55 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const unorder
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define ldout fixed << setprecision(40) 
 
+static const double EPS = 1e-14;
+static const long long INF = 1e18;
+static const long long mo = 1e9+7;
+
+// TODO なぜ閉区間？？？
+template <class T>
+struct fenwick_tree {
+    /**********************/
+    // 実装箇所
+    /**********************/
+    T T0 = 0;
+    T op(T a, T b) { return a + b; }
+    /**********************/
+    // 実装終わり
+    /**********************/
+    // xのデータ構造。op=+, invop=1, T=int, T0=0の場合
+    // iが最右添字な数字列をs[i]として、x[i] = s[i]の総和 (例: i=5, s[i]="45", x[i]=9)
+    // 0123456789ABCDEF
+    // 01234567--------
+    // 0123----89AB----
+    // 01--23--89--CD--
+    // 0-2-4-6-8-A-C-E-
+    vector<T> x;
+    // TODO nはn以上の2の倍数じゃないとだめ！！
+    fenwick_tree(int n) : x(n, T0) { }
+    // O(log n)
+    T query(int j) {
+        T S = T0;
+        for (j; j >= 0; j = (j & (j + 1)) - 1) { // jは、C->B->7と遷移する。0からCをカバーするための数字列の添字へ飛ぶ
+            S = op(S, x[j]); 
+        }
+        return S;
+    }
+    // O(log n)
+    void update(int k, T a) {
+        for (; k < x.size(); k |= k+1) x[k] = op(x[k], a); // kは、C->D->Fと遷移する。Cをカバーする数字列全てに飛ぶ
+    }
+    // O(1)
+    // 生のx[i]にアクセスする
+    T access(int k) {
+        return T0; // TODO
+    }
+    void print(void) {
+        for (int i = 0; i < x.size(); i++) 
+            cout << i << " ";
+        cout << endl;
+    }
+};
+
 // 静的木
 class Tree {
 public:
@@ -140,37 +189,37 @@ public:
 
 };
 
-/*
-  6
-  0 1
-  1 3
-  0 2
-  2 4
-  2 5
- */
-int main() {
-    int n; cin >> n;
-    Tree tree(n, 0/*root*/);
-    for (int i = 0; i < n-1; i++) {
-        int x, y; cin >> x >> y;
-        tree.unite(x, y);
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+
+    ll n, q; cin >> n >> q;
+    Tree t(n, 0);
+    rep(i, n-1) {
+        ll tmp; cin >> tmp;
+        t.unite(i+1, tmp-1); 
     }
-    tree.init();
+    t.init();
+    t.print();
+    cout << t.euler << endl;
 
-    tree.print();
-    cout << tree.parent << endl;
-    cout << tree.euler << endl;
-    cout << tree.s << endl;
-    cout << tree.f << endl;
-
-    cout << tree.binary_search(5, [&](int v){ return v > 1; }) << endl;
-
+    fenwick_tree<ll> ft(2 * n);
     /*
-       int Q; cin >> Q;
-       for (int i = 0; i < Q; i++) {
-       int a, b; cin >> a >> b;
-       cout << tree.dist(a, b) + 1 << endl;
-       }
-       */
+    ft.update(t.f[0], 1);
+    ft.update(t.s[0], -1);
+    */
+    ft.update(0, 10);
+    ft.update(11, 1);
+    cout << ft.x << endl;
+    /*
+
+    rep(_, q) {
+        char c; ll v; cin >> c >> v; v--;
+        if (c == 'M') {
+            ft.update(t.f[0], 1);
+            ft.update(t.s[0], -1);
+        } else {
+        }
+    }
+    */
     return 0;
 }

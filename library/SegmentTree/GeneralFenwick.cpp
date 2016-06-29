@@ -15,12 +15,11 @@ struct fenwick_tree {
     /**********************/
     T T0 = 0;
     T op(T a, T b) { return a + b; }
-    T invop(T a, T b) { return a - b; }
     /**********************/
     // 実装終わり
     /**********************/
 
-    // xのデータ構造。op=+, invop=1, T=int, T0=0の場合
+    // xのデータ構造。op=+, T=int, T0=0の場合
     // iが最右添字な数字列をs[i]として、x[i] = s[i]の総和 (例: i=5, s[i]="45", x[i]=9)
     // 0123456789ABCDEF
     // 01234567--------
@@ -29,10 +28,6 @@ struct fenwick_tree {
     // 0-2-4-6-8-A-C-E-
     vector<T> x;
     fenwick_tree(int n) : x(n, T0) { }
-    // O(log n)
-    T query(int i, int j) { /*逆演算があれば範囲が定義可能*/
-        return invop(query(j)/*0からj*/, query(i-1)); 
-    }
     T query(int j) {
         T S = T0;
         for (j; j >= 0; j = (j & (j + 1)) - 1) { // jは、C->B->7と遷移する。0からCをカバーするための数字列の添字へ飛ぶ

@@ -17,7 +17,6 @@ public:
         sumdata = vll(n+1, 0);
         rep(i, n) if(f(i)) sumdata[i+1] = data[i];
         rep(i, n) sumdata[i+1] += sumdata[i];
-//        rep(i, n+1) cout << sumdata[i] << " "; cout << endl;
     }
     // [i, j)の小区間の総和 (半開区間)
     ll sum(int i, int j) {
@@ -26,6 +25,9 @@ public:
     // [i, i+ilen)の小区間の総和 (半開区間)
     ll suml(int i, int len) {
         return this->sum(i, i+len);
+    }
+    void print(void) {
+        rep(i, sumdata.size()) cout << sumdata[i] << " "; cout << endl;
     }
 };
 

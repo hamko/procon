@@ -1,12 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef _WIN32
-#define scanfll(x) scanf("%I64d", x)
-#else
-#define scanfll(x) scanf("%lld", x)
-#endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -41,9 +35,85 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+struct UnionFind {
+    vector<int> data;
+    UnionFind(int size) : data(size, -1) { }
+    // x, yをマージ
+    bool unite(int x, int y) {
+        x = root(x); y = root(y);
+        if (x != y) {
+            if (data[y] < data[x]) swap(x, y);
+            data[x] += data[y]; data[y] = x;
+        }
+        return x != y;
+    }
+    // x, yが同じ集合なら1
+    bool find(int x, int y) {
+        return root(x) == root(y);
+    }
+    // xの根を探す。同じ集合なら同じ根が帰る
+    int root(int x) {
+        return data[x] < 0 ? x : data[x] = root(data[x]);
+    }
+    // xが含まれる集合の大きさを返す
+    int size(int x) {
+        return -data[root(x)];
+    }
+    // 分離されている集合の数を返す
+    int setNum(void) {
+        map<int, int> c;
+        rep(i, data.size()) {
+            c[root(i)]++;
+        }
+        return c.size();
+    }
+    vector<vector<int>> getUnionList(void) {
+        map<int, vector<int>> c;
+        for (int i = 0; i < data.size(); i++) 
+            c[root(i)].pb(i);
+        vector<vector<int>> v;
+        for (auto x : c) 
+            v.push_back(x.second);
+        return v;
+    }
+    void print(void) {
+        auto c = getUnionList();
+        for (auto x : c) {
+            for (auto y : x) 
+                cout << y << " ";
+            cout << endl;
+        }
+    }
+};
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n, nx, ny; cin >> n >> nx >> ny;
+    vector<P> s(n);
+    
+    vll rx(nx, -1), ry(ny, -1);
+    bool is_wall = 0;
+    rep(i, n) {
+        cin >> s[i].fi >> s[i].se; s[i].fi--; s[i].se--;
+        rx[s[i].fi] = ry[s[i].se] = i;
+        is_wall |= (s[i].fi == 0 || s[i].fi == nx-1 || s[i].se == 0 || s[i].se == ny-1);
+    }
+
+    UnionFind uf(n);
+    rep(i, n) {
+        uf.unite(i, rx[s[i].fi]);
+        uf.unite(i, ry[s[i].se]);
+    }
+
+    auto list = uf.getUnionList();
+    if (list.size() == 1) {
+        cout << (*list.begin()).size() - 1 << endl;
+        return 0;
+    }
+
+    ll ret = 0;
+    for (auto x : list) 
+        ret += x.size() - 1;
+    cout << ret + 2 * list.size() - is_wall - 1 << endl;
+
     return 0;
 }

@@ -1,20 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef _WIN32
-#define scanfll(x) scanf("%I64d", x)
-#else
-#define scanfll(x) scanf("%lld", x)
-#endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
-#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
-#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 

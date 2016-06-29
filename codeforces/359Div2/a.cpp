@@ -1,20 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef _WIN32
-#define scanfll(x) scanf("%I64d", x)
-#else
-#define scanfll(x) scanf("%lld", x)
-#endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
-#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
-#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -44,6 +36,21 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll ret; cin >> ret;
+    ll dist = 0;
+    rep(i, n) {
+        char c; ll d; cin >> c >> d;
+        if (c == '+') {
+            ret += d;
+        } else {
+            if (ret - d >= 0) {
+                ret -= d;
+            } else {
+                dist++;
+            } 
+        }
+    }
+    cout << ret << " " << dist << endl;
+
     return 0;
 }

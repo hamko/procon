@@ -1,12 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef _WIN32
-#define scanfll(x) scanf("%I64d", x)
-#else
-#define scanfll(x) scanf("%lld", x)
-#endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -41,9 +35,80 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+// 累積和の計算
+// 構築O(n)
+// クエリO(1)
+const function<bool(ll)> f1_default = [](ll x) { return 1; };
+class Sum1d {
+public:
+    vll data;
+    vll sumdata;
+    Sum1d(vll& d, function<bool(ll)> f = f1_default) {
+        int n = d.size();
+        data = d;
+        sumdata = vll(n+1, 0);
+        rep(i, n) if(f(i)) sumdata[i+1] = data[i];
+        rep(i, n) sumdata[i+1] += sumdata[i];
+    }
+    // [i, j)の小区間の総和 (半開区間)
+    ll sum(int i, int j) {
+        if (i >= j)
+            return 0;
+        return sumdata[j]-sumdata[i];
+    }
+    // [i, i+ilen)の小区間の総和 (半開区間)
+    ll suml(int i, int len) {
+        return this->sum(i, i+len);
+    }
+    void print(void) {
+        rep(i, sumdata.size()) cout << sumdata[i] << " "; cout << endl;
+    }
+};
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n, m; cin >> n >> m;
+    vll s(n), t(n), p(m); 
+    rep(i, s.size()) 
+        cin >> s[i] >> t[i]; 
+    rep(i, p.size()) 
+        cin >> p[i];
+
+    sort(all(p));
+
+    vll pd_even(m), pd_odd(m);
+    pd_even[0] = p[0];
+    repi(i, 1, m) {
+        (i % 2 == 0 ? pd_even[i] : pd_odd[i]) = p[i]-p[i-1];
+        (i % 2 == 1 ? pd_even[i] : pd_odd[i]) = 0;
+    }
+
+    Sum1d s_even(pd_even), s_odd(pd_odd);
+
+    ll ret = 0;
+    rep(i, s.size()) {
+        ll is = lower_bound(all(p), s[i]) - p.begin();
+        ll it = lower_bound(all(p), t[i]) - p.begin();
+        if (is == it) {
+            ret += abs(t[i] - s[i]);
+            continue;
+        }
+
+        if (is < it) {
+            ret += abs(p[is] - s[i]);
+            if (it % 2 == is % 2) {
+                ret += abs(p[it-1] - t[i]);
+            }
+            ret += (is % 2 == 0 ? s_even : s_odd).sum(is+1, it);
+        } else {
+            ret += abs(p[is-1] - s[i]);
+            if (it % 2 == is % 2) {
+                ret += abs(p[it] - t[i]);
+            }
+            ret += (is % 2 == 0 ? s_even : s_odd).sum(it+1, is);
+        }
+    }
+    cout << ret << endl;
+
+    
     return 0;
 }

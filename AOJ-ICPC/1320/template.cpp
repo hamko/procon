@@ -1,12 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef _WIN32
-#define scanfll(x) scanf("%I64d", x)
-#else
-#define scanfll(x) scanf("%lld", x)
-#endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -43,7 +37,58 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n;
+    while (cin >> n && n) {
+        vector<string> tmp(n);
+        rep(i, n) 
+            cin >> tmp[i];
+        vll eliminate(n);
+        rep(i, n) rep(j, n) if (i != j) 
+            if (tmp[i].find(tmp[j]) != string::npos)
+                eliminate[j] = 1;
+        
+        vector<string> names;
+        rep(i, n) 
+            if (!eliminate[i])
+                names.pb(tmp[i]);
+        if (names.size() == 1) {
+            cout << names[0].length() << endl;
+            continue;
+        }
+
+        map<P, ll> match_length;
+        rep(i, names.size()) rep(j, names.size()) if (i != j) {
+            match_length[P(i, j)] = 0;
+            for (int l = 1; l < min(names[i].length(), names[j].length()); l++) {
+                bool faf = 1;
+                rep(k, l) 
+                    if (names[i][names[i].length()-l+k] != names[j][k]) 
+                        faf = 0;
+                if (faf)
+                    chmax(match_length[P(i, j)], l);
+            }
+        }
+        for (auto&& x : match_length) 
+            x.se = names[x.fi.se].length() - x.se;
+            
+        ll dp[1ll << 15][15] = {};
+        rep(i, 1ll<<15) rep(j, 15)
+            dp[i][j] = INF;
+        rep(i, names.size()) 
+            dp[1ll<<i][i] = names[i].length();
+
+        rep(mask, 1ll << names.size()) 
+            rep(curr, names.size()) 
+                if (mask && dp[mask][curr] != INF) 
+                    rep(i, names.size()) 
+                        if ((mask & (1ll << i)) == 0) 
+                            chmin(dp[mask | (1ll << i)][i], dp[mask][curr] + match_length[P(curr, i)]);
+
+        ll ret = INF;
+        rep(i, names.size())  
+            chmin(ret, dp[(1ll << names.size())-1][i]);
+
+        cout << ret << endl;
+    }
     return 0;
 }

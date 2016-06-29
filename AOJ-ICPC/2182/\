@@ -1,12 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef _WIN32
-#define scanfll(x) scanf("%I64d", x)
-#else
-#define scanfll(x) scanf("%lld", x)
-#endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -41,9 +35,55 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+// 累積和の計算
+// 構築O(n)
+// クエリO(1)
+const function<bool(ll)> f1_default = [](ll x) { return 1; };
+class Sum1d {
+public:
+    vll data;
+    vll sumdata;
+    Sum1d(vll& d, function<bool(ll)> f = f1_default) {
+        int n = d.size();
+        data = d;
+        sumdata = vll(n+1, 0);
+        rep(i, n) if(f(i)) sumdata[i+1] = data[i];
+        rep(i, n) sumdata[i+1] += sumdata[i];
+    }
+    // [i, j)の小区間の総和 (半開区間)
+    ll sum(int i, int j) {
+        return sumdata[j]-sumdata[i];
+    }
+    // [i, i+ilen)の小区間の総和 (半開区間)
+    ll suml(int i, int len) {
+        return this->sum(i, i+len);
+    }
+    void print(void) {
+        rep(i, sumdata.size()) cout << sumdata[i] << " "; cout << endl;
+    }
+};
+
+
 int main(void) {
-    cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    string s;
+    while(getline(cin, s))
+    {
+        if (s == "0")
+            break;
+
+        vll d(s.size());
+        rep(i, s.size())
+            d[i] = (i % 2 ? -1 : 1) * (s[i] - '0');
+
+        Sum1d S(d, [&](ll x){ return x % 2 == 1; });
+
+        ll ret = 0;
+        vll b(11);
+        for (int i = n - 1; i >= 0; i--) {
+            ret += b[
+        }
+        cout << ret << endl;
+    }
+
     return 0;
 }

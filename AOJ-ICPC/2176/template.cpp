@@ -1,20 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef _WIN32
-#define scanfll(x) scanf("%I64d", x)
-#else
-#define scanfll(x) scanf("%lld", x)
-#endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
-#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
-#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -41,9 +33,46 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+vvll c; 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n, d; 
+    while (cin >> n >> d && n && d) {
+        c.resize(n);
+        rep(i, c.size()) { 
+            ll m;
+            cin >> m;
+            c[i].resize(m);
+            rep(j, m)
+                cin >> c[i][j];
+        }
+
+        vll s(n);
+        rep(i, n) 
+            s[i] = accumulate(all(c[i]), 0ll);
+
+        rep(mi_, 1e6) {
+            ll mi = mi_ % n;
+            if (!c[mi].size()) 
+                continue;
+
+            ll min_sum = INF, max_sum = 0;
+            rep(i, n) {
+                ll tmp = s[i] - (i == mi ? c[mi].back() : 0);
+                chmin(min_sum, tmp);
+                chmax(max_sum, tmp);
+            }
+            if (max_sum - min_sum <= d) {
+                s[mi] -= c[mi].back();
+                c[mi].pop_back();
+            }
+        }
+
+        rep(i, n) if (c[i].size()) { cout << "No" << endl; goto next; }
+        cout << "Yes" << endl;
+        next:;
+    }
+
+
     return 0;
 }

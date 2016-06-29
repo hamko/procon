@@ -2,7 +2,7 @@ struct UnionFind {
     vector<int> data;
     UnionFind(int size) : data(size, -1) { }
     // x, yをマージ
-    bool unionSet(int x, int y) {
+    bool unite(int x, int y) {
         x = root(x); y = root(y);
         if (x != y) {
             if (data[y] < data[x]) swap(x, y);
@@ -11,7 +11,7 @@ struct UnionFind {
         return x != y;
     }
     // x, yが同じ集合なら1
-    bool findSet(int x, int y) {
+    bool find(int x, int y) {
         return root(x) == root(y);
     }
     // xの根を探す。同じ集合なら同じ根が帰る
@@ -30,4 +30,24 @@ struct UnionFind {
         }
         return c.size();
     }
+    // O(n)
+    // 集合ごとに全部の要素を出力
+    vector<vector<int>> getUnionList(void) {
+        map<int, vector<int>> c;
+        for (int i = 0; i < data.size(); i++) 
+            c[root(i)].pb(i);
+        vector<vector<int>> v;
+        for (auto x : c) 
+            v.push_back(x.second);
+        return v;
+    }
+    void print(void) {
+        auto c = getUnionList();
+        for (auto x : c) {
+            for (auto y : x) 
+                cout << y << " ";
+            cout << endl;
+        }
+    }
 };
+
