@@ -1,6 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#endif
+
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
