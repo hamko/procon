@@ -3,10 +3,11 @@ using namespace std;
 
 #ifdef _WIN32
 #define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
 #else
 #define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
 #endif
-
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -42,8 +43,7 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
 int main(void) {
-    cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n; scanfll(&n);
+    vll a(n); rep(i, a.size()) scanfll(&a[i]);
     return 0;
 }
