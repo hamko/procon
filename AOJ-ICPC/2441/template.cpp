@@ -1,12 +1,21 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
+#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -33,59 +42,99 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+// 整数二分探索
+// O(log(range))
+// f: 単調増加関数. 000111, 111111, 000000を許容する（11110000で探索したい場合は、自分でfを反転すること）
+// 閉区間[rl, rr]から単調関数fを満たす最小の数を返す。
+// 全て0ならrr+1を返す、全て1なら0を返す！
+ll BinarySearch(ll rl, ll rr, function<bool(ll)> f) { 
+    ll lo = rl-1, ro = rr+1;
+    while (ro - lo != 1) {
+        ll m = (lo + ro) / 2; 
+        ((m!=rl-1&&f(m))?ro:lo)=m; 
+    }
+    return ro;
+}
+void BinarySearchInteractive(ll rl, ll rr, function<bool(ll)> f) { 
+    while (1) {
+        cout << "####" << endl;
+        ll tmp; cin >> tmp;
+        if (rl > tmp) {cout << "Out of range: too small" << endl; continue; }
+        if (rr < tmp) {cout << "Out of range: too large" << endl; continue; }
+        ll ret = f(tmp); cout << tmp << " : " << ret << endl;
+    }
+}
+void BinarySearchPrint(ll rl, ll rr, function<bool(ll)> f) { 
+    for (int i = rl; i <= rr; i++) cout << f(i); cout << endl;
+}
+void BinarySearchAssert(ll rl, ll rr, function<bool(ll)> f) { 
+    bool p = false;
+    for (int i = rl; i <= rr; i++) {
+        bool t = f(i);
+        if (p && !t) cerr << i << ": F NOT MONOTONIC INCREASE" << endl, exit(1);
+        p |= t;
+    }
+}
+
+
+ll is10pow(ll n) {
+    ll ret = 0;
+    while (n) {
+        if (n % 10) 
+            return -1;
+        else
+            n /= 10;
+    }
+    return ret;
+}
+ll digit(ll n) {
+    ll ret = 0;
+    while (n) {
+        n /= 10;
+        ret++;
+    }
+    return ret;
+}
+ll pow10(ll n) {
+    ll ret = 1;
+    rep(i, n)
+        ret *= 10;
+    return ret;
+}
+
+ll len(ll l, ll r) {
+    if (digit(l) != digit(r)) {
+        return len(l, pow10(digit(l))-1) + len(pow10(digit(l)), r);
+    } 
+    ll fizz = (r / 3 - (l - 1) / 3);
+    ll buzz = (r / 5 - (l - 1) / 5);
+    ll fizzbuzz = (r / 15 - (l - 1) / 15);
+    ll ret = fizz * 4 + buzz * 4 + digit(l) * (r - l + 1 - fizz - buzz + fizzbuzz);
+    return ret;
+}
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vvll len(20, vll(6));
-    vvll len_border(20, vll(6));
-    // 15+3i
-    rep(i, len.size()) {
-        len[i][0] = len[i][1] = len[i][3] = i+1;
-        len[i][2] = len[i][4] = 4;
-        len[i][5] = 8;
+    if (n == 1) {
+        cout << "12Fizz4BuzzFizz78Fiz" << endl;
+        return 0;
     }
-    // 16+3i
-    rep(i, len_border.size()) {
-        len_border[i][0] = len_border[i][1] = i+1;
-        len_border[i][3] = i+2;
-        len_border[i][2] = len_border[i][4] = 4;
-        len_border[i][5] = 8;
-    }
-    cout << len << endl;
-    cout << len_border << endl;
-
-    // 20
-    //
-    // 6*1
-    // 7
-    // 9*0
-
-        
-
-    // TODO 1-3は特殊
-    // TODO 3ll
-    ll repnum;
-    ll repred;
+    function<bool(ll)> f = [&](ll x){
+        return len(1, x) >= n;
+    };
+    ll first = BinarySearch(1, 1e18, f);
+    ll firstpos = len(1, first-1) + 1;
+    string s;
     rep(i, 20) {
-        ll lenfrom = ((ll)(pow(10, i))+3); // from 103
-        ll lento = ((ll)(pow(10, i+1))-4); // from 996 
-        ll lennum = (lento - lenfrom + 1) / 6;
-        if (!i) 
-            lennum = 1;
-        if (n >= lennum * (16 + 3 * i))
-            n -= lennum * (16 + 3 * i);
-        else {
-            ll repnum = n / (16 + 3 * i); 
-            ll repred = n % (16 + 3 * i); 
-            n -= lennum * (16 + 3 * i);
-            break;
-        }
-
-        if (n >= (17 + 3 * i))
-            n -= (17 + 3 * i);
-        else {
-        }
+        if ((first + i) % 3 == 0 && (first + i) % 5 != 0)
+            s += "Fizz";
+        else if ((first + i) % 5 == 0 && (first + i) % 3 != 0)
+            s += "Buzz";
+        else if ((first + i) % 5 == 0 && (first + i) % 3 == 0)
+            s += "FizzBuzz";
+        else
+            s += to_string(first + i);
     }
-
+    cout << s.substr(n - firstpos, 20) << endl;
     return 0;
 }

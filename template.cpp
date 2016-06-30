@@ -43,7 +43,8 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
 int main(void) {
-    ll n; scanfll(&n);
-    vll a(n); rep(i, a.size()) scanfll(&a[i]);
+    cin.tie(0); ios::sync_with_stdio(false);
+    ll n; cin >> n;
+    vll a(n); rep(i, a.size()) cin >> a[i];
     return 0;
 }
