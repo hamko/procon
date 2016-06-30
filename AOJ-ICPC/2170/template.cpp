@@ -35,7 +35,7 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-// TODO なぜ閉区間？？？
+// 閉区間なので注意!!!!!!!!!!!!!
 template <class T>
 struct fenwick_tree {
     /**********************/
@@ -46,6 +46,7 @@ struct fenwick_tree {
     /**********************/
     // 実装終わり
     /**********************/
+
     // xのデータ構造。op=+, invop=1, T=int, T0=0の場合
     // iが最右添字な数字列をs[i]として、x[i] = s[i]の総和 (例: i=5, s[i]="45", x[i]=9)
     // 0123456789ABCDEF
@@ -53,34 +54,49 @@ struct fenwick_tree {
     // 0123----89AB----
     // 01--23--89--CD--
     // 0-2-4-6-8-A-C-E-
+    int n_org;
     vector<T> x;
-    // TODO nはn以上の2の倍数じゃないとだめ！！
-    fenwick_tree(int n) : x(n, T0) { }
+    fenwick_tree(int n_)  { 
+        n_org = n_;
+        int n = 1; while (n <= n_) n *= 2;
+        x = vector<T>(n, T0);
+    }
     // O(log n)
     T query(int j) {
         T S = T0;
-        for (j; j >= 0; j = (j & (j + 1)) - 1) { // jは、C->B->7と遷移する。0からCをカバーするための数字列の添字へ飛ぶ
+        for (j; j >= 0; j = (j & (j + 1)) - 1)  // jは、C->B->7と遷移する。0からCをカバーするための数字列の添字へ飛ぶ
             S = op(S, x[j]); 
-        }
         return S;
     }
     // O(log n)
     void update(int k, T a) {
-        for (; k < x.size(); k |= k+1) x[k] = op(x[k], a); // kは、C->D->Fと遷移する。Cをカバーする数字列全てに飛ぶ
+        for (; k < x.size(); k |= k+1) // kは、C->D->Fと遷移する。Cをカバーする数字列全てに飛ぶ
+            x[k] = op(x[k], a); 
     }
     // O(1)
     // 生のx[i]にアクセスする
     T access(int k) {
-        return T0; // TODO
+        return query(k) - (k ? query(k-1) : 0);
     }
     void print(void) {
+        for (int i = 0; i < n_org; i++) 
+            cout << access(i) << " ";
+        cout << endl;
+    }
+    void print_raw(void) {
         for (int i = 0; i < x.size(); i++) 
-            cout << i << " ";
+            cout << x[i] << " ";
         cout << endl;
     }
 };
 
 // 静的木
+//
+// 構築O(n): オイラーツアー, 木の高さ, 祖先ダブリング
+//
+// LCA O(log n)
+// 頂点間最小辺数 O(log n)
+// 頂点から根までのパスの二分探索 O(log n)
 class Tree {
 public:
     static const int MAXLOGV = 25;
@@ -91,9 +107,9 @@ public:
     vector<vector<int>> parent; // parent[i][j]: jのi^2番目の親。j=0で直近の親。
     vector<int> depth; // depth[i]: 頂点iの根からの深さ, 根が0
 
-    vector<int> euler; // 根から始めるオイラーツアー
-    vector<int> f; // f[i] = eulerでiが出てくる1回目の位置
-    vector<int> s; // f[i] = eulerでiが出てくる2回目の位置
+    vector<int> euler; // 根から始めるオイラーツアー、長さvn*2
+    vector<int> f; // f[i] = eulerでiが出てくる1回目の位置, 長さvn
+    vector<int> s; // f[i] = eulerでiが出てくる2回目の位置, 長さvn
 
     /*********/
     // 構築
@@ -101,15 +117,17 @@ public:
     Tree(int vn, int root) : vn(vn), root(root) {
         parent.resize(MAXLOGV);
         m_edges.resize(vn);
-        for (int i = 0; i < MAXLOGV; i++) parent[i].resize(vn);
+        for (int i = 0; i < MAXLOGV; i++) 
+            parent[i].resize(vn);
         depth.resize(vn);
     }
+
     // 無向辺の構築
-    // TODO parentは別途更新しているのだから、子供から親への辺はいらない
     void unite(int u, int v) {
         m_edges[u].push_back(v);
         m_edges[v].push_back(u);
     }
+
     // rootからの深さと親を確認。
     // uniteし終わったらまずこれを呼ぶこと。
     void init() {
@@ -117,22 +135,23 @@ public:
         f.clear(); f.resize(vn);
         s.clear(); s.resize(vn);
         dfs(root, -1, 0);
-        for (int k = 0; k+1 < MAXLOGV; k++) { // 2^k代祖先を計算
-            for (int v = 0; v < vn; v++) {
-                if (parent[k][v] < 0) parent[k+1][v] = -1; // 2^k代の親が根を超えてるなら、2^(k+1)代の親ももちろん根を超えている
-                else parent[k+1][v] = parent[k][parent[k][v]]; // 2^(k+1)代の親は、2^k代の親の2^k代の親。
-            }
-        }
+        for (int k = 0; k+1 < MAXLOGV; k++) // 2^k代祖先を計算
+            for (int v = 0; v < vn; v++) 
+                if (parent[k][v] < 0) 
+                    parent[k+1][v] = -1; // 2^k代の親が根を超えてるなら、2^(k+1)代の親ももちろん根を超えている
+                else 
+                    parent[k+1][v] = parent[k][parent[k][v]]; // 2^(k+1)代の親は、2^k代の親の2^k代の親。
     }
-    // 辿って親と深さを確認するだけ
+
+    // 1つ親と深さとオイラーツアーを構築
     void dfs(int v, int p, int d) {
         parent[0][v] = p;
         depth[v] = d;
         f[v]=euler.size();
         euler.push_back(v);
-        for (int next : m_edges[v]) {
-            if (next != p) dfs(next, v, d+1);
-        }
+        for (int next : m_edges[v]) 
+            if (next != p)
+                dfs(next, v, d+1);
         s[v]=euler.size();
         euler.push_back(v);
     }
@@ -157,6 +176,7 @@ public:
         }
         return parent[0][u];
     }
+
     // uとvの距離を求める
     // 距離はエッジの重みではなく、遷移回数で定義
     //
@@ -165,61 +185,61 @@ public:
         int p = lca(u, v);
         return (depth[u]-depth[p]) + (depth[v]-depth[p]);
     }
-    // [root, v]のうち、fを満たす最も根側のノードを返す。
+
+    // [root, v]のうち、fを満たす最も根側のノードを返す
+    // 1つも満たさないなら-1を返す。
     //
     // O(log n)
-    // 1つも満たさないなら-1を返す。
-    int binary_search(int v, function<bool(int)> f) {
-        for(int j = MAXLOGV - 1; j >= 0;j--)
-            if(parent[j][v] != -1 && f(parent[j][v])) 
+    int binary_search(int v, function<bool(int)> f) const {
+        for(int j = MAXLOGV - 1; j >= 0;j--) 
+            if(parent[j][v] != -1 && f(parent[j][v]))
                 v = parent[j][v];
-        return (f(v) ? v : -1);
+        return f(v) ? v : -1;
     }
+
     // 木の構造描画
-    void print_dfs(int v, int p) {
+    void print_dfs(int v, int p) const {
         for (int i = 0; i < depth[v]; i++)
             cout << " ";
         cout << v << endl;
         for (int next : m_edges[v]) if (next != p) 
             print_dfs(next, v);
     }
-    void print(void) {
+    void print(void) const {
         print_dfs(root, -1);
     }
-
 };
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
 
-    ll n, q; cin >> n >> q;
-    Tree t(n, 0);
-    rep(i, n-1) {
-        ll tmp; cin >> tmp;
-        t.unite(i+1, tmp-1); 
-    }
-    t.init();
-    t.print();
-    cout << t.euler << endl;
-
-    fenwick_tree<ll> ft(2 * n);
-    /*
-    ft.update(t.f[0], 1);
-    ft.update(t.s[0], -1);
-    */
-    ft.update(0, 10);
-    ft.update(11, 1);
-    cout << ft.x << endl;
-    /*
-
-    rep(_, q) {
-        char c; ll v; cin >> c >> v; v--;
-        if (c == 'M') {
-            ft.update(t.f[0], 1);
-            ft.update(t.s[0], -1);
-        } else {
+    ll n, q; 
+    while (cin >> n >> q && n && q) {
+        Tree t(n, 0);
+        rep(i, n-1) {
+            ll tmp; cin >> tmp;
+            t.unite(i+1, tmp-1); 
         }
+        t.init();
+
+        fenwick_tree<ll> ft(n*2);
+        ft.update(t.f[0], 1);
+        ft.update(t.s[0], -1);
+
+        ll ret = 0;
+        rep(_, q) {
+            char c; ll v; cin >> c >> v; v--;
+            if (c == 'M') {
+                if (ft.access(t.f[v]))
+                    continue;
+                ft.update(t.f[v], 1);
+                ft.update(t.s[v], -1);
+            } else {
+                ll marked_num = ft.query(t.f[v]);
+                ret += t.binary_search(v, [&](ll x){ return ft.query(t.f[x]) == marked_num; }) + 1; 
+            }
+        }
+        cout << ret << endl;
     }
-    */
     return 0;
 }

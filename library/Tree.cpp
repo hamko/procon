@@ -32,6 +32,12 @@ void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cou
 #define ldout fixed << setprecision(40) 
 
 // 静的木
+//
+// 構築O(n): オイラーツアー, 木の高さ, 祖先ダブリング
+//
+// LCA O(log n)
+// 頂点間最小辺数 O(log n)
+// 頂点から根までのパスの二分探索 O(log n)
 class Tree {
 public:
     static const int MAXLOGV = 25;
@@ -42,9 +48,9 @@ public:
     vector<vector<int>> parent; // parent[i][j]: jのi^2番目の親。j=0で直近の親。
     vector<int> depth; // depth[i]: 頂点iの根からの深さ, 根が0
 
-    vector<int> euler; // 根から始めるオイラーツアー
-    vector<int> f; // f[i] = eulerでiが出てくる1回目の位置
-    vector<int> s; // f[i] = eulerでiが出てくる2回目の位置
+    vector<int> euler; // 根から始めるオイラーツアー、長さvn*2
+    vector<int> f; // f[i] = eulerでiが出てくる1回目の位置, 長さvn
+    vector<int> s; // f[i] = eulerでiが出てくる2回目の位置, 長さvn
 
     /*********/
     // 構築
@@ -52,15 +58,17 @@ public:
     Tree(int vn, int root) : vn(vn), root(root) {
         parent.resize(MAXLOGV);
         m_edges.resize(vn);
-        for (int i = 0; i < MAXLOGV; i++) parent[i].resize(vn);
+        for (int i = 0; i < MAXLOGV; i++) 
+            parent[i].resize(vn);
         depth.resize(vn);
     }
+
     // 無向辺の構築
-    // TODO parentは別途更新しているのだから、子供から親への辺はいらない
     void unite(int u, int v) {
         m_edges[u].push_back(v);
         m_edges[v].push_back(u);
     }
+
     // rootからの深さと親を確認。
     // uniteし終わったらまずこれを呼ぶこと。
     void init() {
@@ -68,22 +76,23 @@ public:
         f.clear(); f.resize(vn);
         s.clear(); s.resize(vn);
         dfs(root, -1, 0);
-        for (int k = 0; k+1 < MAXLOGV; k++) { // 2^k代祖先を計算
-            for (int v = 0; v < vn; v++) {
-                if (parent[k][v] < 0) parent[k+1][v] = -1; // 2^k代の親が根を超えてるなら、2^(k+1)代の親ももちろん根を超えている
-                else parent[k+1][v] = parent[k][parent[k][v]]; // 2^(k+1)代の親は、2^k代の親の2^k代の親。
-            }
-        }
+        for (int k = 0; k+1 < MAXLOGV; k++) // 2^k代祖先を計算
+            for (int v = 0; v < vn; v++) 
+                if (parent[k][v] < 0) 
+                    parent[k+1][v] = -1; // 2^k代の親が根を超えてるなら、2^(k+1)代の親ももちろん根を超えている
+                else 
+                    parent[k+1][v] = parent[k][parent[k][v]]; // 2^(k+1)代の親は、2^k代の親の2^k代の親。
     }
-    // 辿って親と深さを確認するだけ
+
+    // 1つ親と深さとオイラーツアーを構築
     void dfs(int v, int p, int d) {
         parent[0][v] = p;
         depth[v] = d;
         f[v]=euler.size();
         euler.push_back(v);
-        for (int next : m_edges[v]) {
-            if (next != p) dfs(next, v, d+1);
-        }
+        for (int next : m_edges[v]) 
+            if (next != p)
+                dfs(next, v, d+1);
         s[v]=euler.size();
         euler.push_back(v);
     }
@@ -108,6 +117,7 @@ public:
         }
         return parent[0][u];
     }
+
     // uとvの距離を求める
     // 距離はエッジの重みではなく、遷移回数で定義
     //
@@ -116,28 +126,29 @@ public:
         int p = lca(u, v);
         return (depth[u]-depth[p]) + (depth[v]-depth[p]);
     }
-    // [root, v]のうち、fを満たす最も根側のノードを返す。
+
+    // [root, v]のうち、fを満たす最も根側のノードを返す
+    // 1つも満たさないなら-1を返す。
     //
     // O(log n)
-    // 1つも満たさないなら-1を返す。
-    int binary_search(int v, function<bool(int)> f) {
-        for(int j = MAXLOGV - 1; j >= 0;j--)
-            if(parent[j][v] != -1 && f(parent[j][v])) 
+    int binary_search(int v, function<bool(int)> f) const {
+        for(int j = MAXLOGV - 1; j >= 0;j--) 
+            if(parent[j][v] != -1 && f(parent[j][v]))
                 v = parent[j][v];
-        return (f(v) ? v : -1);
+        return f(v) ? v : -1;
     }
+
     // 木の構造描画
-    void print_dfs(int v, int p) {
+    void print_dfs(int v, int p) const {
         for (int i = 0; i < depth[v]; i++)
             cout << " ";
         cout << v << endl;
         for (int next : m_edges[v]) if (next != p) 
             print_dfs(next, v);
     }
-    void print(void) {
+    void print(void) const {
         print_dfs(root, -1);
     }
-
 };
 
 /*
