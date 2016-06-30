@@ -51,8 +51,6 @@ int main(void) {
     
     dp[0][n][w] = 1;
     rep(k, n) { 
-//        cout << "####" << endl;
-//        cout << k << endl;
         ll curr = k % 2, next = (k + 1) % 2;
         rep(i, n+1) rep(j, w+1) {
             dp[next][i][j] = 0;
@@ -60,17 +58,10 @@ int main(void) {
         rep(i, n+1) rep(j, w+1) {
             if (!dp[curr][i][j])
                 continue;
-//            cout << i << " " << j << endl;
             if (j - a[k] >= 0)
                 (dp[next][i][j-a[k]] += dp[curr][i][j]) %= mo;
             (dp[next][min(i, k)][j] += dp[curr][i][j]) %= mo;
         }
-        /*
-        rep(i, n+1) rep(j, w+1) {
-            if (!dp[next][i][j]) continue;
-            cout << k + 1 << " " << i << " " << j << " : " << dp[next][i][j] << endl;
-        }
-        */
     }
 
     ll ret = 0;
