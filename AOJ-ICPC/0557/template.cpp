@@ -42,98 +42,22 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-// スパーステーブル
-// 構築O(n log n)
-// クエリO(log (log n))
-//
-// rmq(i, j)    [i, j)の最小値・最大値を求める
-struct SparseTable {
-    // 構築時データ
-    vector<ll> val;
-    
-    // max_flag==trueならRange Maximum Query
-    // デフォルトMinimum
-    bool max_flag;
-
-    // table[i][j]: [i, i+2^j)の最小値を取る添字
-    vector<vector<ll>> table;
-
-    inline ll MSB(ll x) { return x>0?31-__builtin_clz(x):-1; }
-    SparseTable(void){}
-    SparseTable(const vector<ll> a, bool max_flag_ = false) : val(a), max_flag(max_flag_) {
-        ll n = a.size(), ln = MSB(n);
-        table = vector<vector<ll>>(n, vector<ll>(ln + 1,0));
-        rep(i,n)
-            table[i][0] = i;
-
-        ll k = 1;
-        rep(j, ln) {
-            rep(i, n){
-                ll id1 = table[i][j], id2 = (i+k<n)?table[i+k][j]:id1;
-                table[i][j+1] = (max_flag ? (val[id1]>=val[id2]) : (val[id1]<=val[id2]))?id1:id2;
-            }
-            k <<= 1;
-        }
-    }
-
-    inline ll rmqi(ll l, ll r){
-        ll ln = MSB(r-l);
-        ll id1 = table[l][ln], id2 = table[r-(1<<ln)][ln];
-        return (max_flag ? (val[id1]>=val[id2]) : (val[id1]<=val[id2]))?id1:id2;
-    }
-
-    inline ll rmq(ll l, ll r){ 
-        if (l >= r) return max_flag ? 0 : INF;
-        return val[rmqi(l,r)]; 
-    }
-};
-
-// 整数二分探索
-// O(log(range))
-// f: 単調増加関数. 000111, 111111, 000000を許容する（11110000で探索したい場合は、自分でfを反転すること）
-// 閉区間[rl, rr]から単調関数fを満たす最小の数を返す。
-// 全て1なら0を返す（定義通り）、全て0ならrr+1を返す（異常値検出用）！
-ll BinarySearch(ll rl, ll rr, function<bool(ll)> f) { 
-    ll lo = rl-1, ro = rr+1;
-    while (ro - lo != 1) {
-        ll m = (lo + ro) / 2; 
-        ((m!=rl-1&&f(m))?ro:lo)=m; 
-    }
-    return ro;
-}
-void BinarySearchInteractive(ll rl, ll rr, function<bool(ll)> f) { 
-    while (1) {
-        cout << "####" << endl;
-        ll tmp; cin >> tmp;
-        if (rl > tmp) {cout << "Out of range: too small" << endl; continue; }
-        if (rr < tmp) {cout << "Out of range: too large" << endl; continue; }
-        ll ret = f(tmp); cout << tmp << " : " << ret << endl;
-    }
-}
-
-
-// 1 3 2 4 4 5      1 3 3 4 4 5
-// 4 3 3 4 5 3      4 3 3 3 3 3
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
+    ll n; cin >> n; n--;
     vll a(n); rep(i, a.size()) cin >> a[i];
-    vll b(n); rep(i, b.size()) cin >> b[i];
-    SparseTable amax(a, true);
-    SparseTable bmin(b, false);
-
-    ll ret = 0;
-    rep(i, n) {
-        // min(i, j) >= max(i, j)なるjを探す
-        ll geq = BinarySearch(i, n, [&](ll x){ return amax.rmq(i, x) >= bmin.rmq(i, x); });
-        // min(i, j) > max(i, j)なるjを探す
-        ll gt  = BinarySearch(i, n, [&](ll x){return amax.rmq(i, x) >  bmin.rmq(i, x); });
-        if (geq == n+1) 
-            ret = ret + 0;
-        else 
-            ret += gt - geq;
+    ll dest; cin >> dest;
+    unsigned long long dp[110][25] = {};
+    dp[0][0] = 1;
+    rep(i, n) rep(j, 21) {
+        if (!dp[i][j]) 
+            continue;
+        if (j+a[i] <= 20)
+            dp[i+1][j+a[i]] += dp[i][j];
+        if (i && j-a[i] >= 0)
+            dp[i+1][j-a[i]] += dp[i][j];
     }
-    cout << ret << endl;
+    cout << dp[n][dest] << endl;
     
     return 0;
 }
