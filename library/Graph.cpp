@@ -95,6 +95,10 @@ bool detectClosedCircuit(Graph& g, bool* visited, ll s, ll t) { // 一つ前がs
 
 // Dijkstra
 // O(E log V)
+//
+// s: 始点
+// dist: 空ベクトルを渡すと副作用で始点sからの最短距離を計算してくれる
+// prev: 空ベクトルを渡すと副作用で何かが出てくる。経路復元に必要
 void shortestPathDI(const Graph &g, ll s,
         vector<Weight> &dist, vector<ll> &prev) {
     ll n = g.size();
