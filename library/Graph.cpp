@@ -9,7 +9,11 @@ using namespace std;
 
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define all(x) (x).begin(), (x).end()
-using ll = long long; using ld = long double; using vll = vector<ll>; using vi = vector<int>;
+using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
+using vi = vector<int>; using vvi = vector<vi>;
+vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
+using P = pair<ll, ll>;
+
 
 /***********************/
 // 共通部分
@@ -39,6 +43,7 @@ void addDirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size(
 void addUndirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(dst, src, weight)); }
 void addDirected(Graph& g, ll src, ll dst) { addDirected(g, src, dst, 1); }
 void addUndirected(Graph& g, ll src, ll dst) { addUndirected(g, src, dst, 1); }
+
 void printGraph(Graph& g) {
     rep(i, g.size()) {
         if (!g[i].size())
@@ -48,7 +53,18 @@ void printGraph(Graph& g) {
         cout << endl;
     }
 }
-
+/***********************/
+// 共通部分おわり
+/***********************/
+// 逆辺のグラフを得る
+void reverseGraph(Graph& g_dst, Graph& g_src) { /*g_dstは空graphを渡す*/
+    g_dst = Graph(g_src.size());
+    rep(i, g_src.size()) {
+        rep(j, g_src[i].size()) {
+            addDirected(g_dst, g_src[i][j].dst, g_src[i][j].src, g_src[i][j].weight);
+        }
+    }
+}
 // グラフの深さ優先探索のテンプレート
 // O(V)
 // gはグラフ, visitedはg.size()の配列, sは直前の頂点(根なら-1), tは今処理している頂点
@@ -73,10 +89,9 @@ ll dfs(Graph& g, ll s, ll t) {
         ret += g[t][j].weight;
         ret += dfs(g, t, dst); 
     }
+    return ret;
 }
-/***********************/
-// 共通部分おわり
-/***********************/
+
 // 無向グラフ閉路検出
 // O(V)
 // dfs(g, visited, -1, root)で、rootからの連結をvisitに全列挙しつつ、閉路があれば1を返す
@@ -206,6 +221,7 @@ bool shortestPathJO(const Graph &g,
         }
         rep(u, n) dist[s][u] += h[u] - h[s];
     }
+    return true;
 }
 vector<ll> buildPathJO(const vector< vector<ll> >& prev, ll s, ll t) {
     vector<ll> path;
@@ -410,7 +426,6 @@ void visit(Graph &h, ll v, ll s, ll r,
         vector<ll> &no, vector< vector<ll> > &comp,
         vector<ll> &prev, vector< vector<ll> > &next, vector<Weight> &mcost,
         vector<ll> &mark, Weight &cost, bool &found) {
-    const ll n = h.size();
     if (mark[v]) {
         vector<ll> temp = no;
         found = true;
@@ -504,6 +519,7 @@ Weight minimum_steiner_tree(const vector<ll>& T, const Matrix &g) {
     for (ll S = 0; S < (1 << numT); ++S)
         for (ll q = 0; q < n; ++q)
             ans = min(ans, OPT[S][q] + OPT[((1 << numT)-1)-S][q]);
+    return ans;
 }
 
 
@@ -937,6 +953,17 @@ Weight shortestHamiltonPath(Matrix w, ll s, vector<ll> &path) {
 }
 
 
+// トポロジカルソート
+// 頂点の順序付け u であって，u[i] から u[j] に辺がある => i < j が成立するものをいう．
+//
+// const Graph &g
+// グラフ．
+// vector<int> &order
+// トポロジカルソートの結果を副作用で代入．意味を持つのは戻り値が true のときに限る．
+// 戻り値
+// トポロジカルソート可能かどうか．
+//
+// O(V+E)
 bool visitT(const Graph &g, ll v, vector<ll> &order, vector<ll> &color) {
     color[v] = 1;
     FOR(e, g[v]) {
@@ -1035,6 +1062,29 @@ void constructBiparitate(Graph& g, int L, int R, Function f) {
     rep(l, L) rep(r, R) if (f(l, r)) addDirected(g, l, L + r);
 }
 
+
+
+
+
+
+
+
+
+
+
+template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
+template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
+template<class Ch, class Tr, class Tuple, size_t... Is>
+void print_tuple(basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){ using s = int[]; (void)s{0, (void(os << (Is == 0? "" : ", ") << get<Is>(t)), 0)...}; }
+template<class Ch, class Tr, class... Args> 
+auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
+ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; cout << endl; } return o; }
+template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+
 int main(void)
 {
     // 基本的な使い方
@@ -1062,6 +1112,7 @@ int main(void)
         shortestPathFW(g, dist);
         cout << dist << endl;
     }
+
     // 強連結分解
     {
         cout << "########Strongly Connected Component" << endl;
@@ -1095,5 +1146,86 @@ int main(void)
         int ret = bipartiteMatching(g, L, matching);
         cout << ret << endl;
     }
+
+    // トポロジカルソート成功例
+    {
+        cout << "########Topological Sort" << endl;
+        Graph g = Graph(6);
+        addDirected(g, 4, 2);
+        addDirected(g, 5, 0);
+        addDirected(g, 2, 0);
+        addDirected(g, 0, 3);
+        addDirected(g, 5, 3);
+        addDirected(g, 3, 1);
+
+        vector<ll> order;
+        topologicalSort(g, order);
+        cout << order << endl;
+    }
+
+    // トポロジカルソート成功例
+    {
+        cout << "########Topological Sort (Failure)" << endl;
+        Graph g = Graph(3);
+        addDirected(g, 0, 1);
+        addDirected(g, 1, 2);
+        addDirected(g, 2, 0);
+
+        vector<ll> order;
+        bool success = topologicalSort(g, order);
+        if (success) 
+            cout << order << endl;
+        else 
+            cout << "NOT DAG" << endl;
+    }
+
+    // SCCからのDAG構成からのトポロジカルソート
+    // 0 -> 2  ->  1 -> 4
+    //       <- 3 <-
+    //          |
+    //          5 -> 6
+    {
+        cout << "########Topological Sort (Failure)" << endl;
+        Graph g = Graph(7);
+        addDirected(g, 0, 2);
+        addDirected(g, 2, 1);
+        addDirected(g, 1, 3);
+        addDirected(g, 3, 5);
+        addDirected(g, 3, 2);
+        addDirected(g, 1, 4);
+        addDirected(g, 5, 6);
+
+        // ループを潰すための前処理
+        vector<vector<ll>> scc;
+        stronglyConnectedComponents(g, scc);
+        rep(i, scc.size()) {
+            rep(j, scc[i].size()) cout << scc[i][j] << " ";
+            cout << endl;
+        }
+
+        // 各頂点が、どのSCCに属しているか
+        vector<ll> scc_inv(g.size());
+        rep(i, scc.size()) rep(j, scc[i].size()) scc_inv[scc[i][j]] = i;
+        cout << scc_inv << endl;
+
+        // 新しいDAGのグラフ作成
+        // グラフdagの頂点iは、実際には(vector<ll> scc[i])たちを表している。
+        Graph dag(scc.size());
+        rep(from, g.size()) rep(to, g[from].size()) if (scc_inv[from] != scc_inv[g[from][to].dst]) {
+            addDirected(dag, scc_inv[from], scc_inv[g[from][to].dst]);
+        }
+        printGraph(dag);
+
+        vector<ll> order;
+        bool success = topologicalSort(dag, order);
+        if (success) 
+            cout << order << endl;
+        else 
+            cout << "NOT DAG" << endl; // 絶対DAGになるはず！
+    }
+
+
+
+
     return 0;
 }
