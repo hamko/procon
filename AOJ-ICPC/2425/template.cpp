@@ -117,8 +117,7 @@ ll n;
 set<P> s;
 ll lx, ly;
 bool is_valid(ll x, ll y) {
-    ll ynum = (2 * ly + 1) - abs(x);
-    return (-lx <= x && x <= lx && -(ynum/2) <= y && y <= (ynum-1)/2);
+    return (-lx <= x && x <= lx && -ly <= y && y <= ly);
 }
 int main(void) {
 cin.tie(0); ios::sync_with_stdio(false);
@@ -138,7 +137,7 @@ cin.tie(0); ios::sync_with_stdio(false);
         ll nextt = (t+1) % 6;
         for (ll x = -lx; x <= lx; x++) {
             ll ynum = (2 * ly + 1) - abs(x);
-            for (ll y = -(ynum / 2); y <= (ynum-1)/2; y++) {
+            for (ll y = -ly; y <= ly; y++) {
                 ll nocost = abs(x * y * t) % 6;
                 rep(d, dx.size()) {
                     ll nextx, nexty;
