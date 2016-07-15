@@ -55,6 +55,8 @@ int main(void) {
 
     if (a == 0 && d == "0") {
         cout << 0 << endl;
+    } else if (a != 0 && d == "0" && b == 0) {
+        cout << a << endl;
     } else if (a == 0 && d != "0") {
         cout << a << "." << d << endl;
     } else {
