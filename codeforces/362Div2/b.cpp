@@ -1,6 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -8,6 +15,7 @@ using namespace std;
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -28,23 +36,47 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-class <%:class-name%> {
-    public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+    string s; cin >> s;
+    string A, B, d;
+    int i = 0;
+    for (; i < s.length(); i++) { if (s[i] == '.') break; A += s[i]; } i++;
+    for (; i < s.length(); i++) { if (s[i] == 'e') break; d += s[i]; } i++;
+    for (; i < s.length(); i++) { B += s[i]; }
+
+    int a = stoi(A), b = stoi(B);
+
+    if (a == 0 && d == "0") {
+        cout << 0 << endl;
+    } else if (a != 0 && d == "0" && b == 0) {
+        cout << a << endl;
+    } else if (a == 0 && d != "0") {
+        cout << a << "." << d << endl;
+    } else {
+        if (d.length() > b) {
+            cout << a;
+            rep(i, b) 
+                cout << d[i];
+            cout << ".";
+            repi(i, b, d.length()) 
+                cout << d[i];
+            cout << endl;
+        } else {
+            cout << a;
+            rep(i, d.length()) 
+                cout << d[i];
+            rep(i, b - d.length()) 
+                cout << "0";
+            cout << endl;
         }
-};
-
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
-
-
-
-
-
+    }
+    
+    return 0;
+}

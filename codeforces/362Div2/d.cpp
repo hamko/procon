@@ -1,6 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -8,6 +15,7 @@ using namespace std;
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -28,23 +36,49 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-class <%:class-name%> {
-    public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+int main(void) {
+    ll n; cin >> n;
+    vi p(n); p[0] = -1;
+    vvi c(n); 
+    rep(i, n-1) { 
+        scanf("%d", &p[i+1]); p[i+1]--;
+        c[p[i+1]].pb(i+1);
+    }
+    vll rank(n); 
+    function<ll(ll)> f = [&](ll v){
+        ll tmp = 0;
+        rep(i, c[v].size()) {
+            tmp += f(c[v][i]) + 1;
         }
-};
+        return rank[v] = tmp;
+    };
+    f(0);
+//    cout << rank << endl;
 
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
+    vector<double> ret(n, -1); 
+    ret[0] = 1.0;
+    function<void(ll)> g = [&](ll v){
+        double sum = 0;
+        rep(i, c[v].size()) {
+            sum += (double)rank[c[v][i]] + 1.0;
+        }
+        rep(i, c[v].size()) {
+            ret[c[v][i]] = (double)ret[v] + (double)1 + (double)(sum - (double)rank[c[v][i]] - 1.0) / 2.0;
+            g(c[v][i]);
+        }
+    };
+    g(0);
+    rep(i, ret.size()) {
+        if (i) printf(" ");
+        printf("%.10lf", ret[i]);
+    }
+    printf("\n");
 
-
-
-
-
+    return 0;
+}

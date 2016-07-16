@@ -1,13 +1,21 @@
 #include <bits/stdc++.h>
 using namespace std;
+#define repi(i,a,b) for(int i = (int)(a); i < (int)(b); i++)
+#define rep(i,a) repi(i,0,a)
 
-#define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
-#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -28,23 +36,67 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define ldout fixed << setprecision(40) 
 
-static const double EPS = 1e-14;
-static const long long INF = 1e18;
-static const long long mo = 1e9+7;
 
-class <%:class-name%> {
-    public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+const int MAX = 100010;
+int N, M;
+typedef pair<int,int> pii;
+
+struct union_find{
+    vector<ll> rnk, par, w;
+
+    union_find(int n){ rnk.resize(n); par.resize(n); w.resize(n); rep(i,n) rnk[i] = 1, par[i] = i, w[i] = 0;}
+
+    pii weight(int x){
+        if(x == par[x]) return pii(x,0);
+        pii ret = weight(par[x]);
+        cout << x << " " << ret.second << "#lazy" << endl;
+        return pii((par[x]=ret.first), (w[x]+=ret.second));
+    }
+    int find(int x){ 
+        return weight(x).first;
+    }
+    void unite(int a, int b, int k){
+        cout << "----" << endl;
+        cout << par << endl;
+        cout << w << endl;
+        int x = find(a), y = find(b);
+        k -= w[b]-w[a];
+        if(x == y) return;
+        if(rnk[x] > rnk[y]){
+            par[y] = x;
+            w[y] = k;
         }
+        else{
+            par[x] = y;
+            w[x] = -k;
+            if(rnk[x] == rnk[y]) rnk[y]++;
+        }
+        cout << par << endl;
+        cout << w << endl;
+    }
+    bool same(int x, int y){ return find(x)==find(y);}
 };
 
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
+void solve(){
+    union_find uf(N);
+    int a, b, w; char c;
+    rep(i,M){
+        cin >> c >> a >> b; a--; b--;
+        cout << uf.w << endl;
+        if(c=='!'){
+            cin >> w;
+            uf.unite(a,b,w);
+        }
+        else {
+            if(!uf.same(a,b)) puts("UNKNOWN");
+            else cout << uf.w[b]-uf.w[a] << endl;
+        }
+    }
+}
 
-
-
-
-
+int main(){
+    while(cin >> N >> M, N and M) solve();
+    return 0;
+}

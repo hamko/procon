@@ -1,6 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -8,6 +15,7 @@ using namespace std;
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -28,23 +36,58 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-class <%:class-name%> {
-    public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+void FZT(vll& f) {
+    rep(i, round(log(f.size())/log(2))) rep(j, f.size()) if(!(j & 1 << i)) f[j] += f[j | 1 << i];
+}
+
+// 高速メビウス変換
+// O(n 2^n)
+//
+// fは2^nでなければならない
+// fに積集合の計算結果を入れてこれを呼び出すと、fが和集合の計算結果になる。
+void FMT(vll& f) {
+    rep(i, round(log(f.size())/log(2))) rep(j, f.size()) if(j & 1 << i) f[j] -= f[j ^ 1 << i];
+}
+
+vll f;
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+    ll n, m; cin >> n >> m;
+    vll a(n), q(n); 
+    rep(i, n) cin >> a[i];
+    rep(i, n) cin >> q[i];
+
+    f = vll(1<<n);
+
+    rep(mask, 1<<n) if (mask) {
+        ll p = 1;
+        rep(j, n) if (mask & (1ll << j)) {
+            ll u = a[j] / __gcd(p, a[j]);
+            if ((double)p * u < 2e18)
+                p *= u;
+            else 
+                p = ((ll)1e18)+10;
         }
-};
+        f[mask] = m / p;
+    }
 
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
+    FMT(f);
 
+    double ret = 0;
+    rep(mask, 1<<n) {
+        double p = 1;
+        rep(j, n) {
+            p *= (double)(mask & (1ll << j) ? (q[j]) : 100-q[j]) / 100;
+        }
+        ret += abs(f[mask]) * p;
+    }
+    cout << ldout << ret << endl;
 
-
-
-
+    return 0;
+}

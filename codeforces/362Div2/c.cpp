@@ -1,6 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -8,6 +15,7 @@ using namespace std;
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
@@ -28,23 +36,57 @@ template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-class <%:class-name%> {
-    public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+ll level(ll x) {
+    ll ret = 0;
+    while (x) {
+        x /= 2;
+        ret++;
+    }
+    return ret;
+}
+
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+    ll n; cin >> n;
+    map<P, ll> cost;
+    rep(_, n) {
+        ll q; cin >> q;
+        ll u, v; cin >> u >> v;
+
+//        cout << level(u) << " " << level(v) << endl;
+        if (level(u) > level(v)) 
+            swap(u, v);
+        vector<P> edges;
+        while (level(u) < level(v)) {
+            edges.pb(P(v, v/2));
+            v/=2;
         }
-};
+        while (u != v) {
+            edges.pb(P(v, v/2));
+            v/=2;
+            edges.pb(P(u, u/2));
+            u/=2;
+        }
+//        cout << edges << endl;
 
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
-
-
-
-
-
+        if (q == 1) {
+            ll c; cin >> c;
+            rep(i, edges.size()) {
+                cost[edges[i]] += c;
+            }
+        } else {
+            ll ret = 0;
+            rep(i, edges.size()) {
+                ret += cost[edges[i]];
+            }
+            cout << ret << endl;
+        }
+    }
+    return 0;
+}
