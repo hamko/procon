@@ -356,8 +356,7 @@ public:
                 else 
                     parent[k+1][v] = parent[k][parent[k][v]]; // 2^(k+1)代の親は、2^k代親の2^k代親
 
-        // 頂点の重みをダブリング
-        // 頂点の重みはモノイドでOK
+        // 親のダブリング
         rep(k, MAXLOGV - 1) // 2^k代祖先を計算
             for (int v = 0; v < vn; v++) 
                 if (parent[k][v] < 0) 
