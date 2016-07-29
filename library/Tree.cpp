@@ -41,6 +41,9 @@ static const long long INF = 1e18;
 // 頂点から根までの頂点の二分探索 O(log n)
 // 頂点からn個親の頂点jを知る O(log n)
 // 頂点iからn個親の頂点jまでの、辺の積分を知る O(log n)
+//
+// accumulateはモノイドデータに対して使う単語
+// sumは群データに対して使う単語
 
 
 
@@ -482,9 +485,27 @@ public:
     // uを根とする部分木に含まれる頂点全ての演算結果を求める。
     //
     // O(log n)
-    // 制約: 頂点のデータが群
+    // 制約: 頂点のデータがモノイド
     verticle_t accumulateSubTree(int u) {
         return m_euler_verticles_positive_segment.query(m_euler_appears_first[u], m_euler_appears_second[u] + 1);
+    }
+
+    // 頂点uにxを足す
+    //
+    // O(log n)
+    // 制約: 頂点のデータがモノイド
+    void addSubTree(int u, verticle_t x) {
+        m_euler_verticles_positive_segment.update(m_euler_appears_first[u], x);
+        m_euler_verticles_positive_segment.update(m_euler_appears_second[u], x);
+    }
+
+    // uを根とする部分木に含まれる頂点全てにxを足す
+    //
+    // O(log n)
+    // 制約: 頂点のデータがモノイド
+    void addAllSubTree(int u, verticle_t x) {
+        m_euler_verticles_positive_segment.enable_range_update_flag = true;
+        m_euler_verticles_positive_segment.update(m_euler_appears_first[u], m_euler_appears_second[u] + 1, x);
     }
 
     /****************************************************/
@@ -498,7 +519,7 @@ public:
     // O(log n)
     // 制約: 頂点のデータが群
     // 制約: u is parent of v !!!
-    verticle_t accumulateMinimumLengthPathParentAndChild(int u, int v) {
+    verticle_t sumMinimumLengthPathParentAndChild(int u, int v) {
         return m_euler_verticles_negative.query(m_euler_appears_first[v])
             - m_euler_verticles_negative.query(m_euler_appears_first[u] - 1);
     }
@@ -507,10 +528,10 @@ public:
     //
     // O(log n)
     // 制約: 頂点のデータが群
-    verticle_t accumulateMinimumLengthPath(int u, int v) {
+    verticle_t sumMinimumLengthPath(int u, int v) {
         int lca_v = lca(u, v); 
-        return accumulateMinimumLengthPathParentAndChild(lca_v, u) 
-            + accumulateMinimumLengthPathParentAndChild(lca_v, v);
+        return sumMinimumLengthPathParentAndChild(lca_v, u) 
+            + sumMinimumLengthPathParentAndChild(lca_v, v);
     }
 
 #if 0 // not yet
@@ -539,7 +560,7 @@ public:
     // O(log n)
     // 制約: 頂点のデータがモノイド
     // 制約: u is parent of v !!!
-    verticle_t opMinimumLengthPathParentAndChild(int u, ll n) {
+    verticle_t accumulateMinimumLengthPathParentAndChild(int u, ll n) {
         verticle_t ret = op->T0;
         ll index = u;
         n = min(n, (1ll << MAXLOGV) - 1);
@@ -554,10 +575,10 @@ public:
     //
     // O(log n)
     // 制約: 頂点のデータがモノイド
-    verticle_t opMinimumLengthPath(int u, int v) {
+    verticle_t accumulateMinimumLengthPath(int u, int v) {
         int lca_v = lca(u, v); 
-        return op->op(opMinimumLengthPathParentAndChild(lca_v, depth[u] - depth[lca_v]), 
-            opMinimumLengthPathParentAndChild(lca_v, depth[v] - depth[lca_v]));
+        return op->op(accumulateMinimumLengthPathParentAndChild(lca_v, depth[u] - depth[lca_v]), 
+            accumulateMinimumLengthPathParentAndChild(lca_v, depth[v] - depth[lca_v]));
     }
 
     /*************/
@@ -626,20 +647,20 @@ int main() {
     cout << tree.accumulateSubTree(1) << endl;
     cout << tree.accumulateSubTree(2) << endl;
 
-    cout << "Accumulate Minimum Length Path" << endl;
-    cout << tree.accumulateMinimumLengthPath(0, 3) << endl;
-    cout << tree.accumulateMinimumLengthPath(2, 5) << endl;
-    cout << tree.accumulateMinimumLengthPath(0, 4) << endl;
-    cout << tree.accumulateMinimumLengthPath(3, 5) << endl;
+    cout << "Sum Minimum Length Path" << endl;
+    cout << tree.sumMinimumLengthPath(0, 3) << endl;
+    cout << tree.sumMinimumLengthPath(2, 5) << endl;
+    cout << tree.sumMinimumLengthPath(0, 4) << endl;
+    cout << tree.sumMinimumLengthPath(3, 5) << endl;
 
     cout << "Min Minimum Length Path" << endl;
-    cout << tree.opMinimumLengthPathParentAndChild(3, 1) << endl;
-    cout << tree.opMinimumLengthPathParentAndChild(3, 2) << endl;
-    cout << tree.opMinimumLengthPathParentAndChild(3, 3) << endl;
-    cout << tree.opMinimumLengthPath(3, 1) << endl;
-    cout << tree.opMinimumLengthPath(3, 2) << endl;
-    cout << tree.opMinimumLengthPath(3, 3) << endl;
-    cout << tree.opMinimumLengthPath(4, 5) << endl;
+    cout << tree.accumulateMinimumLengthPathParentAndChild(3, 1) << endl;
+    cout << tree.accumulateMinimumLengthPathParentAndChild(3, 2) << endl;
+    cout << tree.accumulateMinimumLengthPathParentAndChild(3, 3) << endl;
+    cout << tree.accumulateMinimumLengthPath(3, 1) << endl;
+    cout << tree.accumulateMinimumLengthPath(3, 2) << endl;
+    cout << tree.accumulateMinimumLengthPath(3, 3) << endl;
+    cout << tree.accumulateMinimumLengthPath(4, 5) << endl;
 
     cout << "Diameter" << endl;
     cout << tree.diameter() << endl;
