@@ -1,0 +1,73 @@
+==== FOLDERS ====
+     ```````
+
+Optimized -    single-core realizations of cycle counting programs
+               with hand made optimizations. 
+               !!! WARNING: WE DO NOT GUARANTEE THAT THESE PROGRAMS WILL WORK CORRECTLY
+               !!! ```````  WITH GRAPH OF ABOUT 100 VERTICES.
+               We give you our hand-optimized program just to
+               demonstrate how to make hand optimizations (as a variant).
+               We strongly recommend to use initial programs and
+               optimize them by yourself 
+               (taking into account the peculiarities of your graphs).
+
+NotOptimized - Parallel (MPI) and single-core programs
+               without any handmade optimizations (initial programs).
+               These programs are guaranteed to work with graphs of 
+               more than 500 vertices.
+
+Tests -        Some simple tests 
+               (demonstates the input file syntax).
+
+Each folder contains "Int128.h" file. 
+This file contains long 128-bit signed integer arithmetics.
+
+
+==== COMPILING ====
+     `````````
+We used Intel C++ 11 compiler. 
+Keep in mind that programs "Cycles.12.cpp", "Cycles.12b.cpp" and "Cycles.14b.cpp"
+take A LOT OF time to be compiled. 
+Our compiler cannot compile them with any code optimization commands.
+Hand-optimized programs could be compiled with "-O3" command.
+
+Unfortunately, GCC make VERY slow code even if one uses optimization command.
+
+
+==== LAUNCHING ====
+     `````````
+To launch the program use the following command line syntax (example):
+
+    > Cycles.05.exe file.in [ file.out ]
+
+If "file.out" is omitted then the program outputs the result on the screen.
+
+
+==== INPUT DATA ====
+     ``````````
+The input file should contain the following information:
+
+  n m (the number of nodes and the number of UNDIRECTED arcs)
+  a1 b1 (next m lines contain pairs of nodes connected by corresponding arc)
+  a2 b2
+  .....
+  am bm
+
+For example, look at complete graph of 4 nodes:
+
+4 6
+1 2
+1 3
+1 4
+2 3
+2 4
+3 4
+
+
+==== OUTPUT DATA ====
+     ```````````
+Each program outputs only the number of cycles of the given length.
+I. e. program "Cycles.05.cpp" outputs the number of cycles of lenght 5,
+program "Cycles.06b.cpp" outputs the number of cycles of lenght 6 in bipartite graph.
+
+EOF
