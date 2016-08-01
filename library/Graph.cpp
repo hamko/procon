@@ -555,7 +555,9 @@ Weight maximumFlowEdmondsKarp(const Graph &g, ll s, ll t) {
 
 
 // Dinic
-// O(E V^2)
+// O(E V^2)なのだが、ランダムケースに対しては、2乗オーダーレベルにめちゃくちゃ速い。
+// 逆に最悪ケースはめっちゃ遅い。
+// 容量が整数以外の場合は無限ループに陥るケースが存在する
 #undef RESIDUE
 #define RESIDUE(s,t) (capacity[s][t]-flow[s][t])
 Weight augment(const Graph &g, const Matrix &capacity, Matrix &flow,

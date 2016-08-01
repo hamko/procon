@@ -20,6 +20,7 @@ class Mod {
         void setmod(const int mod) { this->mod = mod; }
 };
 istream &operator>>(istream &is, Mod &x) { long long int n; is >> n; x = n; return is; }
+ostream &operator<<(ostream &o, const Mod &x) { o << x.num; return o; }
 Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % a.mod); }
 Mod operator+(const long long int a, const Mod b) { return Mod(a) + b; }
 Mod operator+(const Mod a, const long long int b) { return b + a; }
@@ -84,7 +85,9 @@ Mod combination3(const long long a, const long long b, const long long c) {
     return factorial(a+b+c)/factorial(a)/factorial(b)/factorial(c);
 }
 
-// ------
+/*************************************/
+// 謎演算
+/*************************************/
 
 // gcdは関数__gcdを使いましょう。long long対応している。
 
@@ -133,20 +136,124 @@ long long eulerPhi(long long n) {
     return f[n];
 }
 
+/*************************************/
+// GF(p)の行列演算
+/*************************************/
+using number = Mod;
+using arr = vector<number>;
+using matrix = vector<vector<Mod>>;
+
+ostream &operator<<(ostream &o, const arr &v) { rep(i, v.size()) cout << v[i] << " "; cout << endl; return o; }
+ostream &operator<<(ostream &o, const matrix &v) { rep(i, v.size()) cout << v[i]; return o; }
+
+matrix zero(int n) { return matrix(n, arr(n, 0)); } // O( n^2 )
+matrix identity(int n) { matrix A(n, arr(n, 0)); rep(i, n) A[i][i] = 1; return A; } // O( n^2 )
+// O( n^2 )
+arr mul(const matrix &A, const arr &x) { 
+    arr y(A.size(), 0); 
+    rep(i, A.size()) rep(j, A[0].size()) y[i] += A[i][j] * x[j]; 
+    return y; 
+} 
+// O( n^3 )
+matrix mul(const matrix &A, const matrix &B) {
+    matrix C(A.size(), arr(B[0].size(), 0));
+    rep(i, C.size())
+        rep(j, C[i].size())
+            rep(k, A[i].size())
+                C[i][j] += A[i][k] * B[k][j];
+    return C;
+}
+// O( n^3 log e )
+matrix pow(const matrix &A, int e) {
+    return e == 0 ? identity(A.size())  :
+        e % 2 == 0 ? pow(mul(A, A), e/2) : mul(A, pow(A, e-1));
+}
+// O( n )
+number inner_product(const arr &a, const arr &b) {
+    number ans = 0;
+    for (int i = 0; i < a.size(); ++i)
+        ans += a[i] * b[i];
+    return ans;
+}
+// O(n)
+number tr(const matrix &A) {
+    number ans = 0;
+    for (int i = 0; i < A.size(); ++i)
+        ans += A[i][i];
+    return ans;
+}
+// O( n^3 )
+// modは素数でなければならない！！
+number det(matrix A) {
+    int n = A.size();
+    assert(n == A[0].size());
+    number ans = 1;
+    for (int i = 0; i < n; i++) {
+        int pivot = -1;
+        for (int j = i; j < n; j++)
+            if (A[j][i]) {
+                pivot = j;
+                break;
+            }
+        if (pivot == -1) return 0;
+        if (i != pivot) {
+            swap(A[i], A[pivot]);
+            ans *= -1;
+        }
+        number tmpinv = inv(A[i][i]);
+        for (int j = i + 1; j < n; j++) {
+            number c = A[j][i] * tmpinv;
+            for (int k = i; k < n; k++) {
+                A[j][k] = (A[j][k] - c * A[i][k]);
+            }
+        }
+        ans *= A[i][i];
+    }
+    return ans;
+}
+
+// O( n^3 ).
+// int rank(matrix A) はまだ
+
+// O( n^3 ).
+// modが2の時だけ使える演算
+#define FOR(x,to) for(x=0;x<(to);x++)
+int gf2_rank(matrix A) { /* input */
+    if (!A.size() || (A.size() && A[0].size())) return 0;
+    int n = A.size();
+    assert(A[0][0].mod == 2); 
+    
+    int i,j,k;
+    FOR(i,n) {
+        int be=i,mi=n+1;
+        for(j=i;j<n;j++) {
+            FOR(k,n) if(A[j][k]) break;
+            if(k<mi) be=j,mi=k;
+        }
+        if(mi>=n) break;
+        FOR(j,n) swap(A[i][j],A[be][j]);
+
+        FOR(j,n) if(i!=j&&A[j][mi]) {
+            FOR(k,n) A[j][k] += A[i][k]; // ^=のつもり
+        }
+    }
+    return i;
+}
+
 
 int main() {
     cout << __gcd(12, 18) << endl;
 
     cout << ((Mod)2 + (Mod)10) << endl;
-    cout << ((Mod)2 ^ 10) << endl;
-    cout << ((Mod)3 ^ 1000000) << endl;
+    cout << ((Mod)2 ^ 10ll) << endl;
+    cout << ((Mod)3 ^ 1000000ll) << endl;
     Mod r(1000000), c(1000000);
     cout << r * c + (Mod)1 << endl;
     cout << modpowsum(3, 4) << endl; // 1 + 3 + 9 + 27
 
     long long   n = 8e18;
     printf("long long x 1= %Ld\n", n);
-    printf("long long x 2 = %Ld\n", n*2);
+//    printf("long long x 2 = %Ld\n", n*2); // overflow
     long double m = n;
     printf("long double x 1= %Lf\n", m);
     printf("long double x 2 = %Lf\n", m*2);

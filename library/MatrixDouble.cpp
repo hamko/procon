@@ -15,7 +15,13 @@ ostream &operator<<(ostream &o, const matrix &v) {
     return o; 
 }
 
-// O( n )
+// O( n^2 )
+matrix zero(int n) {
+    matrix A(n, arr(n, 0));
+    return A;
+}
+
+// O( n^2 )
 matrix identity(int n) {
     matrix A(n, arr(n, 0));
     for (int i = 0; i < n; ++i) A[i][i] = 1; // 積の単位元（和の単位元は？）
