@@ -8,12 +8,12 @@ ld randrf(ld i, ld j) { return ((ld)rand() / RAND_MAX) * (j - i) + i; }
 
 int main(void)
 {
-    ll n = 300000 / 2;
-    cout << n << " " << n << endl;
+    ll n = 300000;
+    cout << n << " " << n+1 << endl;
     rep(i, n) {
         cout << 1 << " " << 1 << " ";
-        cout << 2 << " " << 1 << " ";
     }
+    cout << 3 << " " << 300000 << " ";
 
     return 0;
 }
