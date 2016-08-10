@@ -1,6 +1,8 @@
 #include <bits/stdc++.h>
 using namespace std;
  
+// 見た目はコピーが高速なUnion-Find
+
 // memory: O(Q loglogN logN)
 // mutable_get: O(loglogN logN)
 // immutable_get: O(loglogN)
