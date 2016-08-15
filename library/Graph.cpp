@@ -25,7 +25,11 @@ const Weight INF = 1e18;
 
 struct Edge {
     ll src, dst;
+    ll cap = 1;
     Weight weight;
+    ll rev; // 残余グラフの対応用
+    bool rev_flag = false; // revなら1
+    Edge() {};
     Edge(ll src, ll dst, Weight weight) :
         src(src), dst(dst), weight(weight) { }
 };
@@ -39,6 +43,12 @@ typedef vector<Edges> Graph;
 typedef vector<Weight> Array;
 typedef vector<Array> Matrix;
 
+void addDirected(Graph& g, ll src, ll dst, Weight weight, ll cap) {
+    assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0);
+    Edge e = Edge(src, dst, weight);
+    e.cap = cap;
+    g[src].push_back(e); 
+}
 void addDirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); }
 void addUndirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(dst, src, weight)); }
 void addDirected(Graph& g, ll src, ll dst) { addDirected(g, src, dst, 1); }
@@ -53,6 +63,16 @@ void printGraph(Graph& g) {
         cout << endl;
     }
 }
+void printGraphCap(Graph& g) {
+    rep(i, g.size()) {
+        if (!g[i].size())
+            continue;
+        rep(j, g[i].size()) 
+            cout << "(" << i << ", " << g[i][j].dst << " : " << g[i][j].cap << ", " << (g[i][j].rev_flag ? "rev" : "for") << "), ";
+        cout << endl;
+    }
+}
+
 /***********************/
 // 共通部分おわり
 /***********************/
@@ -107,6 +127,230 @@ bool detectClosedCircuit(Graph& g, bool* visited, ll s, ll t) { // 一つ前がs
     }
     return ret;
 }
+
+class FordFulkerson {
+public:
+    Graph g; // 残余ネットワーク
+    int s, t; // 始点, 終点
+    int n; // 頂点数
+    ll flow = 0; // 最大フロー、これを辺追加・削除時にきちんと更新する
+
+    FordFulkerson(Graph& input, int s_, int t_) : s(s_), t(t_) {
+        n = input.size();
+        g.resize(n);
+        used.resize(n);
+        for (auto&& from : input) {
+            for (auto&& e_for : from) {
+                addEdge(e_for);
+            }
+        }
+
+        flow = 0;
+        revise();
+    }
+    // 順向きの辺のsrc, dst, capの情報から、
+    // 残余グラフの順逆辺を追加する
+    void addEdge(Edge& e_for) {
+        Edge e_rev;
+        e_rev.src = e_for.dst; 
+        e_rev.dst = e_for.src;
+        e_rev.cap = 0;
+
+        e_for.rev = g[e_rev.src].size();
+        e_rev.rev = g[e_for.src].size(); // 逆辺のマーカー
+        e_rev.rev_flag = true;
+        g[e_for.src].push_back(e_for);
+        g[e_rev.src].push_back(e_rev);
+    }
+    // 残余グラフが初期、あるいは変更された時に
+    // flowを再計算する
+    ll revise(void) {
+        while (1) {
+            ll f = update(INF);
+            if (!f) { // 残余グラフが収束したら
+                break;
+            }
+            flow += f;
+        }
+        return flow;
+    }
+    // 一回だけ、
+    // 残余グラフで、vからtへの正のパスを探して、あればそこに流す
+    //
+    // sからtへ移動可能ならそのルートの最大流量を返し、不可能なら0を返す。
+    // fは流そうとしている流量
+    //
+    // O(V)
+    vector<bool> used;
+    int dfs_rec(int v/*from*/, int to, ll f) {
+        if (v == to)
+            return f;
+        used[v] = true;
+        for (int i = 0; i < g[v].size(); i++) {
+            Edge &e = g[v][i];
+            if (used[e.dst] || e.cap <= 0) 
+                continue;
+            // キャパシティが残っている辺を探す 
+            int d = dfs_rec(e.dst, to, min(f, e.cap)); // 流そうとしてる流量、キャパシティのうち小さい方を次に流そうとする
+            if (d > 0) {
+                e.cap -= d; // 残余グラフの辺を更新
+                g[e.dst][e.rev].cap += d; // 残余グラフの逆辺を更新
+                return d;
+            }
+        }
+        return 0;
+    }
+    int dfs(int v/*from*/, int to, ll f) {
+        rep(i, n) {
+            used[i] = 0;
+        }
+        return dfs_rec(v, to, f);
+    }
+    int update(ll f) {
+        return update(f, t);
+    }
+    int update(ll f, int to) {
+        return dfs(s, to, f);
+    }
+
+    // sからtへの最大流量を返す。
+    // s == tならINFを返す, 不可能なら0を返す
+    ll get(void) {
+        return flow;
+    }
+    // O(V) 
+    // fromからtoへの有向辺にcapを追加して、その時の最大流量を返す
+    // もし有向辺がもともとはなかったら辺を追加する
+    // TODO 未確認！！！！
+    int add(int from, int to, ll cap) {
+        bool found = false;
+        rep(i, g[from].size()) {
+            Edge& e = g[from][i];
+            if (e.rev_flag) continue;
+            if (e.dst == to) { // もともとあったら
+                e.cap += cap;
+                found = true;
+                break;
+            }
+        }
+        if (found == false) {
+            Edge e;
+            e.src = from;
+            e.dst = to;
+            e.cap = cap;
+            this->addEdge(e);
+        }
+        revise();
+        return flow;
+    }
+
+    // fromからtoへの辺をcapだけ削除する
+    // この時、from->to->パス->fromを用いて、ループが出来るならば、
+    // from->toの逆辺をループのコスト分だけ下げることができて、
+    // パスもコスト分だけ下げたあとに、逆辺を上げることが出来る。
+    ll erase_using_circuit(int from, int to, ll cap) {
+        rep(i, g[from].size()) {
+            if (!cap) break;
+
+            Edge& e = g[from][i];
+            if (e.rev_flag) continue;
+            if (e.dst != to) continue;
+            if (g[e.dst][e.rev].cap == 0) continue;
+            // フローが流れているfromからtoへの順向き辺を全列挙
+
+            Edge& e_rev = g[e.dst][e.rev];
+            // 消すべき辺のフローを頑張って全部押し戻そうとする
+            // 押し戻しきれなかったらあとで考える
+            while (cap) {
+                // e.srcを通る残余グラフの閉路があれば押し戻せる
+                bool used[n];
+                rep(i, n) {
+                    used[i] = false;
+                }
+                function<ll(ll, ll)> dfs_lam = [&](ll v, ll c) {
+                    if (v == e.dst) {
+                        return c;
+                    }
+                    used[v] = true;
+                    for (auto&& tmp : g[v]) if (used[tmp.dst] == false) {
+                        ll f = dfs_lam(tmp.dst, min(c, tmp.cap));
+                        if (f) {
+                            tmp.cap -= f;
+                            g[tmp.dst][tmp.rev].cap += f;
+                            return f;
+                        }
+                    }
+                    return 0ll;
+                };
+                ll can_erase = dfs_lam(e.src, cap);
+                cap -= can_erase;
+                e_rev.cap -= can_erase;
+
+                if (can_erase == 0 && cap) { // 閉路では消しきれない
+                    // TODO 本当はここに来た時点で、全部の辺を確認する必要はなく次に進んでいいはず。
+                    break;
+                }
+            }
+        }
+        return cap;
+    }
+    // O(V) 
+    // fromからtoへの有向辺からcapを減らして、その時の最大流量を返す
+    // capが0になっても、残余グラフそのものの辺は消さない
+    int erase(int from, int to, ll cap) {
+        // 削除クエリの容量が、実際に消せる容量を上回っていないかを確認
+        ll cap_sum = 0;
+        rep(i, g[from].size()) if (g[from][i].dst == to) {
+            Edge& e = g[from][i];
+            if (e.rev_flag) continue;
+            // 順向き辺を全列挙
+
+            cap_sum += e.cap + g[e.dst][e.rev].cap;
+        }
+        if (cap > cap_sum) {
+            cap = cap_sum;
+        }
+
+        // 使ってない辺があったら気にせず削除
+        rep(i, g[from].size()) {
+            Edge& e = g[from][i];
+            if (e.rev_flag) continue;
+            if (e.dst != to) continue;
+            if (g[e.dst][e.rev].cap != 0) continue;
+            // フローが流れていないfromからtoへの辺を全列挙
+
+            ll to_erase = min(e.cap, cap);
+            e.cap -= to_erase;
+            cap -= to_erase;
+        }
+        if (cap == 0) { // もう消す必要がないなら終わり
+            return flow;
+        }
+
+        cap = erase_using_circuit(from, to, cap);
+        if (cap == 0) { // もう消す必要がないなら終わり
+            return flow;
+        }
+
+        // まだcapを消さないといけない
+        // 残余グラフでのt->sへの増大路をcap分だけ見つけて、押し戻してflowを減少させる
+        // 減少後には、必ず削除すべき辺を含む閉路が存在するので、先ほどと同じように押し戻す
+        ll cap_to_go_back = cap;
+        while (1) {
+            ll f = dfs(t, s, cap_to_go_back);
+            if (!f) break;
+            flow -= f;
+            cap_to_go_back -= f;
+        }
+        cap = erase_using_circuit(from, to, cap);
+        assert(cap == 0);
+        return flow;
+    }
+    // fromからtoへの辺の全削除 
+    int erase(int from, int to) {
+        return erase(from, to, INF);
+    }
+};
 
 // Dijkstra
 // O(E log V)
@@ -1226,8 +1470,35 @@ int main(void)
             cout << "NOT DAG" << endl; // 絶対DAGになるはず！
     }
 
+    {
+        cout << "########Ford Fullkerson" << endl;
+        Graph g = Graph(5);
+        addDirected(g, 0, 1, 0, 10);
+        addDirected(g, 0, 3, 0, 2);
+        addDirected(g, 1, 2, 0, 6);
+        addDirected(g, 1, 3, 0, 6);
+        addDirected(g, 2, 3, 0, 3);
+        addDirected(g, 2, 4, 0, 8);
+        addDirected(g, 3, 4, 0, 5);
+        FordFulkerson ff(g, 0, 4);
+        cout << ff.get() << endl;
+    }
+   
+    {
+        cout << "########Ford Fullkerson (Dynamic)" << endl;
+        Graph g = Graph(3);
+        addDirected(g, 0, 1, 0, 10);
+        addDirected(g, 1, 2, 0, 2);
+        FordFulkerson ff(g, 0, 2); 
+        printGraphCap(ff.g);
+        cout << ff.get() << endl; // 1-2が2で少ないので、2が答え
+        cout << ff.add(0, 2, 6) << endl; // 0-1-2は2で、0-2が6なので、8が答え
+        printGraphCap(ff.g);
+        cout << ff.erase(0, 2, 1) << endl;
+        printGraphCap(ff.g);
+        cout << ff.erase(0, 2, 5) << endl;
+        cout << ff.erase(0, 2, 1) << endl; // 削除しすぎても自動的にクリップする
 
-
-
-    return 0;
+        cout << ff.add(1, 2, 6) << endl; 
+    }
 }
