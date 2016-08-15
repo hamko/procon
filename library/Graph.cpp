@@ -128,6 +128,7 @@ bool detectClosedCircuit(Graph& g, bool* visited, ll s, ll t) { // 一つ前がs
     return ret;
 }
 
+// TODO 計算量間違ってない？
 class FordFulkerson {
 public:
     Graph g; // 残余ネットワーク
@@ -135,6 +136,8 @@ public:
     int n; // 頂点数
     ll flow = 0; // 最大フロー、これを辺追加・削除時にきちんと情報を保つ
 
+    // 普通のフォードフルカーソン
+    // O(E ret)
     FordFulkerson(Graph& input, int s_, int t_) : s(s_), t(t_) {
         n = input.size();
         g.resize(n);
