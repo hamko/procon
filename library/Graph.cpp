@@ -133,7 +133,7 @@ public:
     Graph g; // 残余ネットワーク
     int s, t; // 始点, 終点
     int n; // 頂点数
-    ll flow = 0; // 最大フロー、これを辺追加・削除時にきちんと更新する
+    ll flow = 0; // 最大フロー、これを辺追加・削除時にきちんと情報を保つ
 
     FordFulkerson(Graph& input, int s_, int t_) : s(s_), t(t_) {
         n = input.size();
@@ -164,6 +164,8 @@ public:
     }
     // 残余グラフが初期、あるいは変更された時に
     // flowを再計算する
+    //
+    // O(V ret)
     ll revise(void) {
         while (1) {
             ll f = update(INF);
@@ -174,6 +176,7 @@ public:
         }
         return flow;
     }
+
     // 一回だけ、
     // 残余グラフで、vからtへの正のパスを探して、あればそこに流す
     //
@@ -182,6 +185,12 @@ public:
     //
     // O(V)
     vector<bool> used;
+    int dfs(int v/*from*/, int to, ll f) {
+        rep(i, n) {
+            used[i] = 0;
+        }
+        return dfs_rec(v, to, f);
+    }
     int dfs_rec(int v/*from*/, int to, ll f) {
         if (v == to)
             return f;
@@ -200,12 +209,11 @@ public:
         }
         return 0;
     }
-    int dfs(int v/*from*/, int to, ll f) {
-        rep(i, n) {
-            used[i] = 0;
-        }
-        return dfs_rec(v, to, f);
-    }
+
+    // 一回だけDFSのラッパ関数。
+    // s, tが予め指定されているなら、こっちを使ったほうが簡潔
+    //
+    // O(V)
     int update(ll f) {
         return update(f, t);
     }
@@ -218,10 +226,10 @@ public:
     ll get(void) {
         return flow;
     }
+
     // O(V) 
     // fromからtoへの有向辺にcapを追加して、その時の最大流量を返す
     // もし有向辺がもともとはなかったら辺を追加する
-    // TODO 未確認！！！！
     int add(int from, int to, ll cap) {
         bool found = false;
         rep(i, g[from].size()) {
@@ -244,14 +252,19 @@ public:
         return flow;
     }
 
-    // fromからtoへの辺をcapだけ削除する
-    // この時、from->to->パス->fromを用いて、ループが出来るならば、
-    // from->toの逆辺をループのコスト分だけ下げることができて、
+    //  最 大 流 自 体 は 変 え ず に、from->toのフローを最小化したグラフに置き換える。
+    //
+    // fromからtoへの辺のフロー=to->fromの逆辺コストを、代替パス=from->toのパスを探すことで、最大流を変えない条件下でなるべく低下させる。
+    // from->toのパスの下がったフローの量を返し、副作用でfrom->toのフロー最小化グラフへとgを書き換える。
+    //
+    // from->パス->to->fromで、ループが出来るならば、
+    // from->toの逆辺をループのコスト分だけ下げることができる。
     // パスもコスト分だけ下げたあとに、逆辺を上げることが出来る。
-    ll erase_using_circuit(int from, int to, ll cap) {
+    //
+    // O(V ret)
+    ll minimizeFlowOfEdgePreservingMaxFlow(int from, int to) {
+        ll sum = 0;
         rep(i, g[from].size()) {
-            if (!cap) break;
-
             Edge& e = g[from][i];
             if (e.rev_flag) continue;
             if (e.dst != to) continue;
@@ -261,7 +274,8 @@ public:
             Edge& e_rev = g[e.dst][e.rev];
             // 消すべき辺のフローを頑張って全部押し戻そうとする
             // 押し戻しきれなかったらあとで考える
-            while (cap) {
+            ll ret = 0;
+            while (1) { // TODO 必要な分だけ空ければいい
                 // e.srcを通る残余グラフの閉路があれば押し戻せる
                 bool used[n];
                 rep(i, n) {
@@ -272,7 +286,7 @@ public:
                         return c;
                     }
                     used[v] = true;
-                    for (auto&& tmp : g[v]) if (used[tmp.dst] == false) {
+                    for (auto&& tmp : g[v]) if (used[tmp.dst] == false && tmp.cap) {
                         ll f = dfs_lam(tmp.dst, min(c, tmp.cap));
                         if (f) {
                             tmp.cap -= f;
@@ -282,21 +296,25 @@ public:
                     }
                     return 0ll;
                 };
-                ll can_erase = dfs_lam(e.src, cap);
-                cap -= can_erase;
+                ll can_erase = dfs_lam(e.src, e_rev.cap);
+                ret += can_erase;
+                sum += can_erase;
                 e_rev.cap -= can_erase;
 
-                if (can_erase == 0 && cap) { // 閉路では消しきれない
+                if (can_erase == 0) { // 閉路では消しきれない
                     // TODO 本当はここに来た時点で、全部の辺を確認する必要はなく次に進んでいいはず。
                     break;
                 }
             }
+            e.cap += ret;
         }
-        return cap;
+        return sum;
     }
-    // O(V) 
+
     // fromからtoへの有向辺からcapを減らして、その時の最大流量を返す
     // capが0になっても、残余グラフそのものの辺は消さない
+    //
+    // O(V ret)
     int erase(int from, int to, ll cap) {
         // 削除クエリの容量が、実際に消せる容量を上回っていないかを確認
         ll cap_sum = 0;
@@ -311,13 +329,13 @@ public:
             cap = cap_sum;
         }
 
-        // 使ってない辺があったら気にせず削除
+        // (1) 使ってない辺があったら気にせず削除
         rep(i, g[from].size()) {
             Edge& e = g[from][i];
             if (e.rev_flag) continue;
             if (e.dst != to) continue;
             if (g[e.dst][e.rev].cap != 0) continue;
-            // フローが流れていないfromからtoへの辺を全列挙
+            // フローが流れていないfromからtoへの順向きの辺を全列挙
 
             ll to_erase = min(e.cap, cap);
             e.cap -= to_erase;
@@ -327,30 +345,56 @@ public:
             return flow;
         }
 
-        cap = erase_using_circuit(from, to, cap);
+        // (2) 使っていても、他のパスに同じフローを押し付けられるなら最大流は変わらない
+        minimizeFlowOfEdgePreservingMaxFlow(from, to); // これでfrom->toのフローがcapだけ空いた
+        // 空いたフローを消す
+        rep(i, g[from].size()) {
+            Edge& e = g[from][i];
+            if (e.rev_flag) continue;
+            if (e.dst != to) continue;
+            ll m = min(cap, e.cap);
+            cap -= m;
+            e.cap -= m;
+        }
         if (cap == 0) { // もう消す必要がないなら終わり
             return flow;
         }
-
-        // まだcapを消さないといけない
+ 
+        // (2) もう他に押し付けられないので、削除したいぶんだけフローを押し戻して最大流を低下させる
+        //
         // 残余グラフでのt->sへの増大路をcap分だけ見つけて、押し戻してflowを減少させる
         // 減少後には、必ず削除すべき辺を含む閉路が存在するので、先ほどと同じように押し戻す
-        ll cap_to_go_back = cap;
+        ll sum = 0;
         while (1) {
-            ll f = dfs(t, s, cap_to_go_back);
+            ll f = dfs(t, s, cap);
             if (!f) break;
             flow -= f;
-            cap_to_go_back -= f;
+            cap -= f;
+            sum += f;
         }
-        cap = erase_using_circuit(from, to, cap);
         assert(cap == 0);
+        minimizeFlowOfEdgePreservingMaxFlow(from, to); // これでfrom->toのフローがちょうどcapだけ空いた
+
+        // 空いたフローを消す
+        rep(i, g[from].size()) {
+            Edge& e = g[from][i];
+            if (e.rev_flag) continue;
+            if (e.dst != to) continue;
+            ll m = min(sum, e.cap);
+            sum -= m;
+            e.cap -= m;
+        }
         return flow;
     }
+
     // fromからtoへの辺の全削除 
+    //
+    // O(V ret)
     int erase(int from, int to) {
         return erase(from, to, INF);
     }
 };
+
 
 // Dijkstra
 // O(E log V)
@@ -1501,4 +1545,27 @@ int main(void)
 
         cout << ff.add(1, 2, 6) << endl; 
     }
+    {
+        cout << "########Ford Fullkerson (Dynamic)" << endl;
+        Graph g = Graph(2);
+        addDirected(g, 0, 1, 0, 1);
+        FordFulkerson ff(g, 0, 1); 
+        cout << ff.erase(0, 1, 1) << endl; 
+    }
+    {
+        cout << "########Ford Fullkerson (Dynamic)" << endl;
+        Graph g = Graph(2);
+        addDirected(g, 0, 1, 0, 1);
+        addDirected(g, 1, 0, 0, 1);
+        FordFulkerson ff(g, 0, 1); 
+        printGraphCap(ff.g);
+        cout << ff.erase(0, 1, 1) << endl; 
+        printGraphCap(ff.g);
+        cout << ff.erase(1, 0, 1) << endl; 
+        printGraphCap(ff.g);
+        cout << ff.add(0, 1, 1) << endl; 
+        cout << ff.add(1, 0, 1) << endl; 
+    }
+
+
 }
