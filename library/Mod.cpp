@@ -68,9 +68,33 @@ Mod inv(const Mod a) { return a ^ (a.mod - 2); }
 Mod operator/(const Mod a, const Mod b) { assert(b.num != 0); return a * inv(b); }
 Mod operator/(const long long int a, const Mod b) { assert(b.num != 0); return Mod(a) * inv(b); }
 Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b); }
-// a^0 + ... + a^(b-1) (MOD mod), bに対してO((log n)^2)
-// condition: mod^mod<LLONG_MAX
-Mod combination(const long long n, const long long k) {
+
+// n!と1/n!のテーブルを作る。
+// nCrを高速に計算するためのもの。
+//
+// assertでnを超えていないかをきちんとテストすること。
+//
+// O(n log mo)
+vector<Mod> fact, rfact;
+void constructFactorial(const long long n) {
+    fact.resize(n);
+    rfact.resize(n);
+    fact[0] = rfact[0] = 1;
+    for (int i = 1; i < n; i++) {
+        fact[i] = fact[i-1] * i;
+        rfact[i] = Mod(1) / fact[i];
+    }
+}
+
+// O(1)
+Mod nCr(const long long n, const long long r) {
+//    assert(n < (long long)fact.size());
+    if (n < 0 || r < 0) return 0;
+    return fact[n] * rfact[r] * rfact[n-r];
+}
+
+// O(k log mo) 
+Mod nCrWithoutConstruction(const long long n, const long long k) {
     if (n < 0) return 0;
     if (k < 0) return 0;
     Mod ret = 1;
@@ -80,9 +104,11 @@ Mod combination(const long long n, const long long k) {
     }
     return ret;
 }
-Mod combination3(const long long a, const long long b, const long long c) {
-    if (a < 0 || b < 0 || c < 0) return 0;
-    return factorial(a+b+c)/factorial(a)/factorial(b)/factorial(c);
+// n*mの盤面を左下から右上に行く場合の数
+// O(1)
+Mod nBm(const long long n, const long long m) {
+    if (n < 0 || m < 0) return 0;
+    return nCr(n + m, n);
 }
 
 /*************************************/
@@ -146,29 +172,29 @@ using matrix = vector<vector<Mod>>;
 ostream &operator<<(ostream &o, const arr &v) { rep(i, v.size()) cout << v[i] << " "; cout << endl; return o; }
 ostream &operator<<(ostream &o, const matrix &v) { rep(i, v.size()) cout << v[i]; return o; }
 
-matrix zero(int n) { return matrix(n, arr(n, 0)); } // O( n^2 )
-matrix identity(int n) { matrix A(n, arr(n, 0)); rep(i, n) A[i][i] = 1; return A; } // O( n^2 )
-// O( n^2 )
+matrix zero(int n) { return matrix(n, arr(n, 0)); } // O(n^2)
+matrix identity(int n) { matrix A(n, arr(n, 0)); rep(i, n) A[i][i] = 1; return A; } // O(n^2)
+// O(n^2)
 arr mul(const matrix &A, const arr &x) { 
     arr y(A.size(), 0); 
     rep(i, A.size()) rep(j, A[0].size()) y[i] += A[i][j] * x[j]; 
     return y; 
 } 
-// O( n^3 )
+// O(n^3)
 matrix mul(const matrix &A, const matrix &B) {
     matrix C(A.size(), arr(B[0].size(), 0));
     rep(i, C.size())
         rep(j, C[i].size())
-            rep(k, A[i].size())
-                C[i][j] += A[i][k] * B[k][j];
+        rep(k, A[i].size())
+        C[i][j] += A[i][k] * B[k][j];
     return C;
 }
-// O( n^3 log e )
+// O(n^3 log e)
 matrix pow(const matrix &A, int e) {
     return e == 0 ? identity(A.size())  :
         e % 2 == 0 ? pow(mul(A, A), e/2) : mul(A, pow(A, e-1));
 }
-// O( n )
+// O(n)
 number inner_product(const arr &a, const arr &b) {
     number ans = 0;
     for (int i = 0; i < a.size(); ++i)
@@ -217,7 +243,7 @@ number det(matrix A) {
 
 // O( n^3 ).
 // modが2の時だけ使える演算
-#define FOR(x,to) for(x=0;x<(to);x++)
+#define FOR(x,to) for(x=0;x<(to);x++) // repに変えちゃダメ。xがint xになると動かない
 int gf2_rank(matrix A) { /* input */
     if (!A.size() || (A.size() && A[0].size())) return 0;
     int n = A.size();
