@@ -18,16 +18,20 @@ using P = pair<ll, ll>;
 /***********************/
 // 共通部分
 /***********************/
+#define REP(i,n) for(int i=0;i<(int)n;++i)
 #define FOR(i,c) for(__typeof((c).begin())i=(c).begin();i!=(c).end();++i)
+#define ALL(c) (c).begin(), (c).end()
 
 typedef long long Weight;
 const Weight INF = 1e18;
 
 struct Edge {
-    ll src, dst;
-    Weight weight;
+    ll src, dst, cap;
+    Weight weight; // 最小費用流ではcostの役割
     Edge(ll src, ll dst, Weight weight) :
         src(src), dst(dst), weight(weight) { }
+    Edge(int src, int dst, int cap, Weight cost):
+        src(src), dst(dst), cap(cap), weight(cost){ }
 };
 bool operator < (const Edge &e, const Edge &f) {
     return e.weight != f.weight ? e.weight > f.weight : // !!INVERSE!!
@@ -740,11 +744,51 @@ Weight maximumFlowGomoryHu(const Graph &T, ll u, ll t, ll p = -1, Weight w = INF
     return d;
 }
 
-
-
 // Primal-Dual
 // O(V^2 U C)
 // 変数定義がよくわからなかったのでnot yet
+#define RESIDUE(u,v) (capacity[u][v] - flow[u][v])
+#define RCOST(u,v) (cost[u][v] + h[u] - h[v])
+pair<Weight, Weight> minimumCostFlow(const Graph &g, int s, int t) {
+    const int n = g.size();
+    Matrix capacity(n, Array(n)), cost(n, Array(n)), flow(n, Array(n));
+    REP(u,n) FOR(e,g[u]) {
+        capacity[e->src][e->dst] += e->cap;
+        cost[e->src][e->dst] += e->weight;
+    }
+    pair<Weight, Weight> total; // (cost, flow)
+    vector<Weight> h(n);
+
+    for (Weight F = INF; F > 0; ) { // residual flow
+        vector<Weight> d(n, INF); d[s] = 0;
+        vector<int> p(n, -1);
+        priority_queue<Edge> Q; // "e < f" <=> "e.cost > f.cost"
+        for (Q.push(Edge(-2, s, 0, 0)); !Q.empty(); ) {
+            Edge e = Q.top(); Q.pop();
+            if (p[e.dst] != -1) continue;
+            p[e.dst] = e.src;
+            FOR(f, g[e.dst]) if (RESIDUE(f->src, f->dst) > EPS) {
+                if (d[f->dst] > d[f->src] + RCOST(f->src, f->dst) + EPS) {
+                    d[f->dst] = d[f->src] + RCOST(f->src, f->dst);
+                    Q.push( Edge(f->src, f->dst, 0, d[f->dst]) );
+                }
+            }
+        }
+        if (p[t] == -1) break;
+
+        Weight f = F;
+        for (int u = t; u != s; u = p[u])
+            f = min(f, RESIDUE(p[u], u));
+        for (int u = t; u != s; u = p[u]) {
+            total.first += f * cost[p[u]][u];
+            flow[p[u]][u] += f; flow[u][p[u]] -= f;
+        }
+        F -= f;
+        total.second += f;
+        REP(u, n) h[u] += d[u];
+    }
+    return total;
+}
 
 
 // 最小共通先祖 Tarjan 
