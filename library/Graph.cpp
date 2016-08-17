@@ -18,20 +18,25 @@ using P = pair<ll, ll>;
 /***********************/
 // 共通部分
 /***********************/
+#define REP(i,n) for(int i=0;i<(int)n;++i)
 #define FOR(i,c) for(__typeof((c).begin())i=(c).begin();i!=(c).end();++i)
+#define ALL(c) (c).begin(), (c).end()
 
 typedef long long Weight;
 const Weight INF = 1e18;
+const Weight EPS = 0; // 浮動小数点なら1e-14
 
 struct Edge {
     ll src, dst;
     ll cap = 1;
-    Weight weight;
+    Weight weight; // 最小費用流ではcostの役割
     ll rev; // 残余グラフの対応用
     bool rev_flag = false; // revなら1
     Edge() {};
     Edge(ll src, ll dst, Weight weight) :
         src(src), dst(dst), weight(weight) { }
+    Edge(int src, int dst, int cap, Weight cost): // 最小費用流用
+        src(src), dst(dst), cap(cap), weight(cost){ }
 };
 bool operator < (const Edge &e, const Edge &f) {
     return e.weight != f.weight ? e.weight > f.weight : // !!INVERSE!!
@@ -43,14 +48,20 @@ typedef vector<Edges> Graph;
 typedef vector<Weight> Array;
 typedef vector<Array> Matrix;
 
+// 最大流と最小費用流の有向
+// 無向は自分でひっくり返して追加して下さい
 void addDirected(Graph& g, ll src, ll dst, Weight weight, ll cap) {
     assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0);
     Edge e = Edge(src, dst, weight);
     e.cap = cap;
     g[src].push_back(e); 
 }
-void addDirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); }
-void addUndirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(dst, src, weight)); }
+
+// 普通のやつ　
+void addDirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); } 
+void addUndirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(dst, src, weight)); } 
+
+// 普通のやつ、辺重みは1固定
 void addDirected(Graph& g, ll src, ll dst) { addDirected(g, src, dst, 1); }
 void addUndirected(Graph& g, ll src, ll dst) { addUndirected(g, src, dst, 1); }
 
@@ -71,6 +82,25 @@ void printGraphCap(Graph& g) {
             cout << "(" << i << ", " << g[i][j].dst << " : " << g[i][j].cap << ", " << (g[i][j].rev_flag ? "rev" : "for") << "), ";
         cout << endl;
     }
+}
+
+void vizGraph(Graph& g, bool with_cap = 0) {
+    ofstream ofs("./out.dot");
+    ofs << "digraph graph_name {" << endl;
+    rep(i, g.size()) {
+        if (!g[i].size())
+            continue;
+        rep(j, g[i].size()) {
+            ofs << "    " << i << " -> " << g[i][j].dst; 
+            if (with_cap) {
+                ofs << " [ label = \"" << g[i][j].weight << "/" << (g[i][j].cap  == INF ? "inf" : to_string(g[i][j].cap)) << "\"];"; 
+            }
+            ofs << endl;
+        }
+    }
+    ofs << "}" << endl;
+    ofs.close();
+    system("dot -T png out.dot > sample.png");
 }
 
 /***********************/
@@ -280,10 +310,7 @@ public:
             ll ret = 0;
             while (1) { // TODO 必要な分だけ空ければいい
                 // e.srcを通る残余グラフの閉路があれば押し戻せる
-                bool used[n];
-                rep(i, n) {
-                    used[i] = false;
-                }
+                vector<bool> used(n);
                 function<ll(ll, ll)> dfs_lam = [&](ll v, ll c) {
                     if (v == e.dst) {
                         return c;
@@ -1031,11 +1058,55 @@ Weight maximumFlowGomoryHu(const Graph &T, ll u, ll t, ll p = -1, Weight w = INF
     return d;
 }
 
-
-
 // Primal-Dual
 // O(V^2 U C)
 // 変数定義がよくわからなかったのでnot yet
+#undef RESIDUE
+#define RESIDUE(u,v) (capacity[u][v] - flow[u][v])
+#define RCOST(u,v) (cost[u][v] + h[u] - h[v])
+pair<Weight, Weight> minimumCostFlow(const Graph &g, int s, int t, ll F) {
+    const int n = g.size();
+    Matrix capacity(n, Array(n)), cost(n, Array(n)), flow(n, Array(n));
+    REP(u,n) FOR(e,g[u]) {
+        capacity[e->src][e->dst] += e->cap;
+        cost[e->src][e->dst] += e->weight;
+    }
+    pair<Weight, Weight> total; // (cost, flow)
+    vector<Weight> h(n);
+
+    for (; F > 0; ) { // residual flow
+        vector<Weight> d(n, INF); d[s] = 0;
+        vector<int> p(n, -1);
+        priority_queue<Edge> Q; // "e < f" <=> "e.cost > f.cost"
+        for (Q.push(Edge(-2, s, 0, 0)); !Q.empty(); ) {
+            Edge e = Q.top(); Q.pop();
+            if (p[e.dst] != -1) continue;
+            p[e.dst] = e.src;
+            FOR(f, g[e.dst]) if (RESIDUE(f->src, f->dst) > EPS) {
+                if (d[f->dst] > d[f->src] + RCOST(f->src, f->dst) + EPS) {
+                    d[f->dst] = d[f->src] + RCOST(f->src, f->dst);
+                    Q.push( Edge(f->src, f->dst, 0, d[f->dst]) );
+                }
+            }
+        }
+        if (p[t] == -1) break;
+
+        Weight f = F;
+        for (int u = t; u != s; u = p[u])
+            f = min(f, RESIDUE(p[u], u));
+        for (int u = t; u != s; u = p[u]) {
+            total.first += f * cost[p[u]][u];
+            flow[p[u]][u] += f; flow[u][p[u]] -= f;
+        }
+        F -= f;
+        total.second += f;
+        REP(u, n) h[u] += d[u];
+    }
+    return total;
+}
+pair<Weight, Weight> minimumCostFlow(const Graph &g, int s, int t) {
+    return minimumCostFlow(g, s, t, INF);
+}
 
 
 // 最小共通先祖 Tarjan 
@@ -1570,5 +1641,23 @@ int main(void)
         cout << ff.add(1, 0, 1) << endl; 
     }
 
+    {
+        cout << "########Primal Dual" << endl;
+        // https://www.msi.co.jp/nuopt/docs/v18/examples/html/02-08-00.html
+        Graph g(6);
+        addDirected(g, 0, 1, 250, 4);
+        addDirected(g, 0, 2, 200, 6);
+        addDirected(g, 1, 3, 270, 5);
+        addDirected(g, 2, 3, 300, 4);
+        addDirected(g, 2, 4, 220, 3);
+        addDirected(g, 3, 5, 190, 8);
+        addDirected(g, 4, 5, 170, 3);
+
+        // 8だけ流す。もし全力で流すなら、8のかわりにINF
+        // 
+        // 答えは5260
+        pair<Weight, Weight> ret = minimumCostFlow(g, 0, 5, 8); 
+        cout << ret << endl;
+    }
 
 }
