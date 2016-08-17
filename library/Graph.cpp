@@ -65,6 +65,14 @@ void addUndirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.siz
 void addDirected(Graph& g, ll src, ll dst) { addDirected(g, src, dst, 1); }
 void addUndirected(Graph& g, ll src, ll dst) { addUndirected(g, src, dst, 1); }
 
+void transformFromMatrixToGraph(Graph& g, Matrix& m) {
+    ll n = m.size();
+    g.resize(n);
+    rep(i, n) rep(j, n) if (m[i][j] != INF) {
+        addDirected(g, i, j, m[i][j]);
+    }
+}
+
 void printGraph(Graph& g) {
     rep(i, g.size()) {
         if (!g[i].size())
@@ -84,7 +92,12 @@ void printGraphCap(Graph& g) {
     }
 }
 
-void vizGraph(Graph& g, bool with_cap = 0) {
+// mode
+//
+// 0 : デフォルト。辺だけ表示
+// 1 : 重みweightだけ表示
+// 2 : フロー用。weight, capを表示。
+void vizGraph(Graph& g, int mode = 0, string filename = "out.png") {
     ofstream ofs("./out.dot");
     ofs << "digraph graph_name {" << endl;
     rep(i, g.size()) {
@@ -92,7 +105,9 @@ void vizGraph(Graph& g, bool with_cap = 0) {
             continue;
         rep(j, g[i].size()) {
             ofs << "    " << i << " -> " << g[i][j].dst; 
-            if (with_cap) {
+            if (mode == 1) {
+                ofs << " [ label = \"" << g[i][j].weight << "\"];"; 
+            } else if (mode == 2) {
                 ofs << " [ label = \"" << g[i][j].weight << "/" << (g[i][j].cap  == INF ? "inf" : to_string(g[i][j].cap)) << "\"];"; 
             }
             ofs << endl;
@@ -100,8 +115,9 @@ void vizGraph(Graph& g, bool with_cap = 0) {
     }
     ofs << "}" << endl;
     ofs.close();
-    system("dot -T png out.dot > sample.png");
+    system(((string)"dot -T png out.dot >" + filename).c_str());
 }
+
 
 /***********************/
 // 共通部分おわり
@@ -1388,11 +1404,13 @@ bool isomorphism(const Matrix &g, const Matrix &h) {
 }
 
 // 二部マッチング
-// O(V (V + E))
 // 入力：
 // g : 二部グラフ．0 ... L-1 が左側頂点，L ... g.size()-1 が右側頂点に対応する．
 // L : 二部グラフの左側の頂点の数．
 // 出力：matching : マッチングに用いられる辺集合．
+//
+// 注意、gは左から右への 有 向 グラフ！
+// O(V (V + E))
 bool augment(const Graph& g, int u,
         vector<int>& matchTo, vector<bool>& visited) {
     if (u < 0) return true;
