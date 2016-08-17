@@ -127,6 +127,35 @@ void printGraphCap(Graph& g) {
     }
 }
 
+// mode
+//
+// 0 : デフォルト。辺だけ表示
+// 1 : 重みweightだけ表示
+// 2 : フロー用。weight, capを表示。
+void vizGraph(Graph& g, int mode = 0, string filename = "out.png") {
+    ofstream ofs("./out.dot");
+    ofs << "digraph graph_name {" << endl;
+    rep(i, g.size()) {
+        if (!g[i].size())
+            continue;
+        rep(j, g[i].size()) {
+            if (name_server.size()) {
+                ofs << "    " << names[i] << " -> " << names[g[i][j].dst]; 
+            } else {
+                ofs << "    " << i << " -> " << g[i][j].dst; 
+            }
+            if (mode == 1) {
+                ofs << " [ label = \"" << g[i][j].weight << "\"];"; 
+            } else if (mode == 2) {
+                ofs << " [ label = \"" << g[i][j].weight << "/" << (g[i][j].cap  == INF ? "inf" : to_string(g[i][j].cap)) << "\"];"; 
+            }
+            ofs << endl;
+        }
+    }
+    ofs << "}" << endl;
+    ofs.close();
+    system(((string)"dot -T png out.dot >" + filename).c_str());
+}
 
 class FordFulkerson {
 public:
@@ -394,58 +423,82 @@ public:
     }
 };
 
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    for(int h, w, c, m, nw, nc, nm; cin >> h >> w >> c >> m >> nw >> nc >> nm, h >= 0;){
+    for(int h,w,c,m,nw,nc,nm;cin>>h>>w>>c>>m>>nw>>nc>>nm,h>=0;){
         clearNameServer();
         vector<string> s;
-
         vll type = {h, w, c, m, 1, 1, 1};
-        vector<string> tn = {"h", "w", "c", "m", "W", "C", "M"};
-        rep(t, type.size()) rep(i, type[t])
-            s.pb(tn[t] + "b" + to_string(i)); // buffer
-        rep(t, type.size()) rep(i, type[t]) 
-            s.pb(tn[t] + to_string(i));
+        vector<string> type_name = {"h", "w", "c", "m", "W", "C", "M"};
+        rep(t, type.size()) {
+            rep(i, type[t]) { s.pb(type_name[t] + "b" + to_string(i)); } // buffer
+            rep(i, type[t]) { s.pb(type_name[t] + to_string(i)); }
+        }
         s.pb("s");
         s.pb("t");
 
-        Graph g(constructNameServer(s));
+        cout << s.size() << "#size" << endl;
+        int n = constructNameServer(s);
+        cout << n << endl;
+        cout << name_server << endl;
+        Graph g(n);
         
         // バッファを全部つなぐ
-        rep(t, 4) rep(i, type[t]) 
-            addDirected(g, tn[t] + "b" + to_string(i), tn[t] + to_string(i), 0, 1);
+        rep(t, 4) {
+            rep(i, type[t]) { 
+                addDirected(g, type_name[t] + "b" + to_string(i), type_name[t] + to_string(i), 0, 1);
+            }
+        }
         addDirected(g, "Wb0", "W0", 0, nw);
         addDirected(g, "Cb0", "C0", 0, nc);
         addDirected(g, "Mb0", "M0", 0, nm);
+        assert(names.size() == name_server.size());
 
         for (auto x : {mt(w, "h", "wb"), mt(c, "w", "cb"), mt(m, "c", "mb")}) {
             rep(i, get<0>(x)) {
                 ll a; cin >> a;
-                rep(_, a) {
+                rep(i, a) {
                     ll index; cin >> index; index--;
                     addDirected(g, get<1>(x) + to_string(index), get<2>(x) + to_string(i), 0, 1);
                 }
             }
         }
+        assert(names.size() == name_server.size());
 
         // 使わない前
-        for (auto x : {mt(h, "h", "Wb0"), mt(w, "w", "Cb0"), mt(c, "c", "Mb0")}) rep(i, get<0>(x)) 
-            addDirected(g, get<1>(x) + to_string(i), get<2>(x), 0, 1);
+        for (auto x : {mt(h, "h", "Wb0"), mt(w, "w", "Cb0"), mt(c, "c", "Mb0")}) {
+            rep(i, get<0>(x)) {
+                addDirected(g, get<1>(x) + to_string(i), get<2>(x), 0, 1);
+            }
+        }
+        assert(names.size() == name_server.size());
         // 使わない前
-        for (auto x : {mt(c, "cb", "W0"), mt(m, "mb", "C0")}) rep(i, get<0>(x)) 
+        for (auto x : {mt(c, "cb", "W0"), mt(m, "mb", "C0")}) {
+            rep(i, get<0>(x)) {
                 addDirected(g, get<2>(x), get<1>(x) + to_string(i), 0, 1);
+            }
+        }
+        assert(names.size() == name_server.size());
 
         // スタートからヒーロー
-        rep(i, h) 
+        rep(i, h) {
             addDirected(g, "s", "hb" + to_string(i), 0, 1);
+        }
+        assert(names.size() == name_server.size());
 
         // メイジからゴール
-        rep(i, m) 
+        rep(i, m) {
             addDirected(g, "m" + to_string(i), "t", 0, 1);
-        addDirected(g, "M0", "t", 0, nm);
+        }
+        assert(names.size() == name_server.size());
+        addDirected(g, "M0", "t", 0, 1);
+        vizGraph(g, 2);
+        cout << name_server << endl;
 
         FordFulkerson ff(g, name_server["s"], name_server["t"]);
         cout << ff.get() << endl;
+
     }
 
     return 0;

@@ -50,20 +50,33 @@ typedef vector<Array> Matrix;
 
 // 最大流と最小費用流の有向
 // 無向は自分でひっくり返して追加して下さい
-void addDirected(Graph& g, ll src, ll dst, Weight weight, ll cap) {
+void addDirected(Graph& g, ll src, ll dst, Weight weight = 0, ll cap = 0) {
     assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0);
     Edge e = Edge(src, dst, weight);
     e.cap = cap;
     g[src].push_back(e); 
 }
+vector<string> names;
+unordered_map<string, int> name_server;
+void clearNameServer(void) {
+    names.clear();
+    name_server.clear();
+}
+int constructNameServer(vector<string>& names_) {
+    names = names_;
+    for (int i = 0; i < names.size(); i++) {
+        name_server[names[i]] = i;
+    }
+    return name_server.size();
+}
+void addDirected(Graph& g, string src, string dst, Weight weight = 0, ll cap = 0) {
+    addDirected(g, name_server[src], name_server[dst], weight, cap);
+}
 
-// 普通のやつ　
-void addDirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); } 
-void addUndirected(Graph& g, ll src, ll dst, Weight weight) { assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0); g[src].push_back(Edge(src, dst, weight)); g[dst].push_back(Edge(dst, src, weight)); } 
-
-// 普通のやつ、辺重みは1固定
-void addDirected(Graph& g, ll src, ll dst) { addDirected(g, src, dst, 1); }
-void addUndirected(Graph& g, ll src, ll dst) { addUndirected(g, src, dst, 1); }
+void addUndirected(Graph& g, ll src, ll dst, Weight weight = 0, ll cap = 0) { 
+    addDirected(g, src, dst, weight, cap);
+    addDirected(g, dst, src, weight, cap);
+} 
 
 void transformFromMatrixToGraph(Graph& g, Matrix& m) {
     ll n = m.size();
@@ -104,7 +117,11 @@ void vizGraph(Graph& g, int mode = 0, string filename = "out.png") {
         if (!g[i].size())
             continue;
         rep(j, g[i].size()) {
-            ofs << "    " << i << " -> " << g[i][j].dst; 
+            if (name_server.size()) {
+                ofs << "    " << names[i] << " -> " << names[g[i][j].dst]; 
+            } else {
+                ofs << "    " << i << " -> " << g[i][j].dst; 
+            }
             if (mode == 1) {
                 ofs << " [ label = \"" << g[i][j].weight << "\"];"; 
             } else if (mode == 2) {
@@ -117,6 +134,7 @@ void vizGraph(Graph& g, int mode = 0, string filename = "out.png") {
     ofs.close();
     system(((string)"dot -T png out.dot >" + filename).c_str());
 }
+
 
 
 /***********************/
