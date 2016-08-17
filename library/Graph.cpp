@@ -28,15 +28,12 @@ const Weight EPS = 0; // 浮動小数点なら1e-14
 
 struct Edge {
     ll src, dst;
-    ll cap = 1;
     Weight weight; // 最小費用流ではcostの役割
+    ll cap;
     ll rev; // 残余グラフの対応用
     bool rev_flag = false; // revなら1
-    Edge() {};
-    Edge(ll src, ll dst, Weight weight) :
-        src(src), dst(dst), weight(weight) { }
-    Edge(int src, int dst, int cap, Weight cost): // 最小費用流用
-        src(src), dst(dst), cap(cap), weight(cost){ }
+    Edge(int src = 0, int dst = 0, int weight = 0, Weight cap = 1): 
+        src(src), dst(dst), weight(weight), cap(cap){ }
 };
 bool operator < (const Edge &e, const Edge &f) {
     return e.weight != f.weight ? e.weight > f.weight : // !!INVERSE!!
@@ -52,9 +49,7 @@ typedef vector<Array> Matrix;
 // 無向は自分でひっくり返して追加して下さい
 void addDirected(Graph& g, ll src, ll dst, Weight weight = 0, ll cap = 0) {
     assert(src < g.size() && src >= 0 && dst < g.size() && dst >= 0);
-    Edge e = Edge(src, dst, weight);
-    e.cap = cap;
-    g[src].push_back(e); 
+    g[src].push_back(Edge(src, dst, weight, cap)); 
 }
 vector<string> names;
 unordered_map<string, int> name_server;
