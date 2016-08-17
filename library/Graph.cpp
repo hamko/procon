@@ -70,6 +70,8 @@ int constructNameServer(vector<string>& names_) {
     return name_server.size();
 }
 void addDirected(Graph& g, string src, string dst, Weight weight = 0, ll cap = 0) {
+    if (!name_server.count(src)) { cerr << "No such node : " << src << endl; exit(1); }
+    if (!name_server.count(dst)) { cerr << "No such node : " << dst << endl; exit(1); }
     addDirected(g, name_server[src], name_server[dst], weight, cap);
 }
 
