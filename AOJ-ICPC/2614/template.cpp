@@ -103,11 +103,18 @@ public:
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    string s = "aaaabssss";
-    string t = "abs";
-    ZAlgorithm z(s, t);
-    rep(i, s.length()) {
-        cout << z.lcp(i) << endl;
+    string s, t; cin >> s >> t;
+
+    ZAlgorithm z_for(s, t);
+    reverse(all(s));
+    reverse(all(t));
+    ZAlgorithm z_rev(s, t);
+
+    ll ret = 0;
+    rep(i, s.length() - t.length() + 1) {
+        if (s.length() - t.length() - i < 0) continue;
+        ret += (z_for.lcp(i) + z_rev.lcp(s.length() - t.length() - i)) == t.length() - 1;
     }
+    cout << ret << endl;
     return 0;
 }
