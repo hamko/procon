@@ -4,3 +4,6 @@ err
 a.out
 *~
 *.swp
+*.dot
+*.png
+*.txt
