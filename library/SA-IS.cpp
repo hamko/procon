@@ -155,6 +155,9 @@ class SuffixArray{
 
     // s[i:end]とs[j:end]の最長共通文字列長を返す
     //
+    // sa.getLcp(i, j) == sa.getLcp(j, i)
+    // sa.getLcp(i, i) == INT_INF
+    //
     // O(log n), seg木実装では、この実装はこっち
     // O(log log n), Sparse Table実装では (MLEするので非推奨)
     int getLcp(int i,int j){
@@ -175,7 +178,7 @@ signed main(){
     SuffixArray sa(s);
     rep(i, s.length()) {
         rep(j, s.length()) {
-            cout << sa.getLcp(i, j) << " ";
+            cout << sa.getLcp(i, j) << " "; 
         }
         cout << endl;
     }
@@ -186,7 +189,6 @@ signed main(){
 
     rep(i, sa.sa.size()) {
         cout << s.substr(sa[i]) << endl;
-    }
-
+    } 
     return 0;
 }
