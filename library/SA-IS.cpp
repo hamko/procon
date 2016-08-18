@@ -1,24 +1,21 @@
-
 #include<bits/stdc++.h>
 using namespace std;
 
-typedef pair<int,int>pint;
-typedef long long ll;
+#define int long long
 typedef vector<int>vint;
+typedef pair<int,int>pint;
 typedef vector<pint>vpint;
-#define pb push_back
-#define mp make_pair
-#define fi first
-#define se second
-#define all(v) (v).begin(),(v).end()
 #define rep(i,n) for(int i=0;i<(n);i++)
 #define reps(i,f,n) for(int i=(f);i<(n);i++)
+#define all(v) (v).begin(),(v).end()
 #define each(it,v) for(__typeof((v).begin()) it=(v).begin();it!=(v).end();it++)
-template<class T,class U>inline void chmin(T &t,U f){if(t>f)t=f;}
-template<class T,class U>inline void chmax(T &t,U f){if(t<f)t=f;}
+#define pb push_back
+#define fi first
+#define se second
+template<typename A,typename B>inline void chmin(A &a,B b){if(a>b)a=b;}
+template<typename A,typename B>inline void chmax(A &a,B b){if(a<b)a=b;}
 
-
-class suffix_array{
+class SuffixArray{
     void create_begin_bucket(vector<int>&v,vector<int>&bucket){
         fill(bucket.begin(),bucket.end(),0);
         for(int i=0;i<v.size();i++)bucket[v[i]]++;
@@ -89,10 +86,10 @@ class suffix_array{
         return sa;
     }
 
-    void sa_is(string &s){
-        vector<int>v(s.size()+1);
+    vector<int> sa_is(string &s){
+        vector<int> v(s.size()+1);
         for(int i=0;i<s.size();i++)v[i]=s[i];
-        sa=sa_is(v,*max_element(v.begin(),v.end()));
+        return sa=sa_is(v,*max_element(v.begin(),v.end()));
     }
 
     void construct_lcp(){
@@ -113,17 +110,18 @@ class suffix_array{
         }
     }
 
+#define INT_INF 1001001001
     struct segtree{
         int N;
         vector<int>dat;
         void init(vector<int> &v){
             for(N=1;N<v.size();N<<=1);
-            dat.resize(N*2,1001001001);
+            dat.resize(N*2,INT_INF);
             for(int i=0;i<v.size();i++)dat[i+N-1]=v[i];
             for(int i=N-2;i>=0;i--)dat[i]=min(dat[i*2+1],dat[i*2+2]);
         }
         int get_min(int a,int b,int k,int l,int r){
-            if(r<=a||b<=l)return 1001001001;
+            if(r<=a||b<=l)return INT_INF;
             if(a<=l&&r<=b)return dat[k];
             return min(get_min(a,b,k*2+1,l,(l+r)/2),get_min(a,b,k*2+2,(l+r)/2,r));
         }
@@ -133,16 +131,19 @@ class suffix_array{
     segtree st;
     string s;
     vector<int>sa,lcp,rank;
-    void init(string &t){
+    void init(const string &t){
         s=t;
         sa_is(s);
         construct_lcp();
         st.init(lcp);
     }
-    suffix_array(string &t){init(t);}
-    suffix_array(){}
+    SuffixArray(const string &t){init(t);}
+    SuffixArray(){}
 
-    bool contain(string &t){
+    // s[0:end]に文字列tが含まれているかを判定
+    //
+    // O(log n)
+    bool contain(const string &t){
         int lb=0,ub=s.size();
         while(ub-lb>1){
             int mid=(lb+ub)/2;
@@ -152,38 +153,39 @@ class suffix_array{
         return s.compare(sa[ub],t.size(),t)==0;
     }
 
-    int get_lcp(int i,int j){
+    // s[i:end]とs[j:end]の最長共通文字列長を返す
+    //
+    // O(log n), seg木実装では、この実装はこっち
+    // O(log log n), Sparse Table実装では (MLEするので非推奨)
+    int getLcp(int i,int j){
         if(rank[i]>rank[j])swap(i,j);
         return st.get_min(rank[i],rank[j]);
     }
+
+    // sa[idx]: 辞書順でidx番目の接頭辞文字列
+    // つまり、|s|個の[sa[idx]:end]を辞書順ソートしたidx番目
     int operator[](const int idx)const{
         return sa[idx];
     }
 };
 
+signed main(){
+    string s = "aabsababaaa";
 
-
-int main(){
-    string s = "aaaabbaaaaabbbaaa";
-    suffix_array sais(s);
-    // 入力例
-    /*
-       0 0
-       0 2
-       4 12
-       5 13
-       -1 aaaaa
-       -1 aaaaaa
-     */
-    while (1) {
-        ll l; cin >> l;
-        if (l < 0) {
-            string s; cin >> s;
-            cout << sais.contain(s) << endl;
-        } else {
-            ll r; cin >> r;
-            cout << sais.get_lcp(l, r) << endl;
+    SuffixArray sa(s);
+    rep(i, s.length()) {
+        rep(j, s.length()) {
+            cout << sa.getLcp(i, j) << " ";
         }
+        cout << endl;
+    }
+
+    string t;
+    t = "abs"; cout << sa.contain(t) << endl;
+    t = "axs"; cout << sa.contain(t) << endl;
+
+    rep(i, sa.sa.size()) {
+        cout << s.substr(sa[i]) << endl;
     }
 
     return 0;
