@@ -8,3 +8,5 @@ a.out
 *.png
 *.txt
 ?
+*.in
+*.out
