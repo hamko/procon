@@ -42,74 +42,65 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-ll n, k; 
-vvll p; 
-set<ll> alive; 
-vll dist1;
-vll dist2;
-vll dist3;
-void visit(ll v, vll& dist) {
-    rep(i, p[v].size()) {
-        ll ch = p[v][i];
-//        cout << v << " " << ch << endl;
-        if (!alive.count(ch))
-            continue;
-        if (dist[ch] >= 0)
-            continue;
-        dist[ch] = dist[v] + 1;
-        visit(ch, dist);
+ll n, k;
+vvll g; 
+ll min_dist(vector<bool>& used, ll initial_v, ll initial_k) {
+    function<void(ll, ll)> f = [&](ll v, ll ks) {
+        if (initial_k < ks) return;
+        if (used[v]) return;
+        used[v] = 1;
+//        cout << v << ":" << g[v] << endl;
+        for (auto to : g[v]) {
+            f(to, ks+1);
+        }
+    }; 
+    f(initial_v, 0);
+    ll s = 0;
+    rep(i, n) {
+        s += used[i];
     }
+    return s;
 }
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     cin >> n >> k;
-    p = vvll(n);
+    g = vvll(n);
+    vector<P> es; 
     rep(i, n-1) {
         ll u, v; cin >> u >> v; u--; v--;
-        p[u].pb(v);
-        p[v].pb(u);
+        g[u].pb(v);
+        g[v].pb(u);
+        es.pb(P(u, v));
     }
-    dist1 = vll(n);
-    dist2 = vll(n);
-    dist3 = vll(n);
-
-    rep(i, n) { alive.insert(i); }
-
-    ll ret = 0;
-    while (1) {
-        rep(i, n) dist1[i] = -1;
-        dist1[*(alive.begin())] = 0;
-        visit(*(alive.begin()), dist1);
-//        cout << dist1 << endl;
-        ll farest = (ll)(max_element(all(dist1)) - dist1.begin());
-
-        rep(i, n) dist2[i] = -1;
-        dist2[farest] = 0;
-        visit(farest, dist2);
-//        cout << dist2 << endl;
-        ll farest2 = (ll)(max_element(all(dist2)) - dist2.begin());
-        ll Bdist = *max_element(all(dist2)); // Diameter
-        if (Bdist <= k) 
-            break;
-        set<ll> Bv;
-        rep(i, n) if (dist2[i] == Bdist) Bv.insert(i);
-
-        rep(i, n) dist3[i] = -1;
-        dist3[farest2] = 0;
-        visit(farest2, dist3);
-//        cout << dist3 << endl;
-        ll Adist = *max_element(all(dist3)); // Diameter
-        set<ll> Av;
-        rep(i, n) if (dist3[i] == Adist) Av.insert(i);
 
 
-        // Av is small
-        if (Av.size() > Bv.size()) {
-            for (auto x : Bv) alive.erase(x);
-            ret+=Bv.size();
-        } else {
-            for (auto x : Av) alive.erase(x);
-            ret+=Av.size();
+    ll ret = INF;
+    if (k % 2 == 0) {
+        rep(v, n) {
+            vector<bool> used(n);
+            ll tmp = min_dist(used, v, k/2);
+//            cout << tmp << endl;
+//            cout << used << endl;
+            chmin(ret, n - tmp);
+        }
+    } else {
+        for (auto e : es) {
+            vector<bool> used(n);
+//            cout << e << ":" << endl;
+
+            ll tmp = 0;
+            rep(i, n) used[i] = 0;
+            used[e.fi] = 1;
+            tmp += min_dist(used, e.se, (k-1)/2) - 1;
+           
+            rep(i, n) used[i] = 0;
+            used[e.se] = 1;
+            tmp += min_dist(used, e.fi, (k-1)/2) - 1;
+//            cout << tmp << endl;
+//            cout << used << endl;
+
+            chmin(ret, n - tmp);
         }
     }
     cout << ret << endl;
