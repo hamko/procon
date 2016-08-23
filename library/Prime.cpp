@@ -3,11 +3,13 @@
 using namespace std;
 using ll = long long;
 
+// 素数の個数はO(n / log n)
+
 /**********************************************************/
 // 前処理ありの素数判定
 // 素数の最大値Mに対して先にconstructPrimesList(M)が必須！
 /**********************************************************/
-// O(n log n)
+// O(n log log n)
 void sieve_of_eratosthenes(vector<ll>& primes, ll n) {
     primes.resize(n);
     for (ll i = 2; i < n; ++i)
