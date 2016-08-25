@@ -17,10 +17,13 @@ static const long long INF = 1e18;
 
 
 // 整数二分探索
-// O(log(range))
 // f: 単調増加関数. 000111, 111111, 000000を許容する（11110000で探索したい場合は、自分でfを反転すること）
 // 閉区間[rl, rr]から単調関数fを満たす最小の数を返す。
 // 全て1なら0を返す（定義通り）、全て0ならrr+1を返す（異常検出用）！
+//
+// xが大で1を返すような関数を作ると思うと間違えない
+//
+// O(log(range))
 ll BinarySearch(ll rl, ll rr, function<bool(ll)> f) { 
     ll lo = rl-1, ro = rr+1;
     while (ro - lo != 1) {
