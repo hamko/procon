@@ -19,8 +19,7 @@ using namespace std;
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>;
-using ld = long double;  using vld = vector<ld>; 
+using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
 vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
@@ -36,7 +35,7 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & (1ll << i)); return s; }
+void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
@@ -45,7 +44,53 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    string s; cin >> s;
+    ll n = s.size();
+    vll a(s.length()+1);
+    rep(i, n) {
+        a[i+1] = a[i] + (s[i] == '(' ? 1 : -1);
+    }
+    ll ret = 0;
+    ll last = 0;
+    rep(i, n) {
+        ll faf = 1;
+        rep(j, n+1) {
+            if (a[j] < 0) faf = 0;
+        }
+        if (faf) break;
+
+        if (s[i] == ')') {
+            repi(j, i+1, n+1) {
+                a[j] += 2;
+            }
+            ret++;
+            s[i] = '(';
+            chmax(last, i);
+        }
+    }
+
+
+    rep(i, n) {
+        vll tmp = a;
+        repi(j, i+1, n+1) {
+            tmp[j] -= 2;
+        }
+        ll skip = 0;
+        rep(j, n+1) {
+            if (tmp[j] < 0) {
+                skip = 1;
+            }
+        }
+        if (skip == 0) {
+            a = tmp;
+            s[i] = ')';
+            ret++;
+            chmax(last, i);
+        }
+    }
+    ret += last;
+
+    cout << ret << endl;
+
     return 0;
 }

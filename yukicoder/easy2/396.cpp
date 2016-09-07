@@ -45,7 +45,16 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n, m; cin >> n >> m;
+    ll x, y; cin >> x >> y; x--; y--;
+    x %= m * 2ll;
+    y %= m * 2ll;
+//    cout << x << " " << y << endl;
+    if (x == y  || x == (m * 2ll - y - 1) % (m * 2ll)) 
+        cout << "YES" << endl;
+    else 
+        cout << "NO" << endl;
+
+
     return 0;
 }
