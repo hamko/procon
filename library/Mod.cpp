@@ -189,6 +189,14 @@ matrix mul(const matrix &A, const matrix &B) {
         C[i][j] += A[i][k] * B[k][j];
     return C;
 }
+// O(n^2)
+matrix plus(const matrix &A, const matrix &B) {
+    matrix C(A.size(), arr(B[0].size(), 0));
+    rep(i, C.size())
+        rep(j, C[i].size())
+            C[i][j] += A[i][j] + B[i][j];
+    return C;
+}
 // O(n^3 log e)
 matrix pow(const matrix &A, int e) {
     return e == 0 ? identity(A.size())  :

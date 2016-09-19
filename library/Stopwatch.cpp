@@ -2,6 +2,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+// これを{}でくくる初めに置くと、{}の終わりで呼ばれたデストラクタでかかった時間を表示する
 struct stop_watch {
     chrono::high_resolution_clock::time_point start;
     stop_watch() 

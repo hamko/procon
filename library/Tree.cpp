@@ -300,12 +300,16 @@ public:
     vector<vector<int>> parent; // parent[i][j]: jのi^2番目の親。j=0で直近の親。
     vector<int> depth; // depth[i]: 頂点iの根からの深さ, 根が0
 
+    /*********/
+    // オイラーツアー
+    /*********/
     vector<int> m_euler; // 根から始めるオイラーツアー、長さvn*2
     fenwick_tree<verticle_t> m_euler_verticles_positive; // 1回目で+, 2回目で+になる頂点に載ったデータ, 長さvn*2
     fenwick_tree<verticle_t> m_euler_verticles_negative; // 1回目で+, 2回目で-になる頂点に載ったデータ, 長さvn*2
     SegmentTree<verticle_t> m_euler_verticles_positive_segment; // 1回目で+, 2回目で+になる頂点に載ったデータ, 長さvn*2
     vector<int> m_euler_appears_first; // f[i] = eulerでiが出てくる1回目の位置, 長さvn
     vector<int> m_euler_appears_second; // f[i] = eulerでiが出てくる2回目の位置, 長さvn
+
 
     /*********/
     // 構築
@@ -382,6 +386,9 @@ public:
             m_euler_verticles_positive_segment.update(m_euler_appears_first[i], +m_verticles[i]);
             m_euler_verticles_positive_segment.update(m_euler_appears_second[i], +m_verticles[i]);
         }
+
+        // HL分解
+        constructHLD(); 
     }
 
     // 1つ親と深さとオイラーツアーを構築
@@ -396,7 +403,7 @@ public:
         m_euler_appears_second[v]=m_euler.size();
         m_euler.push_back(v);
     }
-    
+
     // 木の直径を求める
     // 辺が重み付きでもOK!
     //
@@ -586,6 +593,93 @@ public:
     // そもそも、木では辺と頂点を同一視できるので必要ない！
     // 辺の重みを、子側の頂点に載せることで、頂点のテクニックと同様に取り扱うことができる
 
+    /*********/
+    // HL分解
+    /*********/
+    // heavy light decomposition
+    //
+    // 今までの番号を、Heavy-Lightパスの根から葉の方向へと付け替える in [0, n)
+    // これ自体にはデータを載せず、パスの添字のみを取得するインターフェースのみ提供
+    vector<int> treesize; // m_edges.size(): 子の数
+    // i: ノードの添字
+    // j: Heavy pathの添字
+    int hl_size = 0; // Heavy pathの数
+    vector<int> group; // m_edges.size(): ノードiが属するグループj
+    vector<int> id; // m_edges.size(): ノードiに再割り振りされた新ノード番号id in [0, m_edges.size())
+    vector<int> par; // hl_size: Heavy path jの根の親のノードi
+    vector<int> bg; //  hl_size: Heavy path jの根のノードi
+    void setTreeSize(int v, int p) {
+        treesize[v]=1;
+        for (auto &u:m_edges[v]) if (u.to != p) {
+            cout << v << " " << p << " " << u.from << " " << u.to  << " " << p << endl;
+            setTreeSize(u.to, v);
+            treesize[v]+=treesize[u.to];
+        }
+    }
+    void build(int v, int p, int g, int& i) {
+        group[v]=g;
+        id[v]=i++;
+        if (m_edges[v].size() == 1) return;
+
+        // 最大サイズの子hを求める
+        int h=-1;
+        for (auto &u:m_edges[v]) if (u.to != p) {
+            if(treesize[h]<treesize[u.to]) {
+                h=u.to;
+            }
+        }
+
+        // Heavy
+        build(h, v, g, i);
+
+        // Light
+        for (auto &u:m_edges[v]) if (u.to != p) if (h != u.to) { 
+            cout << "*" << endl;
+            par.push_back(v);
+            bg.push_back(i);
+            build(u.to, v, hl_size++, i);
+        }
+    }
+    void constructHLD(void) {
+        int n = m_edges.size();
+        treesize.resize(n);
+        group.resize(n);
+        id.resize(n);
+
+        setTreeSize(root, -1);
+        cout << treesize << "#treesize" << endl;
+        int i = 0; // 再度割り振り直す添字番号
+        par.push_back(-1);
+        bg.push_back(i);
+        build(root, -1, hl_size++, i);
+    }
+    // O(log n)
+    //
+    // [r, c]の再割り振りされた添字区間を返す。区間は葉から根への順番。
+    //
+    // rがcより根側のノードでなければならない
+    // c側から、以下の漸化式によってパスを分解する
+    //      ret += {groupの根, c}, c = groupの根の親
+    using P=pair<int, int>;
+    vector<P> hl_decomposition(int r, int c) {
+        vector<P> res;
+        while (group[c]!=group[r]) {
+            res.push_back(P(bg[group[c]], id[c]));
+            c=par[group[c]];
+        }
+        res.push_back(P(id[r], id[c]));
+        return res;
+    }
+    void print_HLDecomposition(void) {
+        rep(i, m_edges.size()) {
+            cout << group[i] << " " << id[i] << endl;
+        }
+        cout << "####" << endl;
+        rep(i, hl_size) {
+            cout << par[i] << " " << bg[i] << endl;
+        }
+    }
+
     /*************/
     // 描画
     /*************/
@@ -664,5 +758,7 @@ int main() {
     cout << "Diameter" << endl;
     cout << tree.diameter() << endl;
 
+    cout << "HL decomposition" << endl;
+    tree.print_HLDecomposition();
     return 0;
 }

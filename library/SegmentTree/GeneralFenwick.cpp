@@ -1,7 +1,8 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-// データ型T, 単位元T0, 二項演算子opが与えられた時、
+// データ型T, 単位元T0, 可換二項演算子opが与えられた時、
+//
 // 点更新opをO(log n)、0-indexの範囲sum(int j)をO(log n)で実現
 // もしopに逆演算が定義できるならば、i-indexの範囲sum(int i, int j)が実現可能。
 
@@ -43,7 +44,7 @@ struct fenwick_tree {
         return S;
     }
 
-    // 更新クエリ: #kにaを右から演算する
+    // 更新クエリ: #kにaを演算する
     // O(log n)
     void update(int k, T a) {
         for (; k < x.size(); k |= k+1) // kは、C->D->Fと遷移する。Cをカバーする数字列全てに飛ぶ

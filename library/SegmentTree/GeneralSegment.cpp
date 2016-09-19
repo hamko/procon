@@ -152,7 +152,7 @@ public:
             dat[v] = x;
         while (v){
             v = v >> 1;
-            dat[v] = op->op(dat[v<<1], dat[v<<1|1]);
+            dat[v] = op->op(dat[v<<1], dat[v<<1|1]); // opの順序を逆にしたい場合はここをいじる！！
         }
     }
     // 範囲更新
@@ -187,7 +187,7 @@ public:
         if(ql <= nl && nr <= qr) return dat[n]; // 一回の区間更新に付き最大3回、した区間が小さい順にHitする。
         if (enable_range_update_flag) pullup(n);
         int m = (nl + nr) / 2;
-        return op->op(query(n<<1, nl, m), query(n<<1|1, m, nr));
+        return op->op(query(n<<1, nl, m), query(n<<1|1, m, nr)); // opの順序を逆にしたい場合はここをいじる！！
     }
     // [l, r)の演算結果を出力
     T query(int l, int r){

@@ -42,72 +42,33 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-// Z Algorithm
-// オリジナル：各iについて「S と S[i:|S|-1] の最長共通接頭辞の長さ」を計算
-// 構築 O(s)
-// 最長共通Suffix計算 O(1)
-//
-// しかしこれだけで使ってもあまり嬉しくない。
-// マッチングする文字列tが一個だけの場合、t+sに対してZ Algorithmを構築することで、
-// 各iについて「T と S[i:|S|-1] の最長共通接頭辞の長さ」を計算できる
-// 構築 O(s+t)
-// 最長共通Suffix計算 O(1)
-class ZAlgorithm {
-public:
-    string s;
-    vector<int> z;
-    int s_length = 0;
-    int t_length = 0;
-    bool m_matching_flag = true;
-    
-    // 構築
-    // 事前にsに代入されていることが前提
-    //
-    // O(|s|)
-    void construct(void) {
-        ll n = s.size();
-        z.assign(n, 0);
-
-        z[0] = n;
-        int i = 1, j = 0;
-        while (i < n) {
-            while (i+j < n && s[j] == s[i+j]) ++j;
-            z[i] = j;
-            if (j == 0) { ++i; continue;}
-            int k = 1;
-            while (i+k < n && k+z[k] < j) z[i+k] = z[k], ++k;
-            i += k; j -= k;
-        }
-    }
-    // SとS[i:end]のマッチング
-    ZAlgorithm(string& s_) : s_length(s_.length()) {
-        s = s_;
-        construct();
-    }
-    // TとS[i:end]のマッチング
-    ZAlgorithm(string& s_, string& t_) : s_length(s_.length()), t_length(t_.length()) {
-        m_matching_flag = true;
-        s = t_ + s_;
-        construct();
-    }
-    // SとS[i:end]のマッチング、もしくはTとS[i:end]の最長マッチング数を返す
-    ll lcp(ll i) {
-        if (!m_matching_flag) {
-            return z[i];
-        } else {
-            return min(z[i + t_length], t_length);
-        }
-    }
-};
-
-
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    string s = "aaaabssss";
-    string t = "abs";
-    ZAlgorithm z(s, t);
-    rep(i, s.length()) {
-        cout << z.lcp(i) << endl;
+    ll n; cin >> n;
+    vector<string> ret(n);
+    bool found = 0;
+    rep(i, n) {
+        string s; cin >> s;
+        if (!found) {
+            if (s[0] == 'O' && s[1] == 'O') {
+                s[0] = '+';
+                s[1] = '+';
+                found = 1;
+            } else if (s[3] == 'O' && s[4] == 'O') {
+                s[3] = '+';
+                s[4] = '+';
+                found = 1;
+            }
+        }
+        ret[i] = s;
+    }
+    if (found) {
+        cout <<"YES" << endl;
+    rep(i, n) {
+        cout << ret[i] << endl;
+    }
+    } else {
+        cout << "NO" << endl;
     }
     return 0;
 }

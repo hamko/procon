@@ -10,81 +10,67 @@ vector<int> graph[MAX], query[MAX], answer[MAX];
 int n, q, x, y, rep[MAX], rank[MAX], anc[MAX];
 short int visited[MAX]; //0 - not visited, 1 - visited 2 - processed
 
-int Find(int a)
-{
+int Find(int a) {
     if(rep[a] != a)
         rep[a] = Find(rep[a]);
     return rep[a];
 }
 
-void Union(int a, int b)
-{
-    a = Find(a);
-    b = Find(b);
+void Union(int a, int b) {
+    a = Find(a); b = Find(b);
     if(a == b) return;
 
-    if(rank[a] < rank[b])
+    if (rank[a] < rank[b]) {
         rep[a] = b;
-    else if(rank[b] < rank[a])
+    } else if (rank[b] < rank[a]) {
         rep[b] = a;
-    else
-    {
+    } else {
         rep[a] = b;
         ++rank[b];
     }
 }
 
-void MakeSets(int m)
-{
-    while(m--)
-    {
+void MakeSets(int m) {
+    while(m--) {
         rep[m] = m;
         rank[m] = 0;
     }
 }
 
-void dfs(int v)
-{
+void dfs(int v) {
     visited[v] = 1;
     anc[v] = v;
-    for(int i = 0; i < graph[v].size(); ++i)
-    {
-        if(visited[graph[v][i]] == 0)
-        {
+    for (int i = 0; i < graph[v].size(); ++i) {
+        if (visited[graph[v][i]] == 0) {
             dfs(graph[v][i]);
             Union(v, graph[v][i]);
             anc[Find(v)] = v;
         }
     }
     visited[v] = 2;
-    for(int i = 0; i < query[v].size(); ++i)
-    {
-        if(visited[query[v][i]] == 2)
+    for (int i = 0; i < query[v].size(); ++i) 
+        if (visited[query[v][i]] == 2)
             answer[v][i] = anc[Find(query[v][i])];
-    }
 }
 
 typedef pair<int, int> P;
 map<P, P> memo;
-void addQuery(int x, int y) 
-{
+void addQuery(int x, int y) {
     memo[P(x, y)] = P(x, query[x].size());
     cout << memo[P(x, y)].first << " " << memo[P(x, y)].second << "#" << x << " " << y << endl;
     query[x].push_back(y);
-    if(x!=y) {
+    if (x!=y) {
         memo[P(y, x)] = P(y, query[y].size());
         query[y].push_back(x);
     }
 }
 
-void LCA(int n, int root)
-{
+void LCA(int n, int root) {
     MakeSets(n);
     for(int i = 0; i < n; ++i) {
         answer[i].resize(query[i].size());
-        for (int j = 0; j < answer[i].size(); j++) {
+        for (int j = 0; j < answer[i].size(); j++) 
             answer[i][j] = NOT_VALID_INDEX;
-        }
     }
     dfs(root);
 }
@@ -102,8 +88,7 @@ int getAnswer(int x, int y)
     exit(1);
     return NOT_VALID_INDEX;
 }
-void init(void)
-{
+void init(void) {
     memo.clear();
 }
 
