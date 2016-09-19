@@ -314,23 +314,29 @@ public:
     /*********/
     // 構築
     /*********/
-    Tree(int vn, int root, AssosiativeOperator<verticle_t>* op_init) : vn(vn), root(root) {
-        op = op_init;
-
+    Tree(int vn, int root) : vn(vn), root(root) {
+        // TODO このへんの確保を最低限に
         MAXLOGV = ceil(log(vn) / log(2)) + 2; // +2は念の為
         m_edges.resize(vn);
         m_verticles.resize(vn);
         parent.resize(MAXLOGV); rep(i, MAXLOGV) parent[i].resize(vn);
-
+        depth.resize(vn);
+    }
+    void setAssosiativeOperator(AssosiativeOperator<verticle_t>* op_init) {
+        op = op_init;
+    }
+    void constructDoubling(void) {
         m_verticles_doubling.resize(MAXLOGV); rep(i, MAXLOGV) m_verticles_doubling[i].resize(vn);
         rep(i, m_verticles_doubling.size()) rep(j, m_verticles_doubling[0].size()) 
             m_verticles_doubling[i][j] = op->T0;
-
-        depth.resize(vn);
+    }
+    void constructEulerTour(void) {
         m_euler_verticles_positive = fenwick_tree<verticle_t>(vn*2);
         m_euler_verticles_negative = fenwick_tree<verticle_t>(vn*2);
         m_euler_verticles_positive_segment = SegmentTree<verticle_t>(vn*2, op); 
     }
+
+
 
     // 辺の構築
     void unite(edge_t e) {
@@ -392,6 +398,7 @@ public:
     }
 
     // 1つ親と深さとオイラーツアーを構築
+    // TODO 機能毎に分ける
     void dfs(int v, int p, int d) {
         parent[0][v] = p;
         depth[v] = d;
@@ -439,7 +446,7 @@ public:
     int getParent(int index, ll n) const {
         ll ret = index;
         n = min(n, (1ll << MAXLOGV) - 1);
-        rep(k, MAXLOGV) if (n & (1ll << k)) {
+        rep(k, MAXLOGV) if (ret != -1) if (n & (1ll << k)) {
             ret = parent[k][ret];
         }
         return ret;
@@ -624,7 +631,7 @@ public:
         // 最大サイズの子hを求める
         int h=-1;
         for (auto &u:m_edges[v]) if (u.to != p) {
-            if(treesize[h]<treesize[u.to]) {
+            if(h == -1 || treesize[h]<treesize[u.to]) {
                 h=u.to;
             }
         }
@@ -709,7 +716,11 @@ public:
  */
 int main() {
     int n; cin >> n;
-    Tree tree(n, 0/*root*/, new AssosiativeOperatorSum<verticle_t>());
+    Tree tree(n, 0/*root*/);
+    tree.setAssosiativeOperator(new AssosiativeOperatorSum<verticle_t>());
+    tree.constructDoubling();
+    tree.constructEulerTour();
+
     for (int i = 0; i < n-1; i++) {
         int x, y; cin >> x >> y;
         tree.unite(x, y);
@@ -717,6 +728,7 @@ int main() {
     for (int i = 0; i < n; i++) {
         tree.setVerticle(i, i);
     }
+
     tree.init();
 
     tree.print();
