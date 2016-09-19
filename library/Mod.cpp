@@ -197,22 +197,59 @@ matrix plus(const matrix &A, const matrix &B) {
             C[i][j] += A[i][j] + B[i][j];
     return C;
 }
+// 構築なし累乗
+//
 // O(n^3 log e)
-matrix pow(const matrix &A, int e) {
+matrix pow(const matrix &A, long long e) {
     return e == 0 ? identity(A.size())  :
         e % 2 == 0 ? pow(mul(A, A), e/2) : mul(A, pow(A, e-1));
 }
+// 構築付き累乗
+//
+// powA: A^2^i
+// O(n^3 log e)
+matrix pow(const vector<matrix>& powA, long long e) { // powA[0]がA
+//    cout << powA[0] << "^" << e <<endl;
+    if (e <= 0) return identity(powA[0].size());
+    matrix ret = identity(powA[0].size());
+    rep(i, powA.size()) if (e & (1ll << i)) {
+        ret = mul(ret, powA[i]);
+    }
+    return ret;
+}
+arr powmul(const vector<matrix>& powA, long long e, arr& a) { // powA[0]がA
+//    cout << powA[0] << "^" << e <<endl;
+    if (e <= 0) return a;
+    arr ret = a;
+    rep(i, powA.size()) if (e & (1ll << i)) {
+        ret = mul(powA[i], ret);
+    }
+    return ret;
+}
+
+// Aを最大e乗まで計算するためのpowAを構築する。
+// powAは副作用で返す
+//
+// O(n^3 log e)
+void construct_powA(const matrix &A, long long e, vector<matrix>& powA) {
+    powA.clear();
+    powA.pb(A);
+    for (int i = 1; (1ll << i) < e; i++) {
+        powA.pb(mul(powA[i-1], powA[i-1]));
+    }
+}
+
 // O(n)
 number inner_product(const arr &a, const arr &b) {
     number ans = 0;
-    for (int i = 0; i < a.size(); ++i)
+    for (int i = 0; i < (int)a.size(); ++i)
         ans += a[i] * b[i];
     return ans;
 }
 // O(n)
 number tr(const matrix &A) {
     number ans = 0;
-    for (int i = 0; i < A.size(); ++i)
+    for (int i = 0; i < (int)A.size(); ++i)
         ans += A[i][i];
     return ans;
 }
@@ -220,7 +257,7 @@ number tr(const matrix &A) {
 // modは素数でなければならない！！
 number det(matrix A) {
     int n = A.size();
-    assert(n == A[0].size());
+    assert(n == (int)A[0].size());
     number ans = 1;
     for (int i = 0; i < n; i++) {
         int pivot = -1;
@@ -273,6 +310,7 @@ int gf2_rank(matrix A) { /* input */
     }
     return i;
 }
+
 
 
 int main() {

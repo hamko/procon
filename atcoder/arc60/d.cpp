@@ -19,8 +19,7 @@ using namespace std;
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>;
-using ld = long double;  using vld = vector<ld>; 
+using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
 vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
@@ -36,7 +35,7 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & (1ll << i)); return s; }
+void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
@@ -45,7 +44,56 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll n, s; cin >> n >> s;
+    if (n < s) {
+        cout << -1 << endl;
+        return 0;
+    }
+    
+    ll ret = INF;
+
+    // k = 1
+    if (n == s) {
+        chmin(ret, n+1);
+    }
+
+    // k = 2
+    repi(p, 1, 1000000) {
+        if ((n - s) % p != 0) continue;
+        vll cand = {(n - s) / p + 1, p + 1};
+        for (ll b : cand) {
+            if (b < 2) continue;
+            if ((n - s) % (b - 1) == 0) {
+                ll a1 = (n - s) / (b - 1);
+                ll a0 = s - a1;
+                if (a0 >= 0 && a1 >= 0 && b > a0 && b > a1 && n == a0 + a1 * b) {
+                    chmin(ret, b);
+//                    cout << b << " " << a0 << " " << a1 << " " << "#hit" << endl;
+                }
+            }
+        }
+    }
+
+    // k > 2
+    repi(b, 2, 1000000) {
+        ll tmp = n;
+        vll a;
+        while (tmp) {
+            a.pb(tmp % b);
+            tmp /= b;
+        }
+        ll check = 0;
+        rep(i, a.size()) {
+            check += a[i];
+        }
+        if (s == check) {
+//            cout << b << " " << a << endl;
+            chmin(ret, b);
+        }
+    }
+    if (ret == INF) 
+        cout << -1 << endl;
+    else 
+        cout << ret << endl;
     return 0;
 }
