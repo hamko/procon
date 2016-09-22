@@ -1,6 +1,14 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+//セグ木の理解とともに、GeneralSegmentがひどいライブラリに見えるようになってきた
+//
+//ノードの一部だけをupdateする
+//でも全部もできるようになってほしい
+//構築不要の場合があるので、ノードを直接叩けるようになっていて欲しい
+//無駄に結合opクラス作るの良くない
+//単位元は構築サボる時以外いらない
+
 #define rep(i,n) for(int i = 0; i < n; i++)
 #define all(x) x.begin(), x.end()
 #define Min(x) *min_element(all(x))
@@ -152,7 +160,7 @@ public:
             dat[v] = x;
         while (v){
             v = v >> 1;
-            dat[v] = op->op(dat[v<<1], dat[v<<1|1]); // opの順序を逆にしたい場合はここをいじる！！
+            dat[v] = op->op(dat[v<<1], dat[v<<1|1]); 
         }
     }
     // 範囲更新
@@ -187,7 +195,7 @@ public:
         if(ql <= nl && nr <= qr) return dat[n]; // 一回の区間更新に付き最大3回、した区間が小さい順にHitする。
         if (enable_range_update_flag) pullup(n);
         int m = (nl + nr) / 2;
-        return op->op(query(n<<1, nl, m), query(n<<1|1, m, nr)); // opの順序を逆にしたい場合はここをいじる！！
+        return op->op(query(n<<1, nl, m), query(n<<1|1, m, nr)); 
     }
     // [l, r)の演算結果を出力
     T query(int l, int r){

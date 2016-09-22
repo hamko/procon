@@ -290,7 +290,7 @@ public:
     int MAXLOGV;
     vector<vector<edge_t>> m_edges; // m_edges[i][j]が存在: i->jの辺が存在
     int vn; // 頂点の数, vn<2^MAXLOGV
-    int root; // 根ノードの番号
+    int root = 0; // 根ノードの番号
 
     vector<verticle_t> m_verticles; 
     vector<vector<verticle_t>> m_verticles_doubling; // m_verticles_doubling[i][j]: jのi^2番目の親までのm_vertivlesの結合演算opによる積分
@@ -299,16 +299,6 @@ public:
 
     vector<vector<int>> parent; // parent[i][j]: jのi^2番目の親。j=0で直近の親。
     vector<int> depth; // depth[i]: 頂点iの根からの深さ, 根が0
-
-    /*********/
-    // オイラーツアー
-    /*********/
-    vector<int> m_euler; // 根から始めるオイラーツアー、長さvn*2
-    fenwick_tree<verticle_t> m_euler_verticles_positive; // 1回目で+, 2回目で+になる頂点に載ったデータ, 長さvn*2
-    fenwick_tree<verticle_t> m_euler_verticles_negative; // 1回目で+, 2回目で-になる頂点に載ったデータ, 長さvn*2
-    SegmentTree<verticle_t> m_euler_verticles_positive_segment; // 1回目で+, 2回目で+になる頂点に載ったデータ, 長さvn*2
-    vector<int> m_euler_appears_first; // f[i] = eulerでiが出てくる1回目の位置, 長さvn
-    vector<int> m_euler_appears_second; // f[i] = eulerでiが出てくる2回目の位置, 長さvn
 
 
     /*********/
@@ -330,13 +320,6 @@ public:
         rep(i, m_verticles_doubling.size()) rep(j, m_verticles_doubling[0].size()) 
             m_verticles_doubling[i][j] = op->T0;
     }
-    void constructEulerTour(void) {
-        m_euler_verticles_positive = fenwick_tree<verticle_t>(vn*2);
-        m_euler_verticles_negative = fenwick_tree<verticle_t>(vn*2);
-        m_euler_verticles_positive_segment = SegmentTree<verticle_t>(vn*2, op); 
-    }
-
-
 
     // 辺の構築
     void unite(edge_t e) {
@@ -355,9 +338,6 @@ public:
     // rootからの深さと親を確認。
     // uniteし終わったらまずこれを呼ぶこと。
     void init() {
-        m_euler.clear(); m_euler.reserve(2 * vn);
-        m_euler_appears_first.clear(); m_euler_appears_first.resize(vn);
-        m_euler_appears_second.clear(); m_euler_appears_second.resize(vn);
         dfs(root, -1, 0);
         for (int k = 0; k+1 < MAXLOGV; k++) // 2^k代祖先を計算
             for (int v = 0; v < vn; v++) 
@@ -373,28 +353,6 @@ public:
                     parent[k+1][v] = -1; // 2^k代親が根を超えてるなら、2^(k+1)代親も根を超える
                 else 
                     parent[k+1][v] = parent[k][parent[k][v]]; // 2^(k+1)代の親は、2^k代親の2^k代親
-
-        // 頂点の重みをダブリング
-        // 頂点の重みはモノイドでOK
-        rep(k, MAXLOGV-1) rep(v, vn) {
-            ll tmp = m_verticles_doubling[k][v];
-            int p = parent[k][v];
-            if (p != -1) tmp = op->op(tmp, m_verticles_doubling[k][p]);
-            m_verticles_doubling[k+1][v] = tmp;
-        }
-
-        // eulerのためのデータ用意
-        rep(i, vn) { 
-            m_euler_verticles_negative.update(m_euler_appears_first[i], +m_verticles[i]);
-            m_euler_verticles_negative.update(m_euler_appears_second[i], -m_verticles[i]);
-            m_euler_verticles_positive.update(m_euler_appears_first[i], +m_verticles[i]);
-            m_euler_verticles_positive.update(m_euler_appears_second[i], +m_verticles[i]);
-            m_euler_verticles_positive_segment.update(m_euler_appears_first[i], +m_verticles[i]);
-            m_euler_verticles_positive_segment.update(m_euler_appears_second[i], +m_verticles[i]);
-        }
-
-        // HL分解
-        constructHLD(); 
     }
 
     // 1つ親と深さとオイラーツアーを構築
@@ -402,13 +360,9 @@ public:
     void dfs(int v, int p, int d) {
         parent[0][v] = p;
         depth[v] = d;
-        m_euler_appears_first[v]=m_euler.size();
-        m_euler.push_back(v);
         for (edge_t next : m_edges[v]) 
             if (next.to != p)
                 dfs(next.to, v, d+1);
-        m_euler_appears_second[v]=m_euler.size();
-        m_euler.push_back(v);
     }
 
     // 木の直径を求める
@@ -479,127 +433,6 @@ public:
         return (depth[u]-depth[p]) + (depth[v]-depth[p]);
     }
 
-    // [root, v]のうち、fを満たす最も根側のノードを返す
-    // 1つも満たさないなら-1を返す。
-    //
-    // O(log n)
-    // 制約: 特性関数は、根から見て000000111111の形
-    int binary_search(int v, function<bool(int)> f) const {
-        for(int j = MAXLOGV - 1; j >= 0;j--) 
-            if(parent[j][v] != -1 && f(parent[j][v]))
-                v = parent[j][v];
-        return f(v) ? v : -1;
-    }
-
-    /****************************************************/
-    // 部分木に対するクエリ
-    // モノイドに範囲更新・範囲クエリ (Lazy Segment Tree)
-    /****************************************************/
-    // uを根とする部分木に含まれる頂点全ての演算結果を求める。
-    //
-    // O(log n)
-    // 制約: 頂点のデータがモノイド
-    verticle_t accumulateSubTree(int u) {
-        return m_euler_verticles_positive_segment.query(m_euler_appears_first[u], m_euler_appears_second[u] + 1);
-    }
-
-    // 頂点uにxを足す
-    //
-    // O(log n)
-    // 制約: 頂点のデータがモノイド
-    void addSubTree(int u, verticle_t x) {
-        m_euler_verticles_positive_segment.update(m_euler_appears_first[u], x);
-        m_euler_verticles_positive_segment.update(m_euler_appears_second[u], x);
-    }
-
-    // uを根とする部分木に含まれる頂点全てにxを足す
-    //
-    // O(log n)
-    // 制約: 頂点のデータがモノイド
-    void addAllSubTree(int u, verticle_t x) {
-        m_euler_verticles_positive_segment.enable_range_update_flag = true;
-        m_euler_verticles_positive_segment.update(m_euler_appears_first[u], m_euler_appears_second[u] + 1, x);
-    }
-
-    /****************************************************/
-    // 動的群データに対する最短パスの積分 (BIT)
-    /****************************************************/
-    // できること: op = sumの最短パスの積分
-    // できないこと: op = min, max
-
-    // u, vのパスの頂点に乗ったデータの総和を求める。
-    //
-    // O(log n)
-    // 制約: 頂点のデータが群
-    // 制約: u is parent of v !!!
-    verticle_t sumMinimumLengthPathParentAndChild(int u, int v) {
-        return m_euler_verticles_negative.query(m_euler_appears_first[v])
-            - m_euler_verticles_negative.query(m_euler_appears_first[u] - 1);
-    }
-
-    // u, vの最短パスの頂点に乗ったデータの総和を求める。
-    //
-    // O(log n)
-    // 制約: 頂点のデータが群
-    verticle_t sumMinimumLengthPath(int u, int v) {
-        int lca_v = lca(u, v); 
-        return sumMinimumLengthPathParentAndChild(lca_v, u) 
-            + sumMinimumLengthPathParentAndChild(lca_v, v);
-    }
-
-#if 0 // not yet
-    // u, vのパスの頂点に乗ったデータの最小値を求める。
-    // 群じゃないので、僕の知っている方法ではできない！
-    // どうすればいい？？
-    //
-    // O(log n)
-    // 制約: 頂点のデータがモノイド
-    // 制約: u is parent of v !!!
-    verticle_t minMinimumLengthPathParentAndChild(int u, int v) {
-        return m_euler_verticles_negative.query(m_euler_appears_first[v])
-            - m_euler_verticles_negative.query(m_euler_appears_first[u] - 1);
-    }
-
-#endif
-
-    /****************************************************/
-    // 静的モノイドデータに対する最短パスの積分(ダブリング)
-    /****************************************************/
-    // できること: op = sum, min, maxの最短パスの積分
-    // できないこと: データが静的なので、一度initしたら頂点に載せたデータを変えられない
- 
-    // uからn個上の頂点までに乗ったデータの結合演算opによる積分を求める。
-    //
-    // O(log n)
-    // 制約: 頂点のデータがモノイド
-    // 制約: u is parent of v !!!
-    verticle_t accumulateMinimumLengthPathParentAndChild(int u, ll n) {
-        verticle_t ret = op->T0;
-        ll index = u;
-        n = min(n, (1ll << MAXLOGV) - 1);
-        rep(k, MAXLOGV) if (n & (1ll << k)) {
-            ret = op->op(ret, m_verticles_doubling[k][index]);
-            index = parent[k][index];
-        }
-        return ret;
-    }
-
-    // u, vの最短パスの頂点に乗ったデータの結合演算opによる積分を求める。
-    //
-    // O(log n)
-    // 制約: 頂点のデータがモノイド
-    verticle_t accumulateMinimumLengthPath(int u, int v) {
-        int lca_v = lca(u, v); 
-        return op->op(accumulateMinimumLengthPathParentAndChild(lca_v, depth[u] - depth[lca_v]), 
-            accumulateMinimumLengthPathParentAndChild(lca_v, depth[v] - depth[lca_v]));
-    }
-
-    /*************/
-    // 辺クエリ
-    /*************/
-    // そもそも、木では辺と頂点を同一視できるので必要ない！
-    // 辺の重みを、子側の頂点に載せることで、頂点のテクニックと同様に取り扱うことができる
-
     /*********/
     // HL分解
     /*********/
@@ -618,7 +451,6 @@ public:
     void setTreeSize(int v, int p) {
         treesize[v]=1;
         for (auto &u:m_edges[v]) if (u.to != p) {
-            cout << v << " " << p << " " << u.from << " " << u.to  << " " << p << endl;
             setTreeSize(u.to, v);
             treesize[v]+=treesize[u.to];
         }
@@ -626,7 +458,7 @@ public:
     void build(int v, int p, int g, int& i) {
         group[v]=g;
         id[v]=i++;
-        if (m_edges[v].size() == 1) return;
+        if ((v == root && m_edges[v].size() == 0) || (v != root && m_edges[v].size() == 1)) return;
 
         // 最大サイズの子hを求める
         int h=-1;
@@ -641,7 +473,6 @@ public:
 
         // Light
         for (auto &u:m_edges[v]) if (u.to != p) if (h != u.to) { 
-            cout << "*" << endl;
             par.push_back(v);
             bg.push_back(i);
             build(u.to, v, hl_size++, i);
@@ -654,7 +485,6 @@ public:
         id.resize(n);
 
         setTreeSize(root, -1);
-        cout << treesize << "#treesize" << endl;
         int i = 0; // 再度割り振り直す添字番号
         par.push_back(-1);
         bg.push_back(i);

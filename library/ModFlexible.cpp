@@ -2,32 +2,33 @@
 using namespace std;
 
 #define rep(i,n) for(int i = 0; i < n; i++)
-#define pb push_back
 
 // ヤコビ記号はnot yet
 // メビウスのμ関数not ye
 // カーマイケルのλ関数 not ye
 
-static const long long mo = 1e9+7;
 class Mod {
     public:
         int num;
+        int mod;
         Mod() : Mod(0) {}
-        Mod(long long int n) : num(n) { }
-        Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mo; num = tmp; }
+        Mod(long long int n) : Mod(n, 1000000007) {}
+        Mod(long long int n, int m) { mod = m; num = (n % mod + mod) % mod;}
+        Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mod; num = tmp; }
         Mod(int n) : Mod(static_cast<long long int>(n)) {}
         operator int() { return num; }
+        void setmod(const int mod) { this->mod = mod; }
 };
 istream &operator>>(istream &is, Mod &x) { long long int n; is >> n; x = n; return is; }
 ostream &operator<<(ostream &o, const Mod &x) { o << x.num; return o; }
-Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % mo); }
+Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % a.mod); }
 Mod operator+(const long long int a, const Mod b) { return Mod(a) + b; }
 Mod operator+(const Mod a, const long long int b) { return b + a; }
 Mod operator++(Mod &a) { return a + Mod(1); }
-Mod operator-(const Mod a, const Mod b) { return Mod((mo + a.num - b.num) % mo); }
+Mod operator-(const Mod a, const Mod b) { return Mod((a.mod + a.num - b.num) % a.mod); }
 Mod operator-(const long long int a, const Mod b) { return Mod(a) - b; }
 Mod operator--(Mod &a) { return a - Mod(1); }
-Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % mo); }
+Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % a.mod); }
 Mod operator*(const long long int a, const Mod b) { return Mod(a)*b; }
 Mod operator*(const Mod a, const long long int b) { return Mod(b)*a; }
 Mod operator*(const Mod a, const int b) { return Mod(b)*a; }
@@ -63,7 +64,7 @@ Mod modpowsum(const Mod a, const long long b) {
 /*************************************/
 // 以下、modは素数でなくてはならない！
 /*************************************/
-Mod inv(const Mod a) { return a ^ (mo - 2); }
+Mod inv(const Mod a) { return a ^ (a.mod - 2); }
 Mod operator/(const Mod a, const Mod b) { assert(b.num != 0); return a * inv(b); }
 Mod operator/(const long long int a, const Mod b) { assert(b.num != 0); return Mod(a) * inv(b); }
 Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b); }
@@ -117,7 +118,7 @@ using number = Mod;
 using arr = vector<number>;
 using matrix = vector<vector<Mod>>;
 
-ostream &operator<<(ostream &o, const arr &v) { rep(i, v.size()) cout << v[i] << " "; return o; }
+ostream &operator<<(ostream &o, const arr &v) { rep(i, v.size()) cout << v[i] << " "; cout << endl; return o; }
 ostream &operator<<(ostream &o, const matrix &v) { rep(i, v.size()) cout << v[i]; return o; }
 
 matrix zero(int n) { return matrix(n, arr(n, 0)); } // O(n^2)
@@ -247,7 +248,7 @@ number det(matrix A) {
 int gf2_rank(matrix A) { /* input */
     if (!A.size() || (A.size() && A[0].size())) return 0;
     int n = A.size();
-    assert(mo == 2); 
+    assert(A[0][0].mod == 2); 
     
     int i,j,k;
     FOR(i,n) {
