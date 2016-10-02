@@ -46,6 +46,36 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll ret = 0;
+    rep(i, n) {
+        string a, b; cin >> a >> b;
+        
+        bool mode;
+
+        string ah, am;
+        mode = 0;
+        rep(j, a.length()) {
+            if (a[j] == ':') { mode = 1; continue;}
+            (mode ? am : ah) += a[j];
+        }
+        ll ahour = stoi(ah);
+        ll aminute = stoi(am);
+
+        string bh, bm;
+        mode = 0;
+        rep(j, b.length()) {
+            if (b[j] == ':') { mode = 1; continue;}
+            (mode ? bm : bh) += b[j];
+        }
+        ll bhour = stoi(bh);
+        ll bminute = stoi(bm);
+
+        ll sleeping_time = (ahour * 60 + aminute) - (bhour * 60 + bminute);
+        sleeping_time *= -1;
+        if (sleeping_time < 0) sleeping_time += 24 * 60;
+
+        ret += sleeping_time;
+    }
+    cout << ret << endl;
     return 0;
 }
