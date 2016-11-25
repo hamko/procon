@@ -75,6 +75,7 @@ template<int MOD> ModInt<MOD> operator^(ModInt<MOD> a, unsigned long long k) {
 	return r;
 }
 typedef ModInt<1000000007> mint;
+typedef vector<mint> vmint;
 
 struct RandomModInt {
     default_random_engine re;
@@ -102,7 +103,7 @@ ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
 // GF(mo)列sから、それを生成する最小線形漸化式Cを復元する
 //
 // 入力: 漸化式が生成したGF(mo)列s
-// 出力: 漸化式係数C
+// 出力: d項間漸化式の係数C (size = d+1)
 // 漸化式
 //      C_0 s_{n} + C_1 s_{n-1} + ... + C_{L} s{n-L} = 0
 // がsを生成した時、Cを求める。
@@ -152,101 +153,155 @@ int berlekampMassey(const vector<mint> &s, vector<mint> &C) {
 // berlekampMasseyとの違いは、係数の順序が違うのと安全用のassertチェックがあること。
 //
 // 入力: 漸化式が生成したGF(mo)列a
-// 出力: 漸化式係数\phi
+// 出力: d項間漸化式の係数\phi (size = d+1)
 // 漸化式
-//      \phi_0 a_0 + \phi_1 a_1 + ... + \phi_L a_L = 0
+//      \phi_0 a_{i} + \phi_1 a_{1} + ... + \phi_L a_L = 0
 // がaを生成した時、\phiを求める。
 //
 // O(n^2)
 //
 // 例:
-// s = [1, 2, 4, 8] -> C = [1, 1000000005(-2)] (s[1] - 2 * s[0] = 0)
-// s = [1, 1, 1, 1] -> C = [1, 1000000006(-1)] (s[1] - s[0] = 0)
+// s = [1, 2, 4, 8] -> C = [1000000005(-2), 1] (s[1] - 2 * s[0] = 0)
+// s = [1, 1, 1, 1] -> C = [1000000006(-1), 1] (s[1] - s[0] = 0)
 void computeMinimumPolynomialForLinearlyRecurrentSequence(const vector<mint> &a, vector<mint> &phi) {
-    int n2 = (int)a.size(), n = n2 / 2;
-    assert(n2 % 2 == 0);
+    assert(a.size() % 2 == 0);
     int L = berlekampMassey(a, phi);
     reverse(phi.begin(), phi.begin() + (L + 1));
 }
 
-// 第K項をinitValuesの線形結合coeffsで表す。
-void linearlyRecurrentSequenceCoeffs(long long K, const vector<mint> &initValues, const vector<mint> &annPoly, vector<mint> &coeffs, int& d) {
-	d = (int)annPoly.size() - 1;
+// 漸化式
+//      \phi_0 a_{i} + \phi_1 a_{1} + ... + \phi_L a_L = 0
+// と、initValues = a[0:phi.size()-1]が与えられる。
+// この時、a[k]をinitValues(=a[0:phi.size()-1])の線形結合の係数を返す。
+//     a[k] = coeff[0] * initValues[0] + coeff[1] * initValues[1] + ...  + coeff[d-1] * initValues[d-1] 
+//
+// O(n^2 log k)
+void linearlyRecurrentSequenceCoeffs(long long k, const vector<mint> &phi_in, vector<mint> &coeffs) {
+	int d = (int)phi_in.size() - 1;
 	assert(d >= 0);
-	assert(annPoly[d].get() == 1);
-	assert(d <= (int)initValues.size());
+	assert(phi_in[d].get() == 1);
 
     coeffs = vector<mint>(d);
 	vector<mint> square;
 	coeffs[0] = 1;
 	int l = 0;
-	while((K >> l) > 1) ++ l;
-	for(; l >= 0; -- l) {
+	while ((k >> l) > 1) ++l;
+	for (; l >= 0; --l) {
 		square.assign(d * 2 - 1, mint());
-		for(int i = 0; i < d; ++ i)
-			for(int j = 0; j < d; ++ j)
-				square[i + j] += coeffs[i] * coeffs[j];
-		for(int i = d * 2 - 2; i >= d; -- i) {
+        rep(i, d) rep(j, d) square[i + j] += coeffs[i] * coeffs[j];
+		for (int i = d * 2 - 2; i >= d; -- i) {
 			mint c = square[i];
-			if(c.x == 0) continue;
-			for(int j = 0; j < d; ++ j)
-				square[i - d + j] -= c * annPoly[j];
+			if (c.x == 0) continue;
+            rep(j, d) square[i - d + j] -= c * phi_in[j];
 		}
-		for(int i = 0; i < d; ++ i)
+        rep(i, d)
 			coeffs[i] = square[i];
-		if(K >> l & 1) {
+		if (k >> l & 1) {
 			mint lc = coeffs[d - 1];
 			for(int i = d - 1; i >= 1; -- i)
-				coeffs[i] = coeffs[i - 1] - lc * annPoly[i];
-			coeffs[0] = mint() - lc * annPoly[0];
+				coeffs[i] = coeffs[i - 1] - lc * phi_in[i];
+			coeffs[0] = mint() - lc * phi_in[0];
 		}
 	}
-//    cout << coeffs << " " << coeffs.size() << endl;
 }
 
-// 数列aは、annPolyがinitValuesから生成する数列である。
-// この時、a[K]を求める。
+// 漸化式
+//      \phi_0 a_{i} + \phi_1 a_{1} + ... + \phi_L a_L = 0
+// と、initValues = a[0:phi.size()-1]が与えられる。
+// この時、
+//      a_{k}を求める
+//
+// O(n^2 log k)
 // 
-// また、副産物として、a[K]をinitVectorの線形結合として表す係数coeffが得られる
-// a[K] = coeff[0] * initValues[0] + coeff[1] * initValues[1] + ...  + coeff[d-1] * initValues[d-1] 
+// また、副産物として、a[k]をinitVectorの線形結合として表す係数coeffが得られる
+// a[k] = coeff[0] * initValues[0] + coeff[1] * initValues[1] + ...  + coeff[d-1] * initValues[d-1] 
 // 
-// O(n^2 log K)
-mint linearlyRecurrentSequenceValue(long long K, const vector<mint> &initValues, const vector<mint> &annPoly) {
-    assert(K >= 0);
-    if(K < (int)initValues.size())
-        return initValues[(int)K];
+mint linearlyRecurrentSequenceValue(long long k, const vector<mint> &initValues, const vector<mint> &phi) {
+    int d = phi.size() - 1;
+	if(d == 0) return mint();
+	assert(d <= (int)initValues.size());
+    assert(k >= 0);
+
+    if(k < (int)initValues.size())
+        return initValues[(int)k];
 
     vector<mint> coeffs;
-    int d;
-    linearlyRecurrentSequenceCoeffs(K, initValues, annPoly, coeffs, d);
-
-	assert(d >= 0);
-	assert(annPoly[d].get() == 1);
-	assert(d <= (int)initValues.size());
-	if(d == 0)
-		return mint();
+    linearlyRecurrentSequenceCoeffs(k, phi, coeffs);
 
 	mint res;
-	for(int i = 0; i < d; ++ i)
-		res += coeffs[i] * initValues[i];
+    rep(i, d) res += coeffs[i] * initValues[i];
 	return res;
 }
 
-mint linearlyRecurrentSequenceValue(long long K, const pair<vector<mint>, vector<mint> > &seqPair) {
-	return linearlyRecurrentSequenceValue(K, seqPair.first, seqPair.second);
-}
-
-int n; long long c;
-vector<int> as;
-void productMatrixVector(vector<mint>& vec_next, vector<mint>& vec) {
-    vector<mint> vecSum(n+1); rep(j, n) vecSum[j+1] = vecSum[j] + vec[j];
-    vec_next = vector<mint>(n); // i = 0
-    rep(j, n) {
-        mint as_j = as[j];
-        vec_next[j] = as_j * vecSum[j+1];
+class matrixData {
+public:
+    int n;
+    vmint data;
+    vmint phi;
+    int d;
+    matrixData(int n_arg, vmint &data_arg) { n = n_arg; data = data_arg; }
+    void init(void) {
+        computeMinimumPolynomialUsingBlackBoxLinearAlgebra();
     }
-    vec = vec_next;
-}
+
+    int size(void) { return n; }
+
+    // vec_out is allocated in THIS function.
+    // u, v: random vector
+    // dp[i] = u^t A^i v
+    virtual void productMatrixByVector(vmint& vec_out, vmint& vec_in) = 0;
+
+    // Cayley-Hamilton
+    // O(n M(n)), M(n) is computation time of "matrix by vector"
+    // 
+    // I never care about "unlucky" situations because I'm enough lucky man.
+    void computeMinimumPolynomialUsingBlackBoxLinearAlgebra(void) {
+        vector<mint> dp(n * 2), u(n), v(n);
+        randomModIntVector(u); randomModIntVector(v);
+        vector<mint> Aiv = v; // i = 0
+
+        // enumerate 2n dp[i]
+        vector<mint> Aiv_next;
+        rep(i, n * 2) {
+            rep(j, n) dp[i] += u[j] * Aiv[j];
+            productMatrixByVector(Aiv_next, Aiv);
+            Aiv = Aiv_next;
+        }
+
+        computeMinimumPolynomialForLinearlyRecurrentSequence(dp, phi);
+        d = phi.size() - 1;
+    }
+
+    // vec_out is allocated in THIS function.
+    void computeMatrixPowerByVector(vmint &res_out, const vmint &v_in, long long k) {
+        res_out.assign(n, mint());
+        vmint vec = v_in;
+        vmint vec_next;
+        vector<mint> coeffs;
+
+        linearlyRecurrentSequenceCoeffs(k, phi, coeffs);
+
+        rep(i, d) {
+            rep(j, n) res_out[j] += coeffs[i] * vec[j];
+            productMatrixByVector(vec_next, vec); 
+            vec = vec_next;
+        }
+    }
+    virtual ~matrixData() {}
+};
+
+class myMatrixData : public matrixData {
+public:
+    myMatrixData(int n_arg, vmint &data_arg) : matrixData(n_arg, data_arg) {}
+    virtual void productMatrixByVector(vmint& vec_out, vmint& vec_in) {
+        vec_out.resize(n);
+        vec_out[0] = vec_in[0] * data[0];
+        rep(i, n-1) 
+            vec_out[i+1] = vec_out[i] + vec_in[i+1] * data[i+1];
+    }
+    virtual ~myMatrixData() {}
+};
+
 int main() {
     /*
     {
@@ -270,122 +325,23 @@ int main() {
         cout << phi << endl;
     }
     */
-    /*
-	int n; long long c;
-	while(~scanf("%d%lld", &n, &c)) {
-		vector<int> as(n);
-		for(int i = 0; i < n; ++ i)
-			scanf("%d", &as[i]);
-		vector<mint> dp(n * 2);
-		dp[0] = 1;
-		rep(i, n) {
-			mint a = as[i];
-			rep(j, (int)dp.size() - 1)
-				dp[j + 1] += dp[j] * a;
-		}
-        cout << dp << endl;
-		vector<mint> phi;
-		computeMinimumPolynomialForLinearlyRecurrentSequence(dp, phi);
-		mint ans = linearlyRecurrentSequenceValue(c, dp, phi);
-		rep(i, n)
-			ans -= mint(as[i]) ^ c;
-		printf("%d\n", ans.get());
-	}
-    */
+
     // BLAを介して解く
+    int n; long long c;
     cin >> n >> c;
-    for(int i = 0; i < n; ++ i) {
-        int tmp; cin >> tmp;
-        as.push_back(tmp);
-    }
+    vmint data; rep(i, n) { int tmp; cin >> tmp; data.push_back(tmp); }
 
-    rep(_, 1) {
-        cout << _ << endl;
-        // u A^i v
-        vector<mint> dp(n * 2);
-        vector<mint> u(n), v(n);
-        randomModIntVector(u);
-        randomModIntVector(v);
-        vector<mint> Aiv = v; // i = 0
+    myMatrixData m = myMatrixData(n, data);
+    m.init();
 
-        /*
-        // O(n^2)による行列xベクトル演算
-        rep(i, n * 2) {
-            rep(j, n) dp[i] += u[j] * Aiv[j];
-            vector<mint> Aiv_next(n); // i = 0
-            rep(j, n) rep(h, n) { // O(n)に累積和を使えばなる
-                if (h > j) continue;
-                mint as_j = as[j];
-                Aiv_next[j] += as_j * Aiv[h];
-            }
-            Aiv = Aiv_next;
-        }
-        */
-        // O(n)による行列xベクトル演算
-        rep(i, n * 2) {
-            rep(j, n) dp[i] += u[j] * Aiv[j];
-            vector<mint> Aiv_next;
-            productMatrixVector(Aiv_next, Aiv);
-            Aiv = Aiv_next;
-        }
-
-        vector<mint> phi;
-        computeMinimumPolynomialForLinearlyRecurrentSequence(dp, phi);
-        cout << phi << endl;
-
-        vector<mint> coeffs;
-        int d;
-        linearlyRecurrentSequenceCoeffs(c, dp, phi, coeffs, d);
-        vector<vector<mint>> AivList(d+1, vector<mint>(n));
-        vector<mint> Aiv_vec = vector<mint>(n, 1);
-        vector<mint> Aiv_vec_next;
-
-        vector<mint> res(n);
-        rep(i, d) {
-            rep(j, n) res[j] += coeffs[i] * Aiv_vec[j];
-            productMatrixVector(Aiv_vec_next, Aiv_vec); 
-            Aiv_vec = Aiv_vec_next;
-            cout << Aiv_vec << endl;
-        }
-        cout << coeffs << endl;
-        cout << res << endl;
-
-        /*
-        vector<mint> phi;
-        computeMinimumPolynomialForLinearlyRecurrentSequence(dp, phi);
-        cout << phi << endl;
-
-        // 漸化式の2n項までを列挙
-        dp = vector<mint>(2 * n);
-        dp[0] = 1;
-        rep(i, n) {
-            mint a = as[i];
-            rep(j, (int)dp.size() - 1)
-                dp[j + 1] += dp[j] * a;
-        }
-
-        // 行列の最小多項式で、漸化式の第c項を計算
-        mint ans = linearlyRecurrentSequenceValue(c, dp, phi);
-        rep(i, n)
-            ans -= mint(as[i]) ^ c;
-        cout << ans.get() << endl;
-        */
-    }
-    /*
-    vector<mint> dp(n * 2);
-    dp[0] = 1;
-    rep(i, n) {
-        mint a = as[i];
-        rep(j, (int)dp.size() - 1)
-            dp[j + 1] += dp[j] * a;
-    }
-    cout << dp << endl;
-    vector<mint> phi;
-    computeMinimumPolynomialForLinearlyRecurrentSequence(dp, phi);
-    mint ans = linearlyRecurrentSequenceValue(c, dp, phi);
+    vmint res_out;
+    vmint v_in(n, 1);
+    m.computeMatrixPowerByVector(res_out, v_in, c);
+    
+    mint ans = res_out[n-1];
     rep(i, n)
-        ans -= mint(as[i]) ^ c;
-    printf("%d\n", ans.get());
-    */
+        ans -= mint(data[i]) ^ c;
+    cout << ans << endl;
+
     return 0;
 }
