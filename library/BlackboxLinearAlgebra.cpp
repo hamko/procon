@@ -1,6 +1,7 @@
 #include "bits/stdc++.h"
 using namespace std;
 #define rep(i,n) for(int (i)=0;(i)<(int)(n);++(i))
+#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define rer(i,l,u) for(int (i)=(int)(l);(i)<=(int)(u);++(i))
 #define reu(i,l,u) for(int (i)=(int)(l);(i)<(int)(u);++(i))
 static const int INF = 0x3f3f3f3f; static const long long INFL = 0x3f3f3f3f3f3f3f3fLL;
@@ -228,39 +229,44 @@ mint linearlyRecurrentSequenceValue(long long k, const vector<mint> &initValues,
     vector<mint> coeffs;
     linearlyRecurrentSequenceCoeffs(k, phi, coeffs);
 
-	mint res;
-    rep(i, d) res += coeffs[i] * initValues[i];
+	mint res; rep(i, d) res += coeffs[i] * initValues[i];
 	return res;
 }
 
+// GF(mod)の行列演算
+// thisが表す行列はAとする。
+//
+// この行列演算は、「掛け算の実装のみを要求する」。
+// 合計で、O(n^2 + n^2 log k + n T(n))
 class matrixData {
 public:
     int n;
-    vmint data;
-    vmint phi;
-    int d;
-    matrixData(int n_arg, vmint &data_arg) { n = n_arg; data = data_arg; }
-    void init(void) {
-        computeMinimumPolynomialUsingBlackBoxLinearAlgebra();
-    }
-
+    matrixData(int n_arg) { n = n_arg; }
     int size(void) { return n; }
 
-    // vec_out is allocated in THIS function.
-    // u, v: random vector
-    // dp[i] = u^t A^i v
-    virtual void productMatrixByVector(vmint& vec_out, vmint& vec_in) = 0;
-
-    // Cayley-Hamilton
-    // O(n M(n)), M(n) is computation time of "matrix by vector"
+    // 行列Aとベクトルvec_inの掛け算して、vec_outを返す。
+    // vec_outはこの関数で確保される。
     // 
-    // I never care about "unlucky" situations because I'm enough lucky man.
-    void computeMinimumPolynomialUsingBlackBoxLinearAlgebra(void) {
+    // O(M(n)) : 密行列でO(n^2), コンパニオンでO(n), w要素疎行列でO(w)
+    virtual void productMatrixByVector(vmint& vec_out, const vmint& vec_in) = 0;
+
+    // 行列Aとベクトルdiag_inの掛け算して、副作用でAを更新する
+    // この関数は最小多項式を特性多項式に一致させるためのものなので、diag_inの掛け算方向は問わない
+    // 
+    // O(w) : w要素疎行列でO(w)
+    virtual void productDiagByMatrix(const vmint& diag_in) = 0;
+
+    // Black Box Linear Algebraを使って、最小多項式の係数を乱択計算する
+    // 乱択だがほぼ100%一致するので、答えが合っているかのチェックする必要なし
+    // 出力はthis->phiに格納される。
+    // 
+    // O(n^2 + n T(n)), T(n)は行列とベクトルの掛け算
+    void computeMinimumPolynomialUsingBlackBoxLinearAlgebra(vmint& phi_out) {
         vector<mint> dp(n * 2), u(n), v(n);
         randomModIntVector(u); randomModIntVector(v);
         vector<mint> Aiv = v; // i = 0
 
-        // enumerate 2n dp[i]
+        // 2n個のdp[i]=u^t A^i vを列挙
         vector<mint> Aiv_next;
         rep(i, n * 2) {
             rep(j, n) dp[i] += u[j] * Aiv[j];
@@ -268,38 +274,126 @@ public:
             Aiv = Aiv_next;
         }
 
-        computeMinimumPolynomialForLinearlyRecurrentSequence(dp, phi);
-        d = phi.size() - 1;
+        // dpが線形漸化的で、その係数が行列の最小多項式phi_outに高確率に一致する
+        computeMinimumPolynomialForLinearlyRecurrentSequence(dp, phi_out);
     }
 
-    // vec_out is allocated in THIS function.
-    void computeMatrixPowerByVector(vmint &res_out, const vmint &v_in, long long k) {
+    // A^k vec_inを、vec_outを返す。
+    // vec_outはこの関数で確保される。
+    // 
+    // O(n^2 log k)
+    void computeMatrixPowerByVector(vmint &res_out, const vmint &v_in, const long long k) {
         res_out.assign(n, mint());
-        vmint vec = v_in;
-        vmint vec_next;
-        vector<mint> coeffs;
 
-        linearlyRecurrentSequenceCoeffs(k, phi, coeffs);
+        // 最小多項式を得る
+        vmint phi; computeMinimumPolynomialUsingBlackBoxLinearAlgebra(phi);
 
-        rep(i, d) {
+        // A^k = \Sigma A^i coeffs[i]となるcoeffsを得る。
+        vector<mint> coeffs; linearlyRecurrentSequenceCoeffs(k, phi, coeffs);
+
+        // A^k v_inを具体的に計算
+        vmint vec = v_in, vec_next;
+        rep(i, phi.size() - 1) {
             rep(j, n) res_out[j] += coeffs[i] * vec[j];
-            productMatrixByVector(vec_next, vec); 
+            productMatrixByVector(vec_next, vec);
             vec = vec_next;
         }
     }
+
+    // ベクトルbを入力として、A x = bなるxを返す。
+    // xこの関数で確保される。
+    // 
+    // O(n T(n)), T(n)は行列とベクトルの掛け算
+    void solve(vmint &x, const vmint &b) {
+        x.assign(n, mint());
+
+        // 最小多項式を得る
+        vmint phi; computeMinimumPolynomialUsingBlackBoxLinearAlgebra(phi);
+
+        // x = -1/phi[0]*(phi[1]*b+phi[2]*A*b+...+phi[d]*A^{d-1}*b)
+        // なのでそれを愚直に計算
+        vmint Aib = b;
+        repi(i, 1, phi.size()) {
+            rep(j, n) x[j] += phi[i] * Aib[j];
+            vmint Aib_next;
+            productMatrixByVector(Aib_next, Aib);
+            Aib = Aib_next;
+        }
+        rep(j, n) x[j] /= -phi[0];
+    }
+
+    // det(A)を高確率に求める
+    // 
+    // det(A) = (-1)^n char(A)(0)なので、まず特性方程式char(A)を求める。
+    // Black Box Linear Algebraで求めるのは最小多項式だが、
+    // ランダムな対角行列をかけると、最小多項式と特性方程式が高確率で一致する。
+    // 特性多項式というのは、要するにケイリーハミルトンの係数のことである。
+    // 
+    // 乱択だがほぼ100%一致するので、答えが合っているかのチェックする必要なし
+    ///
+    // O(n^2 + n T(n)), T(n)は行列とベクトルの掛け算
+    mint det(void) {
+        // ランダム対角行列DをAにかける
+        vmint D(n); randomModIntVector(D); productDiagByMatrix(D);
+
+        // 最小多項式phi(AD)を得る。
+        // ランダム対角行列Dをかけたので、これは高確率で特性多項式char(AD)でもある。
+        vmint Dphi; computeMinimumPolynomialUsingBlackBoxLinearAlgebra(Dphi);
+
+        // det(AD) = det(DA) = (-1)^n * char(AD)(0) = det(A) * \Pi D[i]
+        // なので、det(A) = (-1)^n * char(AD)(0) / (\Pi D[i])
+        mint ret = Dphi[0] * (n % 2 ? -1 : 1); rep(i, n) ret /= D[i];
+
+        // productDiagByMatrixは副作用で変更するので、行列を戻しとく
+        rep(i, n) D[i] = mint(1) / D[i];
+        productDiagByMatrix(D);
+
+        return ret;
+    }
+
     virtual ~matrixData() {}
 };
 
+// yukicoder旨味の相乗効果用。O(n)
 class myMatrixData : public matrixData {
 public:
-    myMatrixData(int n_arg, vmint &data_arg) : matrixData(n_arg, data_arg) {}
-    virtual void productMatrixByVector(vmint& vec_out, vmint& vec_in) {
+    vmint data; // 行列のデータ。データのアラインメントはユーザに任せる。
+    myMatrixData(int n_arg, vmint &data_arg) : matrixData(n_arg) {
+        data = data_arg; 
+    }
+    // O(n)
+    virtual void productMatrixByVector(vmint& vec_out, const vmint& vec_in) {
         vec_out.resize(n);
         vec_out[0] = vec_in[0] * data[0];
         rep(i, n-1) 
             vec_out[i+1] = vec_out[i] + vec_in[i+1] * data[i+1];
     }
+    // O(n), 対角行列は右からかける
+    virtual void productDiagByMatrix(const vmint& diag_in) {
+        rep(i, n) data[i] *= diag_in[i];
+    }
+
     virtual ~myMatrixData() {}
+};
+
+
+/*
+   テンプレート
+*/
+class templateMatrixData : public matrixData {
+public:
+    vmint data; // 行列のデータ。データのアラインメントはユーザに任せる。
+    templateMatrixData(int n_arg, vmint &data_arg) : matrixData(n_arg) {
+        data = data_arg; 
+    }
+    virtual void productMatrixByVector(vmint& vec_out, const vmint& vec_in) {
+        cerr << "productMatrixByVector not implemented." << endl; exit(1); 
+    }
+    virtual void productDiagByMatrix(const vmint& diag_in) {
+        cerr << "productDiagByMatrix not implemented." << endl; exit(1); 
+    }
+
+    virtual ~templateMatrixData() {}
 };
 
 int main() {
@@ -326,22 +420,43 @@ int main() {
     }
     */
 
-    // BLAを介して解く
-    int n; long long c;
-    cin >> n >> c;
-    vmint data; rep(i, n) { int tmp; cin >> tmp; data.push_back(tmp); }
+    {
+        // A^c bを求める。
+        // 
+        //  (1, 2, 3) ^ c (1)
+        //  |1, 2, 0|     |1|
+        //  (1, 0, 0)     (1)
+        int n = 3; long long c = 4;
+        vmint data = {1, 2, 3};
+        myMatrixData m = myMatrixData(n, data);
 
-    myMatrixData m = myMatrixData(n, data);
-    m.init();
+        vmint res_out;
+        vmint b(n, 1);
+        m.computeMatrixPowerByVector(res_out, b, c);
+        cout << res_out << endl;
+    }
 
-    vmint res_out;
-    vmint v_in(n, 1);
-    m.computeMatrixPowerByVector(res_out, v_in, c);
-    
-    mint ans = res_out[n-1];
-    rep(i, n)
-        ans -= mint(data[i]) ^ c;
-    cout << ans << endl;
+    {
+        // A x = bを求める。
+        // 
+        //  (1, 2, 3)      (2)
+        //  |1, 2, 0| x =  |3|
+        //  (1, 0, 0)      (4)
+        int n = 3; 
+        vmint data = {1, 2, 3};
+        myMatrixData m = myMatrixData(n, data);
+
+        vmint x;
+        vmint b = {2, 3, 4};
+        m.solve(x, b);
+        cout << x << endl;
+
+        cout << m.det() << endl;
+        cout << m.det() << endl;
+        cout << m.det() << endl;
+    }
+
+
 
     return 0;
 }
