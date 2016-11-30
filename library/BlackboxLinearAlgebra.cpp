@@ -397,28 +397,27 @@ public:
 };
 
 int main() {
-    /*
     {
+        // Berlekamp Masseyのテスト
         vector<mint> s = {1, 2, 4, 8}, C;
         berlekampMassey(s, C);
         cout << s << endl;
         cout << C << endl;
     }
     {
+        // Berlekamp Masseyのテスト
         vector<mint> s = {1, 1, 1, 1, 1, 1}, C;
         berlekampMassey(s, C);
         cout << s << endl;
         cout << C << endl;
     }
-    */
-    /*
     {
+        // Berlekamp Masseyをひっくりかえしたもののテスト
         vector<mint> a = {100, 1, 0, 0, 0, 0}, phi;
         computeMinimumPolynomialForLinearlyRecurrentSequence(a, phi);
         cout << a << endl;
         cout << phi << endl;
     }
-    */
 
     {
         // A^c bを求める。
@@ -451,12 +450,21 @@ int main() {
         m.solve(x, b);
         cout << x << endl;
 
-        cout << m.det() << endl;
-        cout << m.det() << endl;
-        cout << m.det() << endl;
-    }
+   }
+   {
+       // det(A)を求める。
+       // 
+       //      (1, 2, 3) 
+       //  A = |1, 2, 0|
+       //      (1, 0, 0)
+       int n = 3; 
+       vmint data = {1, 2, 3};
+       myMatrixData m = myMatrixData(n, data);
 
+       cout << m.det() << endl;
+       cout << m.det() << endl;
+       cout << m.det() << endl;
+   }
 
-
-    return 0;
+   return 0;
 }
