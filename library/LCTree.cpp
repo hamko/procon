@@ -8,13 +8,34 @@
 //
 // 理解のポイント
 //
-// 「木をたくさんの列に分解し」
-// 木をうまくたくさんの列に分解することは可能
-//
+// まず、「木をたくさんの列に分解することで表現している」
+// 同じ列であることは、強連結であることで特徴付けている
+// 列間の構造は、parentのみの単方向でつなげることで表している。
+
 // 「列を平衡二分探索木で表現している」
+// 平行二分探索木を使って、ハイローゲームをしていると思うとわかりやすい。
+// 長さnの列の順番を確定させるには、n-1個の情報（=大きさnの木の辺の数）があれば十分である。
+//
 // 真の根に近いほうが「小さい」ノードであると定義すると、列は平衡二分探索木で表現できる
 // この定義では、左が根に近く右が根から遠くなる。
+// 
+// 例えば、
+//   5 - 3 - 2 - 1
+// という列を二分探索木で表すとする。
+// まず、どこを基準にするかを決める。
+// ここでは3を基準とすると、この列を再現するには、「3より5が左側」「3より1が右側」「1より2が左側」という情報が必要
+// これを表したSplay木は以下のようになる。
+//     3
+//   /   |
+//  5    1
+//      /
+//     2
+// どんな情報であっても、このようなSplay木が構成可能である。
 //
+// ところで、列は左右どちらから見ても実質同じであるという問題がある。
+// おそらく、この性質をevertを使って吸収しているものと思う。
+
+
 // 二分探索木が与えられた時、二分探索木が表す順序は一意に定まる！
 // 具体的には、二分探索木の根から、「左が終わってないなら左に移動、左が終わってるなら自分を取る、自分も左も終わってるなら右に移動、全部終わってるなら親に戻る」を繰り返せば、列を復元できる
 //
@@ -65,7 +86,11 @@ struct node {
 		parent = lch = rch = nullptr;
 	}
 };
+node *tr[1000100];
+unordered_map<node*, int> tr_inv;
+
 ostream &operator<<(ostream &o, const node* v) {
+    o << (tr_inv[(node*)v]) << " ";
     o << (v->parent ? to_string(v->parent->id) : "-") << " ";
     o << (v->lch ? to_string(v->lch->id) : "-") << " ";
     o << (v->rch ? to_string(v->rch->id) : "-") << " ";
@@ -178,11 +203,13 @@ void splay(node *x) {
 }
  
 // xを、真の根が属するSplay木に属させる。ついでにxをsplay木の根にする。
-//
-// 重要なのは、初めのxの右を切っている＝「xより葉側を、xが属するSplay木管理外に追いやってる」こと！
-// つまり、xが最も葉側の頂点となる。
-//
 // 英語の意味は「むきだしにする」「掘り出す」
+//
+// やっていることは、
+// 「splayして、前のを右にくっつけて、親に上がる」を真の親になるまで繰り返している
+//
+// 重要なこととして、exposeの結果は「見た目」一意でない（もちろんsplayの実装見れば一意だが…）。
+// デバッグの時は、exposeの結果が同じ木を表現していることを確認するくらいが関の山。
 void expose(node *x) {
 	for (node *y = x, *rch = nullptr; y != nullptr; 
             y = y->parent) { // splay(y)しているので、このparentは必ず次のsplay木に移動する
@@ -245,41 +272,68 @@ node *lca(node *x, node *y) {
 	return l;
 }
  
-node *tr[1000100];
- 
+/*
+
+6
+link 1 2
+link 2 3
+link 3 5
+link 4 5
+expose 1
+splay 2
+
+// expose, splayは、同じ列を表していることを確認するくらいで良い
+*/
+
 int main() {
 	int n;
 	cin >> n;
  
-	for (int i = 0; i < n; i++) 
+	for (int i = 0; i < n; i++) {
         tr[i] = new node(i);
+        tr_inv[tr[i]] = i;
+    }
 
-    for (int i = 0; i < n; i++) 
+    for (int i = 0; i < n; i++) {
         cout << tr[i] << endl; 
+    }
 	while (1) {
         cout << "--------" << endl;
-		int t;
-		scanf("%d", &t);
+        string c; 
+        cin >> c;
  
-		if (t == 1) {
+		if (c == "link") {
 			int u, v;
 			scanf("%d %d", &u, &v);
  
 			link(tr[u], tr[v]);
-		} else if (t == 2) {
+		} else if (c == "cut") {
 			int u;
 			scanf("%d", &u);
  
 			cut(tr[u]);
-		} else {
+		} else if (c == "splay") {
+			int u;
+			scanf("%d", &u);
+ 
+			splay(tr[u]);
+		} else if (c == "expose") {
+			int u;
+			scanf("%d", &u);
+ 
+			expose(tr[u]);
+		} else if (c == "lca") {
 			int u, v;
 			scanf("%d %d", &u, &v);
  
 			node *l = lca(tr[u], tr[v]);
 			int ans = l == nullptr ? -2 : l->id;
 //			printf("%d\n", ans + 1);
-		}
+		} else {
+            cout << "INVALID" << endl;
+            exit(1);
+        }
         for (int i = 0; i < n; i++) 
-            cout << tr[i] << endl; 
+            cout << tr[i] << endl;  // parent, lch, rch
 	}
 }
