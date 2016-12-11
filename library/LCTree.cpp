@@ -202,14 +202,17 @@ void splay(node *x) {
 	push(x);
 }
  
-// xを、真の根が属するSplay木に属させる。ついでにxをsplay木の根にする。
-// 英語の意味は「むきだしにする」「掘り出す」
+// (1) xを、真の根が属するSplay木に属させる。
+// (2) xの、木の根から遠い側を切断する（つまり、xの右の子は必ずNULLにする）
+// (3) xを、splay木の根にする。
 //
 // やっていることは、
 // 「splayして、前のを右にくっつけて、親に上がる」を真の親になるまで繰り返している
 //
 // 重要なこととして、exposeの結果は「見た目」一意でない（もちろんsplayの実装見れば一意だが…）。
 // デバッグの時は、exposeの結果が同じ木を表現していることを確認するくらいが関の山。
+// 
+// 英語の意味は「むきだしにする」「掘り出す」
 void expose(node *x) {
 	for (node *y = x, *rch = nullptr; y != nullptr; 
             y = y->parent) { // splay(y)しているので、このparentは必ず次のsplay木に移動する
@@ -221,23 +224,33 @@ void expose(node *x) {
 	splay(x);
 }
  
-// xとxの親を切断する
+// xと、xの根側の親を切断する
 void cut(node *x) {
 	expose(x);
-	x->lch->parent = nullptr;
+
+    // 強連結を切る。
+    // つまり、もともと同じSplay木で管理されていたxの親と切断
+	x->lch->parent = nullptr; 
 	x->lch = nullptr;
+
 	update(x);
 }
  
-// pの右にxをつける
-// xとpは、別の木であることを前提としている
-// xもpも、exposeで最も葉側となってくれているので、ただくっつけるだけで問題なく列となってくれる
-void link(node *x, node *p) {
-	expose(x);
+// pの右にcをつける。
+// つまり、pよりcが葉側であるようにlinkする。
+// 
+// cとpは、別の木であることを前提としている
+// cもpも、exposeで最も葉側となってくれているので、ただくっつけるだけで問題なく列となってくれる
+void link(node *c, node *p) {
+	expose(c);
 	expose(p);
-	x->parent = p;
-	p->rch = x;
-	update(x);
+
+    // 強連結につなぐ。
+    // pが根側でcが葉側になるように、同じSplay木の中で管理する
+	c->parent = p;
+	p->rch = c;
+
+	update(c);
 	update(p);
 }
  
@@ -274,8 +287,7 @@ node *lca(node *x, node *y) {
  
 /*
 
-6
-link 1 2
+6 link 1 2
 link 2 3
 link 3 5
 link 4 5
