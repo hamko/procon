@@ -224,7 +224,8 @@ void expose(node *x) {
 	splay(x);
 }
  
-// xと、xの根側の親を切断する
+// xを真の根にする。
+// そのために、xと、xの根側の親を切断する
 void cut(node *x) {
 	expose(x);
 
@@ -287,7 +288,8 @@ node *lca(node *x, node *y) {
  
 /*
 
-6 link 1 2
+6 
+link 1 2
 link 2 3
 link 3 5
 link 4 5
@@ -334,6 +336,11 @@ int main() {
 			scanf("%d", &u);
  
 			expose(tr[u]);
+		} else if (c == "evert") {
+			int u;
+			scanf("%d", &u);
+ 
+			evert(tr[u]);
 		} else if (c == "lca") {
 			int u, v;
 			scanf("%d %d", &u, &v);
