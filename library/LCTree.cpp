@@ -255,6 +255,7 @@ void link(node *c, node *p) {
 	update(p);
 }
  
+// xを真の根にする。
 void evert(node *x) {
 	expose(x);
 	x->rch = x->lch;
