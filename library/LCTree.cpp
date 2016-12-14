@@ -124,7 +124,7 @@ struct UnionFind {
 #include <time.h>
 #include <sys/time.h>
 const string db = "\"";
-void vizLCTree(node** tr, int n, string title = "", string dir = "images/") {
+void vizLCTree(node** tr, int n, string title = "", string filename = "out.png") {
     ofstream ofs("./out.dot");
     ofs << "digraph graph_name {" << endl;
     ofs << "graph [ordering=\"out\"];" << endl;
@@ -170,10 +170,20 @@ void vizLCTree(node** tr, int n, string title = "", string dir = "images/") {
     // end
     ofs << "}" << endl;
     ofs.close();
-    struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec);
-    system(((string)"dot -T png out.dot > " + dir + "`date \"+\%Y\%m%d_\%H\%M%S\"`_"+to_string(myTime.tv_usec)+".png &").c_str());
+    system(((string)"dot -T png out.dot > " + filename + "&").c_str());
     usleep(1000000);
 //    system(((string)"dot -T png out.dot > `date \"+\%Y\%m%d_\%H\%M%S\"`.png").c_str());
+
+
+
+
+    // TODO
+    // 実際の木の様子を眺められるようにしたい。
+}
+
+string get_filename(void) {
+    struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec);
+    return "images/`date \"+\%Y\%m%d_\%H\%M%S\"`_"+to_string(myTime.tv_usec)+".png";
 }
 
 
