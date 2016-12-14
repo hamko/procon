@@ -66,6 +66,8 @@
 
 #include <bits/stdc++.h>
 using namespace std;
+#define pb push_back
+#define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
  
 //**************************************************************
 //	link-cut tree
@@ -108,6 +110,72 @@ ostream &operator<<(ostream &o, const node* v) {
     if (v->reversed) o << "(rev) ";
     return o;
 }
+
+struct UnionFind {
+    vector<int> data;
+    UnionFind(int size) : data(size, -1) { }
+    bool unite(int x, int y) { x = root(x); y = root(y); if (x != y) { if (data[y] < data[x]) swap(x, y); data[x] += data[y]; data[y] = x; } return x != y; }
+    bool find(int x, int y) { return root(x) == root(y); }
+    int root(int x) { return data[x] < 0 ? x : data[x] = root(data[x]); }
+    vector<vector<int>> getUnionList(void) { map<int, vector<int>> c; for (int i = 0; i < data.size(); i++) c[root(i)].pb(i); vector<vector<int>> v; for (auto x : c) v.push_back(x.second); return v; }
+};
+
+#include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
+const string db = "\"";
+void vizLCTree(node** tr, int n, string title = "", string dir = "images/") {
+    ofstream ofs("./out.dot");
+    ofs << "digraph graph_name {" << endl;
+    ofs << "graph [ordering=\"out\"];" << endl;
+    // start
+    rep(i, n) {
+        ofs << tr[i]->id;
+        ofs << "[label=\""+to_string(tr[i]->id);
+        // ここからノードの状態の描画
+        if (tr[i]->reversed) 
+            ofs << "\n(rev)";
+        // ここまでノードの状態の描画
+        ofs << "\"]" << endl;
+    }
+
+    rep(i, n) {
+        if (tr[i]->parent && !(tr[i]->parent->lch == tr[i] || tr[i]->parent->rch == tr[i])) 
+            ofs << db << tr[i]->id << db << "->" << db << tr[i]->parent->id << db << "[label=\"p\"]" << endl;
+        if (tr[i]->lch) ofs << db << tr[i]->id << db << "->" << db << tr[i]->lch->id << db  << "[label=\"l\"]"  << endl;
+        if (tr[i]->rch) ofs << db << tr[i]->id << db << "->" << db << tr[i]->rch->id << db  << "[label=\"r\"]"  << endl;
+    }
+
+    // 強連結をくくる
+    {
+        UnionFind uf(n);
+        rep(i, n) if (tr[i]->parent && (tr[i]->parent->lch == tr[i] || tr[i]->parent->rch == tr[i])) 
+            uf.unite(i, tr[i]->parent->id);
+        auto clusters = uf.getUnionList();
+        rep(i, clusters.size()) {
+            auto&& cluster = clusters[i];
+            ofs << "    subgraph cluster_" << to_string(i) << " {" << endl;
+            for (auto&& node : cluster) 
+                ofs << "        " << db << node << db << endl;
+            ofs << "    }" << endl;
+        }
+    }
+
+    if (title != "") {
+          ofs << "overlap=false" << endl;
+          ofs << "label=" << db << title << db << endl;
+          ofs << "fontsize=12;" << endl;
+    }
+
+    // end
+    ofs << "}" << endl;
+    ofs.close();
+    struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec);
+    system(((string)"dot -T png out.dot > " + dir + "`date \"+\%Y\%m%d_\%H\%M%S\"`_"+to_string(myTime.tv_usec)+".png &").c_str());
+    usleep(1000000);
+//    system(((string)"dot -T png out.dot > `date \"+\%Y\%m%d_\%H\%M%S\"`.png").c_str());
+}
+
 
 // なんだこれ
 // 何もやってない
@@ -359,33 +427,39 @@ int main() {
 			scanf("%d %d", &u, &v);
  
 			link(tr[u], tr[v]);
+            vizLCTree(tr, n, "link "+to_string(u)+" "+to_string(v));
 		} else if (c == "cut") {
 			int u;
 			scanf("%d", &u);
  
 			cut(tr[u]);
+            vizLCTree(tr, n, "cut "+to_string(u));
 		} else if (c == "splay") {
 			int u;
 			scanf("%d", &u);
  
 			splay(tr[u]);
+            vizLCTree(tr, n, "splay "+to_string(u));
 		} else if (c == "expose") {
 			int u;
 			scanf("%d", &u);
  
 			expose(tr[u]);
+            vizLCTree(tr, n, "expose "+to_string(u));
 		} else if (c == "evert") {
 			int u;
 			scanf("%d", &u);
  
 			evert(tr[u]);
+            vizLCTree(tr, n, "evert "+to_string(u));
 		} else if (c == "lca") {
 			int u, v;
 			scanf("%d %d", &u, &v);
  
 			node *l = lca(tr[u], tr[v]);
 			int ans = l == nullptr ? -2 : l->id;
-//			printf("%d\n", ans + 1);
+			printf("%d\n", ans + 1);
+            vizLCTree(tr, n, "lca "+to_string(u)+" "+to_string(v));
 		} else {
             cout << "INVALID" << endl;
             exit(1);
