@@ -1,6 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+// 要するに、
+// x->lchあるいはx->rchをいじったら、xの頂点に載っているデータを更新しなければならない！！！ということ。
+// parentをいじっても、別に何もしない。
+// 
+// また、このソースコードは部分木の可換モノイドのreductionをする典型例と言えるだろう。
+
 //**************************************************************
 //	link-cut tree
 //**************************************************************
@@ -17,6 +23,10 @@ int sub(node *x) {
 	return x == nullptr ? 0 : x->solid_sub + x->dashed_sub;
 }
 
+// この関数は、x->parentに依存しない形で書かなければならない！
+// なぜなら、raise関数内でx->?ch->parentを書き換えるが、updateはx->?chに対して行っていないので。
+// 
+// じゃあraise関数内でx->?chも更新すればどうなる？？
 void update(node *x) {
 	if (x == nullptr) return;
 	x->solid_sub = 1 + sub(x->lch) + sub(x->rch);
@@ -36,16 +46,40 @@ bool is_root(node *x) {
 	return x->parent == nullptr || (x->parent->lch != x && x->parent->rch != x);
 }
 
+// 子から見て親がどっち方向か
 int parent_direction(node *x) {
 	if (is_root(x)) return -1;
 	return x->parent->rch == x ? LEFT : RIGHT;
 }
 
+// childから見てparentがdir方向になるように接続
+// この操作で重要なのは、副作用がchildとparentに限定されていること！
+// 
+// 特にchildは、副作用は親のみである。
+// したがって、「自分より子供の」といった子供方向を見る条件であれば、updateする必要はない
 void connect(node *child, node *parent, int dir) {
 	if (parent != nullptr && dir != -1) (dir == RIGHT ? parent->lch : parent->rch) = child;
 	if (child != nullptr) child->parent = parent;
 }
 
+// xとx->parentの深さを逆転させる。
+//
+//        z           z
+//       /           /
+//      y           x
+//    /  |   ->    / |
+//   x   c        a  y
+//  / |             /
+// a  b            b 
+// 
+// x->pの方向xdirを覚える。その後、xのxdirの逆の子を、dirの方向でyにくっつける！
+// その後、yを子としてxを逆向きにつけ、xを子としてzにydirの方向につける。
+//
+// この操作で重要なのは、
+//     x, y, zのparent, lch, rch
+//     xの子のどちらかのparentのみ
+// に副作用を起こす点である。
+// 
 void raise(node *x) {
 	node *y = x->parent;
 	node *z = y->parent;
@@ -54,6 +88,8 @@ void raise(node *x) {
 	connect(xdir == LEFT ? x->lch : x->rch, y, xdir);
 	connect(y, x, !xdir);
 	connect(x, z, ydir);
+    // この順番は、子から親へと向かう方向
+    // 上記の操作で、必ずxとyの深さのみが逆転する。
 	update(y);
 	update(x);
 	update(z);
@@ -62,6 +98,8 @@ void raise(node *x) {
 void splay(node *x) {
 	if (x == nullptr) return;
 	while (!is_root(x)) {
+        // 親から子への方向でpushする。
+        // pushは子への伝播なので、親のほうからやらないといけない。
 		push(x->parent->parent);
 		push(x->parent);
 		push(x);
