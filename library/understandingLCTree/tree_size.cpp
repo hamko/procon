@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
+void printLCTree(string s);
 
 // 要するに、
 // x->lchあるいはx->rchをいじったら、xの頂点に載っているデータを更新しなければならない！！！ということ。
@@ -15,9 +16,19 @@ struct node {
 	node *lch = nullptr;
 	node *rch = nullptr;
 
-	int solid_sub = 1;
-	int dashed_sub = 0;
+    int id = -1;
+	int dashed_sub = 0; // まさにこのノードへdashedでつながっているsplay木のサイズ合計
+	int solid_sub = 1; // splay木で考えた時、このノードを根とする部分木のサイズから、dashedでつながっているものを抜いたもの。
 };
+ostream &operator<<(ostream &o, const node* v) {
+    o << v->id << " ";
+    o << (v->parent ? to_string(v->parent->id) : "-") << " ";
+    o << (v->lch ? to_string(v->lch->id) : "-") << " ";
+    o << (v->rch ? to_string(v->rch->id) : "-") << " ";
+    o << "(solid = " << v->solid_sub << ", dashed = " << v->dashed_sub<< ")";
+    return o;
+}
+
 
 int sub(node *x) {
 	return x == nullptr ? 0 : x->solid_sub + x->dashed_sub;
@@ -137,14 +148,18 @@ void cut(node *x) {
 	update(x);
 }
 
+
+int n;
 void link(node *x, node *p) {
 	expose(x);
 	expose(p);
 	x->parent = p;
+    printLCTree("link bef");
 
-	p->dashed_sub += sub(p->rch);
+	p->dashed_sub += sub(p->rch); // これ本当にいる？？（p->rchは常にNULLのはずなので）
 
 	p->rch = x;
+    printLCTree("link aft");
 
 	update(x);
 	update(p);
@@ -154,53 +169,32 @@ set<int> g[202020];
 node *tr[202020];
 int depth[202020];
 
-void dfs(int curr, int prev) {
-	for (int next : g[curr]) if (next != prev) {
-		depth[next] = depth[curr] + 1;
-		link(tr[next], tr[curr]);
-		dfs(next, curr);
-	}
-}
-
-void cut(int u, int v) {
-	if (depth[u] < depth[v]) swap(u, v);
-	cut(tr[u]);
+void printLCTree(string s = "") {
+    cout << "##### " << s << endl;
+    for (int i = 0; i < n; i++) cout << tr[i] << endl;
 }
 
 int main() {
-	int n;
 	cin >> n;
 
-	for (int i = 0; i < n; i++) tr[i] = new node();
+	for (int i = 0; i < n; i++) {
+        tr[i] = new node();
+        tr[i]->id = i;
+    }
 
-	for (int i = 0; i < n - 1; i++) {
-		int u, v;
-		scanf("%d %d", &u, &v);
-		u--; v--;
-		g[u].insert(v);
-		g[v].insert(u);
-	}
-
-	dfs(0, -1);
-
-	int ans = 0;
-
-	int q;
-	cin >> q;
-
-	for (int i = 0; i < q; i++) {
-		int m;
-		scanf("%d", &m);
-		int v = (ans ^ m) - 1;
-
-		expose(tr[v]);
-		ans = sub(tr[v]);
-
-		for (int u : g[v]) {
-			g[u].erase(v);
-			cut(u, v);
-		}
-
-		printf("%d\n", ans);
+    printLCTree();
+    while (1) {
+        string s; cin >> s;
+        if (s == "link") {
+            int u, v; cin >> u >> v;
+            link(tr[u], tr[v]);
+        } else if (s == "cut") {
+            int u; cin >> u;
+            cut(tr[u]);
+        } else {
+            cerr << "INVALID" << endl;
+            return 1;
+        }
+        printLCTree();
 	}
 }
