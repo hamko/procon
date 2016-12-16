@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 struct Pool {
     int pos;
     char mem[20000000]; // 20MB
@@ -84,20 +85,31 @@ struct SegmentTree {
         for(int i = l; i < r; i++) res[i-l] = max(i, i+1);
         return res;
     }
+    void print(void) {
+        rep(i, size()) cout << dat[i] << " "; cout << endl;
+        rep(i, size()) cout << lazy[i] << " "; cout << endl;
+    }
     T operator [] (const int &idx) { return max(idx, idx + 1); }
 };
 
 int main(void) {
     int n = 10;
     SegmentTree<int> s(n);
+    s.print();
     s.add(0, 10, 1);
+    s.print();
     s.add(0, 5, 2);
+    s.print();
     s.add(3, 5, 3);
-    cout << s.max(0, 10) << endl;
+    s.print();
+//    cout << s.max(0, 10) << endl;
 
+
+    /*
     for (int i = 0; i < n; i++) 
         cout << s[i] << " ";
     cout << endl;
+    */
 
     return 0;
 }
