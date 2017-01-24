@@ -46,7 +46,7 @@ static const long long mo = 1e9+7;
 size_t random_seed = (ll)0xf83d78a52ce85734;
 void init_random_seed(void) {
     srand((unsigned int)time(NULL));
-    random_seed = rand();
+    random_seed ^= rand();
 }
 
 // Vector Hash
@@ -56,7 +56,7 @@ namespace std {
             size_t seed = random_seed;
             seed += vec.size();
             for (auto& x : vec) 
-                seed ^= (size_t)x + 0x9e3779b99e3779b9 + (seed << 12) + (seed >> 4);
+                seed ^= (size_t)hash<ll>{}(x) + (seed << 12) + (seed >> 4);
             return seed;
         }
     };
@@ -64,7 +64,7 @@ namespace std {
 
 // 自前ハッシュ。
 // argument_typeにハッシュを定義したい型を入れる。
-// operator()のseed
+// operator()のseed^=を使って、seedとhash<T>{}(x)の合成関数をかけていく。
 struct S {
     string first_name, last_name;
 };
