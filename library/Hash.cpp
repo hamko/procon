@@ -55,7 +55,8 @@ namespace std {
         size_t operator()(vll const& vec) const {
             size_t seed = random_seed;
             seed += vec.size();
-            for (auto& i : vec) seed ^= (size_t)i + 0x9e3779b99e3779b9 + (seed << 12) + (seed >> 4);
+            for (auto& x : vec) 
+                seed ^= (size_t)x + 0x9e3779b99e3779b9 + (seed << 12) + (seed >> 4);
             return seed;
         }
     };
@@ -89,6 +90,13 @@ int main(void) {
     for (auto x : s) {
         cout << x << endl;
     }
+
+    cout << hash<vll>{}({1, 2, 3}) << endl;
+    cout << hash<vll>{}({4, 5, 6}) << endl;
+    cout << hash<vll>{}({4, 5, 6, 7, 8, 9, 10}) << endl;
+
+    cout << hash<S>{}({"Hamko", "Intel"}) << endl;
+    cout << hash<S>{}({"Ryo", "Wakatabe"}) << endl;
 
     return 0;
 }
