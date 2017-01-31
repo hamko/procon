@@ -355,6 +355,7 @@ pair<size_t, size_t> md5Vector(vector<T> &input) {
 
 int main(int argc, char *argv[])
 {
+    /*
     cout << sizeof(size_t) << endl;
     cout << "md5 of 'grape': " << md5String("grape") << endl;
 
@@ -372,18 +373,21 @@ int main(int argc, char *argv[])
 //        cout << "md5 of random number: " << a << " " << md5Vector(a).fi << endl;
     }
 
+    */
 
     {
+        ll n = 100000;
+        cout << sizeof(size_t) << "#size_t" << endl;
         rep(bitshift, 64) {
             set<pair<size_t, size_t>> memo;
             ll hit = 0;
-            rep(counter, 1000000) {
+            rep(counter, n) {
                 vll tmp; rep(i, 3+rand() % 1000) tmp.pb(rand());
 
                 auto h = md5Vector(tmp);
                 h.se >>= bitshift;
                 if (memo.count(h)) {
-                    //                cout << "FOUND!!!" << counter << " " << h << endl;
+//                  cout << "FOUND!!!" << counter << " " << h << endl;
                     hit++;
                 }
                 memo.insert(h);
@@ -392,6 +396,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    /*
 
     {
         set<pair<size_t, size_t>> memo;
@@ -409,6 +414,7 @@ int main(int argc, char *argv[])
             memo.insert(h);
         }
     }
+    */
 
     return 0;
 }
