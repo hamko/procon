@@ -51,12 +51,13 @@ void init_random_seed(void) {
 
 // Vector Hash
 namespace std {
-    template<> struct hash<vll> {
-        size_t operator()(vll const& vec) const {
+    using argument_type = ll;
+    template<> struct hash<vector<argument_type>> {
+        size_t operator()(vector<argument_type> const& vec) const {
             size_t seed = random_seed;
             seed += vec.size();
             for (auto& x : vec) 
-                seed ^= (size_t)hash<ll>{}(x) + (seed << 12) + (seed >> 4);
+                seed ^= x + (seed << 12) + (seed >> 4);
             return seed;
         }
     };
