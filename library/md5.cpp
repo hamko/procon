@@ -355,6 +355,7 @@ pair<size_t, size_t> md5Vector(vector<T> &input) {
 
 int main(int argc, char *argv[])
 {
+    cout << sizeof(size_t) << endl;
     cout << "md5 of 'grape': " << md5String("grape") << endl;
 
     rep(i, 10) {
