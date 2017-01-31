@@ -43,10 +43,11 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-ll hashVll(vll const& vec) {
-    unsigned long long seed = vec.size();
+using hash_t = unsigned long long;
+hash_t hashVll(vll const& vec) {
+    hash_t seed = vec.size();
     for(auto& i : vec) seed ^= i + 0x9e3779b99e3779b9 + (seed << 12) + (seed >> 4);
-    return (ll)seed;
+    return seed;
 }
 
 int main(void) {
