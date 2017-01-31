@@ -1,16 +1,26 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
+#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
-using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>;
+using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
 vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
@@ -26,31 +36,55 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & (1ll << i)); return s; }
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+void print(bool turn) {
+    cout << (turn ? "YES" : "NO") << endl;
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vector<P> a(n); rep(i, a.size()) {cin >> a[i].fi; a[i].se = i; } ;
+    ll n, m; cin >> n >> m;
+    set<string> p1, p2;
+    string tmp;
+    rep(i, n) cin >> tmp, p1.insert(tmp);
+    rep(i, m) cin >> tmp, p2.insert(tmp);
+    set<string> p12;
+    for (auto x : p1) if (p2.count(x)) 
+        p12.insert(x);
 
-    rep(i, n) {
-        vector<P> dis = a;
-        sort(dis.begin()+i, dis.end());
-        cout << dis[i].se << " " << i << endl;
-        for (int j = dis[i].se; j > i; j--) {
-            swap(a[j], a[j-1]);
-//            cout << j - 1 + 1 << " " << j + 1 << endl;
+    bool turn = true;
+    while (1) {
+//        cout << "#turn = " << turn << endl;
+        auto& p = (turn ? p1 : p2);
+        auto& p_other = (turn ? p2 : p1);
+//        cout << p << endl;
+        if (p.empty()) {
+            print(!turn);
+            return 0;
         }
-        cout << a << endl;
+
+        bool found = 0;
+        for (auto x : p) {
+            if (p12.count(x)) {
+                found = 1;
+                p.erase(x);
+                p_other.erase(x);
+                p12.erase(x);
+//                cout << "#" << x << endl;
+                break;
+            }
+        }
+        if (found == 0) {
+            p.erase(p.begin());
+        }
+//        cout << "->" << p << endl;
+        turn = !turn;
     }
-
-    cout << a << endl;
-
-
     return 0;
 }

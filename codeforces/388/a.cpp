@@ -43,17 +43,17 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-using hash_t = unsigned long long;
-hash_t hashVll(vll const& vec) {
-    hash_t seed = vec.size();
-    for(auto& i : vec) seed ^= i + 0x9e3779b99e3779b9 + (seed << 12) + (seed >> 4);
-    return seed;
-}
-
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
-    cout << hashVll(a) << endl;
+    vll ret;
+    if (n % 2) ret.pb(3), n -= 3;
+    rep(i, n / 2)
+        ret.pb(2);
+    cout << ret.size() << endl;
+    rep(i, ret.size()) {
+        cout << ret[i] << " ";
+    }
+    cout << endl;
     return 0;
 }

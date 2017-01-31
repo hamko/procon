@@ -40,6 +40,38 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    if (n % 4 != 0) {
+        cout << "===" << endl;
+        return 0;
+    }
+
+    string s; cin >> s;
+    unordered_map<char, ll> counter;
+    counter['A'] = 0;
+    counter['G'] = 0;
+    counter['C'] = 0;
+    counter['T'] = 0;
+
+    rep(i, n) {
+        counter[s[i]]++;
+    }
+    for (auto&& x : counter) if (x.fi != '?') {
+        x.se = n / 4 - x.se;
+        if (x.se < 0) {
+            cout << "===" << endl;
+            return 0;
+        }
+    }
+    rep(i, n) if (s[i] == '?') {
+        for (auto&& x : counter) if (x.fi != '?') {
+            if (x.se) {
+                x.se--;
+                s[i] = x.fi;
+                break;
+            }
+        }
+    }
+    cout << s << endl;
+
     return 0;
 }

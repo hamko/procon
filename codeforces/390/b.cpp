@@ -1,6 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -17,7 +24,6 @@ using ld = long double;  using vld = vector<ld>;
 using vi = vector<int>; using vvi = vector<vi>;
 vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
-using Pos = complex<double>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
@@ -37,9 +43,47 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+int n = 4;
+vvll b(n, vll(n));
+int print(vll a) {
+    ll o = 0, x = 0;
+    rep(i, 3) 
+        if (a[i] == 'o')
+            o++;
+        else if (a[i] == 'x')
+            x++;
+    if (x == 2 && o == 0) 
+        return 1;
+    else 
+        return 0;
+}
+bool is_valid(ll x) {
+    return 0 <= x && x <= 3;
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    rep(i, n) rep(j, n) {
+        char c; cin >> c;
+        b[i][j] = c;
+    }
+
+    vector<P> dij = {P(1, 0), P(0, 1), P(1, 1), P(1, -1)};
+    for (auto x : dij) {
+        ll di = x.fi, dj = x.se;
+        for (int i = -10; i < 10; i++) for (int j = -10; j < 10; j++) {
+            vll a; rep(k, 3) 
+                if (is_valid(i+k*di) && is_valid(j+k*dj)) {
+                    a.pb(b[i+k*di][j+k*dj]);
+                }
+            if(a.size() != 3) continue;
+//            cout << i << " " << j << " " << x << " " << a << endl;
+            if (print(a)) {
+                cout << "YES" << endl;
+                return 0;
+            }
+        }
+    }
+    cout << "NO" << endl;
     return 0;
 }

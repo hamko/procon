@@ -40,6 +40,14 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll diff = INF, ret =  1;
+    rep(i, n) if (i) {
+        if (n % i == 0 && diff > abs(n / i - i)) {
+            diff = abs(n / i - i);
+            ret = i;
+        }
+    }
+    cout << ret << " " << n/ret << endl;
+
     return 0;
 }

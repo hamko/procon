@@ -1,6 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -17,7 +24,6 @@ using ld = long double;  using vld = vector<ld>;
 using vi = vector<int>; using vvi = vector<vi>;
 vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
-using Pos = complex<double>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
@@ -37,9 +43,35 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+<<<<<<< HEAD:library/VectorHash.cpp
+using hash_t = unsigned long long;
+hash_t hashVll(vll const& vec) {
+    hash_t seed = vec.size();
+    for(auto& i : vec) seed ^= i + 0x9e3779b99e3779b9 + (seed << 12) + (seed >> 4);
+    return seed;
+}
+
+=======
+>>>>>>> 97eee00a5b2e68cbea7440b455dd5fd5b2f5fd6f:codeforces/TestingRound13/a.cpp
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    int i = 1;
+    vll ret;
+    while (1) {
+        if (n >= i) 
+            n -= i, ret.pb(i);
+        else 
+            break;
+        i++;
+    }
+    if (n) 
+        ret[ret.size()-1] += n, n = 0;
+    cout << ret.size() << endl;
+    rep(i, ret.size()) {
+        cout << ret[i] << " ";
+    }
+    cout << endl;
+
     return 0;
 }

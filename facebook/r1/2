@@ -1,6 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -17,7 +24,6 @@ using ld = long double;  using vld = vector<ld>;
 using vi = vector<int>; using vvi = vector<vi>;
 vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
-using Pos = complex<double>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
@@ -37,9 +43,35 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+void print(ll _, ll x) {
+    cout << "Case #" << _ + 1 << ": " << x << endl;
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    ll cyc; cin >> cyc;
+    rep(_, cyc) {
+        ll n, m; cin >> n >> m;
+        vvll c(n, vll(m));
+        rep(i, n) rep(j, m) cin >> c[i][j];
+        rep(i, n) sort(all(c[i]));
+        vvll dp(350, vll(350, INF));
+        dp[0][0] = 0;
+        for (ll i = 1; i <= n; i++) rep(j, 350) {
+            if (j < i) continue;
+            for (ll k = 0; k <= j; k++) {
+                ll prev_pie_doller = dp[i-1][k];
+                ll need_pie = j - k; // today
+                ll bill_today = 0;
+                rep(h, need_pie) if (h < m) {
+                    bill_today += c[i-1][h];
+                }
+                chmin(dp[i][j], prev_pie_doller + bill_today + need_pie * need_pie);
+            }
+            rep(j, 10) cout << dp[i][j];
+            cout << endl;
+        }
+        print(_, dp[n][n]);
+    }
     return 0;
 }

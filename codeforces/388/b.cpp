@@ -1,6 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -13,11 +20,11 @@ template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, t
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>;
+using Pos = complex<ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
 vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
-using Pos = complex<double>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
@@ -37,9 +44,42 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+// ハッシュの定義方法
+struct S {
+    string first_name;
+    string last_name;
+};
+namespace std
+{
+    using argument_type = Pos;
+    template<> struct hash<argument_type>
+    {
+        size_t operator()(argument_type const& x) const
+        {
+            return hash<ll>{}(x.real()) ^ (hash<ll>{}(x.imag()) << 1); 
+        }
+    };
+}
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    vector<Pos> pos(3);
+    rep(i, 3) {
+        ll x, y; cin >> x >> y;
+        pos[i] = Pos(x, y);
+    }
+    rep(i, 3) 
+        pos.pb(pos[i]);
+
+    unordered_set<Pos> ret;
+    rep(i, 3) {
+        ret.insert(pos[i]+(pos[i+1] - pos[i+2]));
+        ret.insert(pos[i]-(pos[i+1] - pos[i+2]));
+    }
+    cout << ret.size() << endl;
+    for (auto p : ret) {
+        cout << p.real() << " " << p.imag() << endl;
+    }
+
     return 0;
 }
