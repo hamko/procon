@@ -318,11 +318,9 @@ string MD5::hexdigest() const {
 pair<size_t, size_t> MD5::integer() const {
     if (!finalized) return mp(0, 0);
     size_t ret_u = 0;
-    for (int i=0; i<8; i++) 
-        ret_u |= ((size_t)digest[i] << (i * 4));
+    rep(i, 8) ret_u |= ((size_t)digest[i] << (i * 8));
     size_t ret_l = 0;
-    for (int i=0; i<8; i++) 
-        ret_l |= ((size_t)digest[i+8] << (i * 4));
+    rep(i, 8) ret_l |= ((size_t)digest[i+8] << (i * 4));
     return pair<size_t, size_t>(ret_u, ret_l);
 }
 void* MD5::getMD5() const {
@@ -376,23 +374,28 @@ int main(int argc, char *argv[])
     */
 
     {
-        ll n = 100000;
+        ll n = 1000000;
         cout << sizeof(size_t) << "#size_t" << endl;
-        rep(bitshift, 64) {
+        repi(bitshift, 100, 128) {
             set<pair<size_t, size_t>> memo;
             ll hit = 0;
             rep(counter, n) {
                 vll tmp; rep(i, 3+rand() % 1000) tmp.pb(rand());
 
                 auto h = md5Vector(tmp);
-                h.se >>= bitshift;
+                if (bitshift >= 64) {
+                    h.se >>= (bitshift - 64);
+                } else {
+                    h.se = 0;
+                    h.fi >>= (64 - bitshift);
+                }
                 if (memo.count(h)) {
 //                  cout << "FOUND!!!" << counter << " " << h << endl;
                     hit++;
                 }
                 memo.insert(h);
             }
-            cout << 64 + (64 - bitshift) << " " << hit << endl;
+            cout << bitshift << " " << hit << endl;
         }
     }
 
