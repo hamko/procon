@@ -40,12 +40,27 @@ string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & 
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
-static const long long INF = 1e18;
+static const long long INF = 1e18+1;
 static const long long mo = 1e9+7;
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); rep(i, a.size()) cin >> a[i];
+    string s; cin >> s;
+    ll m = s.length();
+    vll dp(m+1, INF);
+    dp[0] = 0;
+    for (ll i = 1; i <= m; i++) {
+        rep(j, i) {
+            string tmp = s.substr(j, i-j);
+            if (tmp.size() > 1 && tmp[0] == '0') continue;
+            if (stod(tmp) > LLONG_MAX) continue;
+            ll num = stoll(tmp);
+            if (num >= n) continue;
+            if (n * 1. * dp[j] + 1. * num > 1e18) continue;
+            chmin(dp[i], n * dp[j] + num);
+        }
+    }
+    cout << dp[m] << endl;
     return 0;
 }
