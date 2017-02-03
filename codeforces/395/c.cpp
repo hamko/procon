@@ -30,8 +30,7 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
-void vin(vll& input) { rep(i, input.size()) cin >> input[i];}
+string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & (1ll << i)); return s; }
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
@@ -41,6 +40,31 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); vin(a);
+    vvll g(n);
+    rep(i, n-1) {
+        ll u, v; cin >> u >> v; u--, v--;
+        g[u].pb(v);
+    }
+    vll color(n);
+    rep(i, n) cin >> color[i];
+
+    unordered_map<ll, ll> memo;
+    ll c = 0;
+    rep(i, n) for (auto&& v : g[i]) if (color[i] != color[v]) memo[i]++, memo[v]++, c++;
+
+    if (memo.empty()) {
+        cout << "YES" << endl;
+        cout << 1 << endl;
+        return 0;
+    } 
+    auto it = memo.begin();
+    if ((it = find_if(all(memo), [&](P x){return x.se == c;} )) != memo.end()) {
+        cout << "YES" << endl;
+        cout << it->fi + 1 << endl;
+    } else {
+        cout << "NO" << endl;
+    }
+
+
     return 0;
 }

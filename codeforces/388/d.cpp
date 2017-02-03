@@ -30,8 +30,7 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
-void vin(vll& input) { rep(i, input.size()) cin >> input[i];}
+string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & (1ll << i)); return s; }
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
@@ -41,6 +40,54 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); vin(a);
+    vvll bid(n); 
+    priority_queue<P> q; 
+    rep(i, n) {
+        ll id, b; cin >> id >> b; id--;
+        bid[id].pb(b);
+    }
+//    cout << bid << endl;
+    rep(i, n) if (bid[i].size()) {
+        q.push(P(bid[i].back(), i));
+    }
+
+    ll query; cin >> query;
+    while (query--) {
+        ll k; cin >> k;
+
+        set<ll> absent;
+        rep(i, k) {
+            ll tmp; cin >> tmp; tmp--; absent.insert(tmp);
+        }
+        vector<P> top2, absent_bids;
+        while (1) {
+            if (q.empty()) break;
+            if (top2.size() == 2) break;
+
+            auto b = q.top(); q.pop();
+
+            if (!absent.count(b.se)) { // 出席してたら
+                top2.pb(b);
+            } else {
+                absent_bids.pb(b);
+            }
+        }
+//        cout << absent << endl;
+//        cout << top2 << endl;
+
+        for (auto x : top2) q.push(x);
+        for (auto x : absent_bids) q.push(x);
+
+        if (top2.size() == 0) {
+            cout << "0 0" << endl;
+        } else if (top2.size() == 1) {
+            cout << top2[0].se+1 << " " << bid[top2[0].se][0] << endl;
+        } else {
+            // bid[top2[0].se]の中で、top2[1].fi以上で最小
+            cout << top2[0].se+1 << " " << *lower_bound(all(bid[top2[0].se]), top2[1].fi) << endl;
+        }
+    }
+
+
     return 0;
 }

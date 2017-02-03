@@ -30,8 +30,7 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
-void vin(vll& input) { rep(i, input.size()) cin >> input[i];}
+string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & (1ll << i)); return s; }
 #define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
@@ -41,6 +40,34 @@ static const long long mo = 1e9+7;
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n;
-    vll a(n); vin(a);
+    ll q; cin >> q;
+
+    vll a(n);
+    while (q--) {
+        ll t, k, d; cin >> t >> k >> d;
+        ll ret = 0;
+        
+        ll counter = 0;
+        rep(i, n) {
+            if (a[i] < t) {
+                counter++;
+            }
+        }
+        if (counter < k) {
+            cout << -1 << endl;
+            continue;
+        }
+
+        counter = k;
+        rep(i, n) {
+            if (counter == 0) break;
+            if (a[i] < t) {
+                a[i] = t + d - 1;
+                ret += i + 1;
+                counter--;
+            }
+        }
+        cout << ret << endl;
+    }
     return 0;
 }
