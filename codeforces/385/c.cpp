@@ -37,11 +37,84 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
 string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
+void vin(vll& input) { rep(i, input.size()) cin >> input[i];}
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
+
+struct UnionFind {
+    vector<int> data;
+    UnionFind(int size) : data(size, -1) { }
+    // x, yをマージ
+    bool unite(int x, int y) {
+        x = root(x); y = root(y);
+        if (x != y) {
+            if (data[y] < data[x]) swap(x, y);
+            data[x] += data[y]; data[y] = x;
+        }
+        return x != y;
+    }
+    // x, yが同じ集合なら1
+    bool find(int x, int y) {
+        return root(x) == root(y);
+    }
+    // xの根を探す。同じ集合なら同じ根が帰る
+    int root(int x) {
+        return data[x] < 0 ? x : data[x] = root(data[x]);
+    }
+    // xが含まれる集合の大きさを返す
+    int size(int x) {
+        return -data[root(x)];
+    }
+    // 分離されている集合の数を返す
+    int getSetNum(void) {
+        map<int, int> c;
+        rep(i, data.size()) {
+            c[root(i)]++;
+        }
+        return c.size();
+    }
+    // 頂点vと連結な集合を返す
+    vector<int> getContainingSet(int v) {
+        vector<int> ret;
+        for (int i = 0; i < data.size(); i++) 
+            if (root(i) == root(v))
+                ret.push_back(i);
+        return ret;
+    }
+
+    // O(n)
+    // 集合ごとに全部の要素を出力
+    vector<vector<int>> getUnionList(void) {
+        map<int, vector<int>> c;
+        for (int i = 0; i < data.size(); i++) 
+            c[root(i)].pb(i);
+        vector<vector<int>> v;
+        for (auto x : c) 
+            v.push_back(x.second);
+        return v;
+    }
+};
+ostream &operator<<(ostream &o, struct UnionFind v) {  v.getUnionList(); int i = 0; for (auto x : v.getUnionList()) { o << i << "\t"; for (auto y : x) o << y << " "; o << endl; i++;} return o; }
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll n, m, k; cin >> n >> m >> k;
+    vll capital(k); cin >> capital;
+    UnionFind uf(n);
+
+    rep(i, m) {
+        ll u, v; cin >> u >> v; u--, v--;
+        uf.unite(u, v);
+    }
+
+    vll s;
+    rep(i, k) 
+        s.pb(uf.getContainingSet(capital[i] - 1).size());
+    sort(all(s));
+
+    ll rem = n - accumulate(all(s), 0ll);
+    s[s.size()-1] += rem;
+    cout << accumulate(all(s), 0ll, [&](ll ret, ll x){return ret + x * (x - 1) / 2;})  - m << endl;
+
+
     return 0;
 }
