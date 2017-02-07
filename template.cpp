@@ -11,6 +11,8 @@ using namespace std;
 #define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
+#define forall(a, f) all_of((a).begin(), (a).end(), (f))
+#define exists(it, a, f) (((it)=find_if((a).begin(), (a).end(), (f)))!=(a).end())
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
