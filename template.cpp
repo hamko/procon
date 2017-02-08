@@ -40,6 +40,7 @@ static const long long mo = 1e9+7;
 
 string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
+string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
