@@ -32,72 +32,23 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const unorder
 string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & (1ll << i)); return s; }
 #define ldout fixed << setprecision(40) 
 
-
 static const long long mo = 1e9+7;
-class Mod {
-    public:
-        int num;
-        Mod() : Mod(0) {}
-        Mod(long long int n) : num(n) { }
-        Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mo; num = tmp; }
-        Mod(int n) : Mod(static_cast<long long int>(n)) {}
-        operator int() { return num; }
-};
-istream &operator>>(istream &is, Mod &x) { long long int n; is >> n; x = n; return is; }
-ostream &operator<<(ostream &o, const Mod &x) { o << x.num; return o; }
-Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % mo); }
-Mod operator+(const long long int a, const Mod b) { return Mod(a) + b; }
-Mod operator+(const Mod a, const long long int b) { return b + a; }
-Mod operator++(Mod &a) { return a + Mod(1); }
-Mod operator-(const Mod a, const Mod b) { return Mod((mo + a.num - b.num) % mo); }
-Mod operator-(const long long int a, const Mod b) { return Mod(a) - b; }
-Mod operator--(Mod &a) { return a - Mod(1); }
-Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % mo); }
-Mod operator*(const long long int a, const Mod b) { return Mod(a)*b; }
-Mod operator*(const Mod a, const long long int b) { return Mod(b)*a; }
-Mod operator*(const Mod a, const int b) { return Mod(b)*a; }
-Mod operator+=(Mod &a, const Mod b) { return a = a + b; }
-Mod operator+=(long long int &a, const Mod b) { return a = a + b; }
-Mod operator-=(Mod &a, const Mod b) { return a = a - b; }
-Mod operator-=(long long int &a, const Mod b) { return a = a - b; }
-Mod operator*=(Mod &a, const Mod b) { return a = a * b; }
-Mod operator*=(long long int &a, const Mod b) { return a = a * b; }
-Mod operator*=(Mod& a, const long long int &b) { return a = a * b; }
-Mod factorial(const long long n) {
-    if (n < 0) return 0;
-    Mod ret = 1;
-    for (int i = 1; i <= n; i++) {
-        ret *= i;
-    }
-    return ret;
-}
-Mod operator^(const Mod a, const long long n) {
-    if (n == 0) return Mod(1);
-    Mod res = (a * a) ^ (n / 2);
-    if (n % 2) res = res * a;
-    return res;
-}
-Mod modpowsum(const Mod a, const long long b) {
-    if (b == 0) return 0;
-    if (b % 2 == 1) return modpowsum(a, b - 1) * a + Mod(1);
-    Mod result = modpowsum(a, b / 2);
-    return result * (a ^ (b / 2)) + result;
-}
 
 // http://www.zedwood.com/article/cpp-md5-function
+using size_internal_t = uint32_t; // must be 32bit
+using hash_t = uint64_t; // must be 32bit
 class MD5
 {
     public:
-        typedef unsigned int size_type; // must be 32bit
 
         MD5();
         MD5(const string& text);
-        MD5(const void* data, size_t data_size);
-        void update(const unsigned char *buf, size_type length);
-        void update(const char *buf, size_type length);
+        MD5(const void* data, hash_t data_size);
+        void update(const unsigned char *buf, size_internal_t length);
+        void update(const char *buf, size_internal_t length);
         MD5& finalize();
         string hexdigest() const;
-        pair<size_t, size_t> integer() const;
+        pair<hash_t, hash_t> integer() const;
         void* getMD5() const;
         friend ostream& operator<<(ostream&, MD5 md5);
 
@@ -108,8 +59,8 @@ class MD5
         enum {blocksize = 64}; // VC6 won't eat a const static int here
 
         void transform(const uint1 block[blocksize]);
-        static void decode(uint4 output[], const uint1 input[], size_type len);
-        static void encode(uint1 output[], const uint4 input[], size_type len);
+        static void decode(uint4 output[], const uint1 input[], size_internal_t len);
+        static void encode(uint1 output[], const uint4 input[], size_internal_t len);
 
         bool finalized;
         uint1 buffer[blocksize]; // bytes that didn't fit in last 64 byte chunk
@@ -148,9 +99,9 @@ MD5::MD5(const string &text) {
     update(text.c_str(), text.length());
     finalize();
 }
-MD5::MD5(const void* data, size_t data_size) {
+MD5::MD5(const void* data, hash_t data_size) {
     init();
-    update((const unsigned char*)data, (size_type)data_size);
+    update((const unsigned char*)data, (size_internal_t)data_size);
     finalize();
 }
 
@@ -164,16 +115,16 @@ void MD5::init() {
     state[3] = 0x10325476;
 }
 
-void MD5::decode(uint4 output[], const uint1 input[], size_type len)
+void MD5::decode(uint4 output[], const uint1 input[], size_internal_t len)
 {
     for (unsigned int i = 0, j = 0; j < len; i++, j += 4)
         output[i] = ((uint4)input[j]) | (((uint4)input[j+1]) << 8) |
             (((uint4)input[j+2]) << 16) | (((uint4)input[j+3]) << 24);
 }
 
-void MD5::encode(uint1 output[], const uint4 input[], size_type len)
+void MD5::encode(uint1 output[], const uint4 input[], size_internal_t len)
 {
-    for (size_type i = 0, j = 0; j < len; i++, j += 4) {
+    for (size_internal_t i = 0, j = 0; j < len; i++, j += 4) {
         output[j] = input[i] & 0xff;
         output[j+1] = (input[i] >> 8) & 0xff;
         output[j+2] = (input[i] >> 16) & 0xff;
@@ -263,14 +214,14 @@ void MD5::transform(const uint1 block[blocksize])
     memset(x, 0, sizeof x);
 }
 
-void MD5::update(const unsigned char input[], size_type length)
+void MD5::update(const unsigned char input[], size_internal_t length)
 {
-    size_type index = count[0] / 8 % blocksize;
+    size_internal_t index = count[0] / 8 % blocksize;
     if ((count[0] += (length << 3)) < (length << 3))
         count[1]++;
     count[1] += (length >> 29);
-    size_type firstpart = 64 - index;
-    size_type i;
+    size_internal_t firstpart = 64 - index;
+    size_internal_t i;
     if (length >= firstpart) {
         memcpy(&buffer[index], input, firstpart);
         transform(buffer);
@@ -280,7 +231,7 @@ void MD5::update(const unsigned char input[], size_type length)
         i = 0;
     memcpy(&buffer[index], &input[i], length-i);
 }
-void MD5::update(const char input[], size_type length) { update((const unsigned char*)input, length); }
+void MD5::update(const char input[], size_internal_t length) { update((const unsigned char*)input, length); }
 MD5& MD5::finalize() {
     static unsigned char padding[64] = {
         0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -291,8 +242,8 @@ MD5& MD5::finalize() {
     if (!finalized) {
         unsigned char bits[8];
         encode(bits, count, 8);
-        size_type index = count[0] / 8 % 64;
-        size_type padLen = (index < 56) ? (56 - index) : (120 - index);
+        size_internal_t index = count[0] / 8 % 64;
+        size_internal_t padLen = (index < 56) ? (56 - index) : (120 - index);
         update(padding, padLen);
         update(bits, 8);
         encode(digest, state, 16);
@@ -307,21 +258,18 @@ MD5& MD5::finalize() {
 string MD5::hexdigest() const {
     if (!finalized) return "";
     char buf[33];
-    size_t long_long = 0;
-    for (int i=0; i<16; i++) {
+    for (int i=0; i<16; i++) 
         sprintf(buf+i*2, "%02x", digest[i]);
-        long_long |= ((size_t)digest[i] << (i * 4));
-    }
     buf[32]=0;
     return string(buf);
 }
-pair<size_t, size_t> MD5::integer() const {
+pair<hash_t, hash_t> MD5::integer() const {
     if (!finalized) return mp(0, 0);
-    size_t ret_u = 0;
-    rep(i, 8) ret_u |= ((size_t)digest[i] << (i * 8));
-    size_t ret_l = 0;
-    rep(i, 8) ret_l |= ((size_t)digest[i+8] << (i * 4));
-    return pair<size_t, size_t>(ret_u, ret_l);
+    hash_t ret_u = 0;
+    rep(i, 8) ret_u |= ((hash_t)digest[i] << (i * 8));
+    hash_t ret_l = 0;
+    rep(i, 8) ret_l |= ((hash_t)digest[i+8] << (i * 8));
+    return pair<hash_t, hash_t>(ret_u, ret_l);
 }
 void* MD5::getMD5() const {
     if (!finalized) return NULL;
@@ -336,19 +284,18 @@ string md5String(const string &str) {
 
 // inputからinput_sizeビットのmd5 sumのうち、上位/下位64bitを取得する。
 // top 64bit of MD5
-pair<size_t, size_t> md5Raw(const void* input, size_t input_size) {
+pair<hash_t, hash_t> md5Raw(const void* input, hash_t input_size) {
     MD5 md5 = MD5(input, input_size);
     return md5.integer();
 }
 
 // vectorのhashの128bitを取得する。
 template<typename T> 
-pair<size_t, size_t> md5Vector(vector<T> &input) {
+pair<hash_t, hash_t> md5Vector(vector<T> &input) {
     if (input.size() == 0) return mp(0, 0); // この条件でruntime error: reference binding to null pointer of typeが出るので苦肉
     MD5 md5 = MD5(input.data(), sizeof(T) * input.size());
     return md5.integer();
 }
-
 /****************************************************************/
 
 int main(int argc, char *argv[])
@@ -374,9 +321,9 @@ int main(int argc, char *argv[])
     */
 
     {
-        ll n = 1000000;
+        ll n = 100000;
         cout << sizeof(size_t) << "#size_t" << endl;
-        repi(bitshift, 100, 128) {
+        repi(bitshift, 1, 128) {
             set<pair<size_t, size_t>> memo;
             ll hit = 0;
             rep(counter, n) {
