@@ -1,7 +1,37 @@
 #include <bits/stdc++.h>
-#define rep(i,n) for(int i = 0; i < n; i++)
 using namespace std;
-using ll = long long;
+
+#define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
+#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
+#define pb push_back
+#define all(x) (x).begin(), (x).end()
+#define fi first
+#define se second
+#define mt make_tuple
+#define mp make_pair
+template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
+template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
+#define forall(a, f) all_of((a).begin(), (a).end(), (f))
+#define exists(it, a, f) (((it)=find_if((a).begin(), (a).end(), (f)))!=(a).end())
+
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ld = long double;  using vld = vector<ld>; 
+using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
+using Pos = complex<double>;
+
+template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
+template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
+template<class Ch, class Tr, class Tuple, size_t... Is>
+void print_tuple(basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){ using s = int[]; (void)s{0, (void(os << (Is == 0? "" : ", ") << get<Is>(t)), 0)...}; }
+template<class Ch, class Tr, class... Args> 
+auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
+ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
+template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+#define ldout fixed << setprecision(40) 
+
 
 // 素数の個数はO(n / log n)
 
@@ -9,72 +39,47 @@ using ll = long long;
 // 前処理ありの素数判定
 // 素数の最大値Mに対して先にconstructPrimesList(M)が必須！
 /**********************************************************/
-// O(n log log n)
-void sieve_of_eratosthenes(vector<ll>& primes, ll n) {
-    primes.resize(n);
-    for (ll i = 2; i < n; ++i)
-        primes[i] = i;
-    for (ll i = 2; i*i < n; ++i)
-        if (primes[i])
-            for (ll j = i*i; j < n; j+=i)
-                primes[j] = 0;
-}
-void getPrimesList(ll n, vector<ll>& primes_list) {
-    vector<ll> tmpList;
-    primes_list.clear(); primes_list.resize(0); primes_list.reserve(n / 5);
-    sieve_of_eratosthenes(tmpList, n);
-    rep(i, n) { 
-        if (tmpList[i])
-            primes_list.push_back(i);
-    }
-}
-
 // 素数テーブル構築: O(n log n)
-vector<ll> primesList;      // 素数リスト（primesListMaxまで）。こいつ自体を使うことあるかも。
-set<ll> primesSet;
-ll primesListMax;
-void constructPrimesList(ll n) {
-    if (primesListMax >= n) 
-        return;
-    primesListMax = n;
-    getPrimesList(n, primesList);
-    for (ll i = 0; i < primesList.size(); i++) {
-        primesSet.insert(primesList[i]);
-    }
-}
-// constructされていないなら、O(n log n)
-// constructされているなら、O(log n)
-bool isPrimeLookup(ll n) {
-    return primesSet.count(n);
+vector<bool> is_prime;
+vector<ll> primes;      // 素数リスト
+void constructPrime(ll n) {
+    is_prime.resize(n);
+    primes.resize(0);
+    for (ll i = 2; i < n; ++i)
+        is_prime[i] = true;
+    for (ll i = 2; i*i < n; ++i)
+        if (is_prime[i])
+            for (ll j = i*i; j < n; j+=i)
+                is_prime[j] = false;
+    for (ll i = 0; i < is_prime.size(); i++) 
+        if (is_prime[i]) 
+            primes.push_back(i);
 }
 
-// constructされていないなら、O(sqrt(n) log n)
-// constructされているなら、O(log n)
-// Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
-void getPrimeFactorizationList(ll n, vector<ll>& divisors_list) {
-    divisors_list.clear(); divisors_list.resize(0);
+// 素因数分解
+void factorize(ll n, vector<ll>& divisors_list) {
     if (n <= 1) return;
+    divisors_list.clear(); 
+    divisors_list.resize(0);
 
-    ll prime = 2;
-    while (n >= prime * prime) {
-        if (n % prime == 0) {
-            divisors_list.push_back(prime);
-            n /= prime;
-        } else {
-            prime++;
-        }
-    }
-    divisors_list.push_back(n);
+    ll prime;
+    for (ll i = 0; (prime = primes[i]) && n >= prime * prime; )  
+        if (n % prime) 
+            i++;
+        else 
+            divisors_list.push_back(prime), n /= prime;
+    if (n != 1) 
+        divisors_list.push_back(n);
 }
 
 // constructされていないなら、O(sqrt(n) log n)
 // constructされているなら、O(log n)
 // Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
-void getDivisorsList(ll n, vector<ll>& divisors_list) {
+void divisors(ll n, vector<ll>& divisors_list) {
     divisors_list.clear(); divisors_list.resize(0);
 
     vector<ll> fac_list;
-    getPrimeFactorizationList(n, fac_list);
+    factorize(n, fac_list);
     map<ll, ll> counter;
     for (auto x : fac_list) 
         counter[x]++;
@@ -94,7 +99,7 @@ void getDivisorsList(ll n, vector<ll>& divisors_list) {
 // constructされていないなら、O(sqrt(n) log n)
 // constructされているなら、O(log n)
 ll getDivisorsNum(ll n) {
-    vector<ll> divisors_list; getPrimeFactorizationList(n, divisors_list);
+    vector<ll> divisors_list; factorize(n, divisors_list);
     map<ll, ll> num;
     for (ll i = 0; i < divisors_list.size(); i++) {
         num[divisors_list[i]]++;
@@ -219,63 +224,32 @@ vector<ll> iterativeSieve() {
 
 
 
-ll n = 1000000;
-vector<ll> primes;
+ll n = 100000;
 int main(void) {
-    // 構築しないで素数判定
-    cout << isPrimeLookup(2) << endl;
-    cout << isPrimeLookup(4) << endl;
-    cout << isPrimeLookup(17) << endl;
-
-    int count;
-
-    // O(n log n)
-    count = 0;
-    sieve_of_eratosthenes(primes, n);
-    rep(i, n) { 
-        if (primes[i])
-            count++;
-    }
-    cout << count << endl;
-
-    // O(n log n)
-    vector<ll> primes_list;
-    getPrimesList(n, primes_list);
-    cout << primes_list.size() << endl;
-
     // 構築O(n log n), 参照O(log n)
-    count = 0;
-    constructPrimesList(n);
-    rep(i, n) { 
-        if (isPrimeLookup(i)) 
-            count++;
-    }
-    cout << count << endl;
+    constructPrime(n);
 
-    // O(n * 200)
-    count = 0;
-    rep(i, n) { 
-        if (isPrime(i)) 
-            count++;
-    }
-    cout << count << endl;
-
-    // 素因数分解
-    int m = 120;
-    vector<ll> prime_factorization;
-    getPrimeFactorizationList(m, prime_factorization);
-    rep(i, prime_factorization.size()) {
-        cout << prime_factorization[i] << " ";
-    }
+    // [0, 30)の素数
+    rep(i, 30) 
+        if (is_prime[i]) 
+            cout << i << " ";
     cout << endl;
 
-    vector<ll> divisors_list;
-    getDivisorsList(m, divisors_list);
-    rep(i, divisors_list.size()) {
-        cout << divisors_list[i] << " ";
-    }
+    // 素因数分解
+    int m; vll f;
+    m = 1; factorize(m, f); cout << f << endl;
+    m = 2; factorize(m, f); cout << f << endl;
+    m = 4; factorize(m, f); cout << f << endl;
+    m = 8; factorize(m, f); cout << f << endl;
+    m = 3; factorize(m, f); cout << f << endl;
+    m = 120; factorize(m, f);  cout << f << endl;
+    m = 1000000007; factorize(m, f); cout << f << endl;
 
-    cout << "#" << getDivisorsNum(m) << " ";
+    vector<ll> d;
+    m = 120; divisors(m, d);
+    rep(i, d.size()) 
+        cout << d[i] << " ";
+    cout << "# num = " << getDivisorsNum(m) << " ";
     cout << endl;
 
     return 0;
