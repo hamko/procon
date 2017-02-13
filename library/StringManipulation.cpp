@@ -365,6 +365,26 @@ vll MP(string S) {
     return A;
 }
 
+const ll NO_INPUT = -1;
+const ll LEADING_ZERO = -2;
+const ll OVERFLOW_DETECTED = -3;
+const ll NOT_A_NUMBER = -4;
+// stollで、オーバーフローと入力なしとリーディング0を許容しないもの。
+ll stoll_no_leading_zero(string s) {
+    if (!s.size()) return NO_INPUT;
+    if (!all_of(all(s), [&](ll x){return '0'<=x&&x<='9';})) return NOT_A_NUMBER;
+    if (s.size() > 1 && s[0] == '0') return LEADING_ZERO;
+    if (stod(s) > LLONG_MAX) return OVERFLOW_DETECTED;
+    return stoll(s);
+}
+// stollで、オーバーフローと入力なしを許容しないもの。
+ll stoll_permitting_leading_zero(string s) {
+    if (!s.size()) return NO_INPUT;
+    if (!all_of(all(s), [&](ll x){return '0'<=x&&x<='9';})) return NOT_A_NUMBER;
+    if (stod(s) > LLONG_MAX) return OVERFLOW_DETECTED;
+    return stoll(s);
+}
+
 int main(void) {
     // ZAlgorithm
     {
@@ -410,6 +430,19 @@ int main(void) {
             ll l = input[i].fi, r = input[i].se;
             cout << rolling.hash(l, r, 0) << endl; 
         }
+    }
+
+    // stoll
+    {
+        cout << "####" << endl;
+        cout << stoll_no_leading_zero("") << endl;
+        cout << stoll_no_leading_zero("12a854321") << endl;
+        cout << stoll_no_leading_zero("12") << endl;
+        cout << stoll_no_leading_zero("012") << endl;
+        cout << stoll_no_leading_zero("0") << endl;
+        cout << stoll_no_leading_zero("39857893275") << endl;
+        cout << stoll_no_leading_zero("9869048328802353780942329058340") << endl;
+        cout << stoll("9869048328802353780942329058340") << endl;;
     }
 
     return 0;

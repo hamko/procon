@@ -43,85 +43,32 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-ll calc(ll a, ll b, ll k) {
-    return 1 + (k - a - 1) / b;
-}
-
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n, m, k, x, y; cin >> n >> m >> k >> x >> y; x--; y--;
-    if (n * m == k) {
-        cout << 1 << " " << 1 << " " << 1 << endl;
-        return 0;
-    } else if (n * m > k) {
-        cout << 1 << " " << 0 << " " << (x * m + y <= k ? 1 : 0) << endl;
-        return 0;
-    } else if (n == 1 && m == 1) {
-        cout << k << " " << k << " " << k << endl;
-        return 0;
-    } else if (n == 1) {
-        if (k % m == 0) {
-            cout << k / m << " " << k / m << " " << k / m << endl;
-        } else {
-            cout << k / m + 1<< " " << k / m  << " " << k / m + (x < k % m ? 1 : 0) << endl;
-        }
-        return 0;
-    }
-
-    ll Max = 1ll + calc(n*m, (n-1ll)*m, k);
-//    cout << n * m << " " << (n-1ll) * m << endl;
-    ll Min = calc(n*m+-1ll, 2ll*(n-1)*m, k);
-//    cout << n*m+-1ll <<  " " << 2ll*(n-1)*m << endl;
-
-    ll pos = 0;
-    if (k <= n * m) {
-        pos = (x * m + y <= k ? 1 : 0);
+    vvll b; 
+    if (n == 1) {
+        vll b1(m);
+        rep(i, m) b1[i] += k / m;
+        rep(i, k - k / m * m) b1[i]++;
+        b.pb(b1);
     } else {
-        k -= n * m;
-        pos++;
-
-        ll loop = k / ((n - 1) * m); 
-        ll rem = k - (n - 1) * m * loop;
-
-        ll l_loop = loop / 2;
-        ll u_loop = (loop+1) / 2;
-
-        bool dir, UPPER = true, LOWER = false;
-        dir = (u_loop > l_loop ? LOWER : UPPER);
-        /*
-        cout << l_loop << " " << u_loop << endl;
-        cout << dir << "#dir" << endl;
-        cout << rem << "#rem" << endl;
-        */
-
-        if (y == 0) {
-            pos = 1 + u_loop;
-        } else if (y == n - 1) {
-            pos = 1 + l_loop;
-        } else {
-            pos = 1 + u_loop + l_loop;
-        }
-//        cout << pos << " " << "pos" << endl;
-
-        if (rem) {
-            if (dir == LOWER && x >= 1) {
-                pos += (x * m + y < (m + rem) ? 1 : 0);
-//                cout << x * m + y << " " << m + rem << endl;
-            } else if (dir == UPPER && x < n - 1) {
-                ll rx = rem / m;
-                ll ry = rem - rx * m;
-                rx++;
-//                cout << rx << " " << ry << endl;
-                if (n - rx <= x) 
-                    pos++;
-                else if (n - rx - 1 == x && y < ry)
-                    pos++;
-            }
-//            cout << (x * m + y) << " " << n * m - (m + rem) << endl;
-        }
+        b = vvll(2*n-2, vll(m));
+        ll all = k / (b.size() * b[0].size()); 
+        for (auto&& v : b) for (auto&& x : v) x = all;
+        ll rem = k - all * (b.size() * b[0].size());
+        rep(i, b.size()) rep(j, b[0].size()) if (rem) b[i][j]++, rem--;
     }
 
-    cout << Max << " " << Min << " " << pos << endl;
+    auto f = [&](ll x, ll y) {
+        return b[x][y] + ((x % n != 0 && x % n != n - 1) ? b[2*n-2-x][y] : 0);
+    };
+
+    ll M = 0, mm = INF, pos;
+    rep(i, n) rep(j, m) chmin(mm, f(i, j)), chmax(M, f(i, j));
+    pos = f(x, y);
+
+    cout << M << " " << mm << " " << pos << endl;
 
     return 0;
 }
