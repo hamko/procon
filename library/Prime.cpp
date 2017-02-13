@@ -36,8 +36,7 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const unorder
 // 素数の個数はO(n / log n)
 
 /**********************************************************/
-// 前処理ありの素数判定
-// 素数の最大値Mに対して先にconstructPrimesList(M)が必須！
+// 素数テーブルの作成
 /**********************************************************/
 // 素数テーブル構築: O(n log n)
 vector<bool> is_prime;
@@ -56,7 +55,17 @@ void constructPrime(ll n) {
             primes.push_back(i);
 }
 
+extern vector<bool> is_prime;
+extern vector<ll> primes;      // 素数リスト
+
+/**********************************************************/
+// 以下はよく行う処理のテンプレート
+// そのままは大抵使えないので、改造するつもりで。
+/**********************************************************/
 // 素因数分解
+//
+// 小さい素数から見ていって、割れたら割って素因数リストに追加する
+// 残ったnが素数リストよりも大きければ、そのnは素数だと見なして返す。
 void factorize(ll n, vector<ll>& divisors_list) {
     if (n <= 1) return;
     divisors_list.clear(); 
@@ -72,9 +81,28 @@ void factorize(ll n, vector<ll>& divisors_list) {
         divisors_list.push_back(n);
 }
 
-// constructされていないなら、O(sqrt(n) log n)
-// constructされているなら、O(log n)
-// Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
+// [0, n]の範囲を全て素因数分解する。「飛び飛びの」高速化。結構速い。
+// n < 1,000,000で150ms
+// n < 10,000,000で1000ms 
+//
+// 配列rem[i]は、初めiが入っている。
+// 素数pを下から見るが、rem[i]を全て見る必要はなく、rem[p*i]だけでいい。
+void factorize(ll n, vector<unordered_map<ll, ll>>& fact) {
+    fact.clear();
+    fact.resize(n+1);
+
+    vector<ll> rem(n+1); rep(i, n+1) rem[i] = i;
+    for (auto x : primes) {
+        for (ll i = x; i <= n; i += x) {
+            while (rem[i] % x == 0) {
+                rem[i] /= x;
+                fact[i][x]++;
+            }
+        }
+    }
+}
+
+// 約数を全列挙する。
 void divisors(ll n, vector<ll>& divisors_list) {
     divisors_list.clear(); divisors_list.resize(0);
 
@@ -96,20 +124,17 @@ void divisors(ll n, vector<ll>& divisors_list) {
     sort(divisors_list.begin(), divisors_list.end());
 }
 
-// constructされていないなら、O(sqrt(n) log n)
-// constructされているなら、O(log n)
 ll getDivisorsNum(ll n) {
     vector<ll> divisors_list; factorize(n, divisors_list);
     map<ll, ll> num;
-    for (ll i = 0; i < divisors_list.size(); i++) {
+    rep(i, divisors_list.size()) 
         num[divisors_list[i]]++;
-    }
     ll p = 1;
-    for (auto x : num) {
+    for (auto x : num) 
         p *= x.second + 1;
-    }
     return p;
 }
+
 /**********************************************************/
 // 前処理なしの素数判定
 /**********************************************************/
