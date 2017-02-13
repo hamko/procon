@@ -30,76 +30,69 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+// 素数の個数はO(n / log n)
+
 /**********************************************************/
 // 前処理ありの素数判定
 // 素数の最大値Mに対して先にconstructPrimesList(M)が必須！
 /**********************************************************/
-// O(n log n)
-void sieve_of_eratosthenes(vector<ll>& primes, ll n) {
-    primes.resize(n);
-    for (ll i = 2; i < n; ++i)
-        primes[i] = i;
-    for (ll i = 2; i*i < n; ++i)
-        if (primes[i])
-            for (ll j = i*i; j < n; j+=i)
-                primes[j] = 0;
-}
-void getPrimesList(ll n, vector<ll>& primes_list) {
-    vector<ll> tmpList;
-    primes_list.clear(); primes_list.resize(0); primes_list.reserve(n / 5);
-    sieve_of_eratosthenes(tmpList, n);
-    rep(i, n) { 
-        if (tmpList[i])
-            primes_list.push_back(i);
-    }
-}
-
 // 素数テーブル構築: O(n log n)
-vector<ll> primesList;      // 素数リスト（primesListMaxまで）。こいつ自体を使うことあるかも。
-set<ll> primesSet;
-ll primesListMax;
-void constructPrimesList(ll n) {
-    if (primesListMax >= n) 
-        return;
-    primesListMax = n;
-    getPrimesList(n, primesList);
-    for (ll i = 0; i < primesList.size(); i++) {
-        primesSet.insert(primesList[i]);
-    }
-}
-// constructされていないなら、O(n log n)
-// constructされているなら、O(log n)
-bool isPrimeLookup(ll n) {
-    return primesSet.count(n);
+vector<bool> is_prime;
+vector<ll> primes;      // 素数リスト
+void constructPrime(ll n) {
+    is_prime.resize(n);
+    primes.resize(0);
+    for (ll i = 2; i < n; ++i)
+        is_prime[i] = true;
+    for (ll i = 2; i*i < n; ++i)
+        if (is_prime[i])
+            for (ll j = i*i; j < n; j+=i)
+                is_prime[j] = false;
+    for (ll i = 0; i < is_prime.size(); i++) 
+        if (is_prime[i]) 
+            primes.push_back(i);
 }
 
-// constructされていないなら、O(sqrt(n) log n)
-// constructされているなら、O(log n)
-// Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
-void getPrimeFactorizationList(ll n, vector<ll>& divisors_list) {
-    divisors_list.clear(); divisors_list.resize(0);
+// 素因数分解
+void factorize(ll n, vector<ll>& divisors_list) {
     if (n <= 1) return;
+    divisors_list.clear(); 
+    divisors_list.resize(0);
 
-    ll prime = 2;
-    while (n >= prime * prime) {
-        if (n % prime == 0) {
-            divisors_list.push_back(prime);
-            n /= prime;
-        } else {
-            prime++;
+    ll prime;
+    for (ll i = 0; (prime = primes[i]) && n >= prime * prime; )  
+        if (n % prime) 
+            i++;
+        else 
+            divisors_list.push_back(prime), n /= prime;
+    if (n != 1) 
+        divisors_list.push_back(n);
+}
+
+// [0, n]の範囲を全て素因数分解する。
+void factorize(ll n, vector<unordered_map<ll, ll>>& fact) {
+    fact.clear();
+    fact.resize(n+1);
+
+    vector<ll> rem(n+1); rep(i, n+1) rem[i] = i;
+    for (auto x : primes) {
+        for (ll i = x; i <= n; i += x) {
+            while (rem[i] % x == 0) {
+                rem[i] /= x;
+                fact[i][x]++;
+            }
         }
     }
-    divisors_list.push_back(n);
 }
 
 // constructされていないなら、O(sqrt(n) log n)
 // constructされているなら、O(log n)
 // Divisor系は、最大nをMAXNとしてconstructPrimesList(sqrt(MAXN))で早くなる
-void getDivisorsList(ll n, vector<ll>& divisors_list) {
+void divisors(ll n, vector<ll>& divisors_list) {
     divisors_list.clear(); divisors_list.resize(0);
 
     vector<ll> fac_list;
-    getPrimeFactorizationList(n, fac_list);
+    factorize(n, fac_list);
     map<ll, ll> counter;
     for (auto x : fac_list) 
         counter[x]++;
@@ -119,7 +112,7 @@ void getDivisorsList(ll n, vector<ll>& divisors_list) {
 // constructされていないなら、O(sqrt(n) log n)
 // constructされているなら、O(log n)
 ll getDivisorsNum(ll n) {
-    vector<ll> divisors_list; getPrimeFactorizationList(n, divisors_list);
+    vector<ll> divisors_list; factorize(n, divisors_list);
     map<ll, ll> num;
     for (ll i = 0; i < divisors_list.size(); i++) {
         num[divisors_list[i]]++;
@@ -131,23 +124,35 @@ ll getDivisorsNum(ll n) {
     return p;
 }
 
+extern vector<bool> is_prime;
+extern vector<ll> primes;      // 素数リスト
+
 class MissingLCM {
     public:
         int getMin(int n) {
-            constructPrimesList(1000000);
-            ll m = n + 1;
-            rep(i, primesList.size()) {
-                ll p = primesList[i];
-                if (p > n) break;
-                ll tmp = n, counter = 0; 
-                while (tmp) {
-                    tmp /= p;
-                    counter++;
+            constructPrime(n+10);
+            cout << "$$$$$$$$$$$$$$" << endl;
+
+
+            unordered_map<ll, ll> fact;
+
+            vector<ll> rem(n+1); rep(i, n+1) rem[i] = i;
+            for (auto x : primes) { // n / log n
+                for (ll i = x; i <= n; i += x) { // log n
+                    ll c = 0;
+                    while (rem[i] % x == 0) 
+                        rem[i] /= x, c++;
+                    chmax(fact[x], c);
                 }
-                ll pm = pow(p, counter - 1) * 2;
-                chmax(m, pm);
             }
-            return m;
+
+            ll ret = 2;
+            for (auto x : fact) {
+                ll pk = pow(x.fi, x.se);
+                chmax(ret, (n / pk + 1) * pk);
+//                cout << x << " " << pk << endl;
+            }
+            return ret;
         }
 };
 
@@ -160,77 +165,77 @@ class MissingLCM {
 #include <cmath>
 using namespace std;
 bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
-	cout << "Test " << testNum << ": [" << p0;
-	cout << "]" << endl;
-	MissingLCM *obj;
-	int answer;
-	obj = new MissingLCM();
-	clock_t startTime = clock();
-	answer = obj->getMin(p0);
-	clock_t endTime = clock();
-	delete obj;
-	bool res;
-	res = true;
-	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
-	if (hasAnswer) {
-		cout << "Desired answer:" << endl;
-		cout << "\t" << p1 << endl;
-	}
-	cout << "Your answer:" << endl;
-	cout << "\t" << answer << endl;
-	if (hasAnswer) {
-		res = answer == p1;
-	}
-	if (!res) {
-		cout << "DOESN'T MATCH!!!!" << endl;
-	} else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
-		cout << "FAIL the timeout" << endl;
-		res = false;
-	} else if (hasAnswer) {
-		cout << "Match :-)" << endl;
-	} else {
-		cout << "OK, but is it right?" << endl;
-	}
-	cout << "" << endl;
-	return res;
+    cout << "Test " << testNum << ": [" << p0;
+    cout << "]" << endl;
+    MissingLCM *obj;
+    int answer;
+    obj = new MissingLCM();
+    clock_t startTime = clock();
+    answer = obj->getMin(p0);
+    clock_t endTime = clock();
+    delete obj;
+    bool res;
+    res = true;
+    cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
+    if (hasAnswer) {
+        cout << "Desired answer:" << endl;
+        cout << "\t" << p1 << endl;
+    }
+    cout << "Your answer:" << endl;
+    cout << "\t" << answer << endl;
+    if (hasAnswer) {
+        res = answer == p1;
+    }
+    if (!res) {
+        cout << "DOESN'T MATCH!!!!" << endl;
+    } else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
+        cout << "FAIL the timeout" << endl;
+        res = false;
+    } else if (hasAnswer) {
+        cout << "Match :-)" << endl;
+    } else {
+        cout << "OK, but is it right?" << endl;
+    }
+    cout << "" << endl;
+    return res;
 }
 int main() {
-	bool all_right;
-	bool disabled;
-	bool tests_disabled;
-	all_right = true;
-	tests_disabled = false;
-	
-	int p0;
-	int p1;
-	
-	// ----- test 0 -----
-	disabled = false;
-	p0 = 1;
-	p1 = 2;
-	all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 1 -----
-	disabled = false;
-	p0 = 2;
-	p1 = 4;
-	all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 2 -----
-	disabled = false;
-	p0 = 3;
-	p1 = 6;
-	all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 3 -----
-	disabled = false;
-	p0 = 4;
+    bool all_right;
+    bool disabled;
+    bool tests_disabled;
+    all_right = true;
+    tests_disabled = false;
+
+    int p0;
+    int p1;
+
+    // ----- test 0 -----
+    disabled = false;
+    p0 = 1;
+    p1 = 2;
+    all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    // ----- test 1 -----
+    disabled = false;
+    p0 = 2;
+    p1 = 4;
+    all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    // ----- test 2 -----
+    disabled = false;
+    p0 = 3;
+    p1 = 6;
+    all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    // ----- test 3 -----
+    disabled = false;
+    p0 = 4;
 	p1 = 8;
 	all_right = (disabled || KawigiEdit_RunTest(3, p0, true, p1) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
@@ -254,7 +259,7 @@ int main() {
 	
 	// ----- test 6 -----
 	disabled = false;
-	p0 = 999999;
+	p0 = 10000000;
 	p1 = 1999966;
 	all_right = (disabled || KawigiEdit_RunTest(6, p0, true, p1) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
