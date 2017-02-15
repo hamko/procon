@@ -11,8 +11,8 @@ using namespace std;
 #define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
-#define forall(a, f) all_of((a).begin(), (a).end(), (f))
-#define exists(it, a, f) (((it)=find_if((a).begin(), (a).end(), (f)))!=(a).end())
+#define exists find_if
+#define forall all_of
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
@@ -30,8 +30,17 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-#define ldout fixed << setprecision(40) 
+vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
+template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
+string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
+template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
+string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
+struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
 
+static const double EPS = 1e-14;
+static const long long INF = 1e18;
+static const long long mo = 1e9+7;
+#define ldout fixed << setprecision(40) 
 
 // 素数の個数はO(n / log n)
 
@@ -66,60 +75,57 @@ extern vector<ll> primes;      // 素数リスト
 //
 // 小さい素数から見ていって、割れたら割って素因数リストに追加する
 // 残ったnが素数リストよりも大きければ、そのnは素数だと見なして返す。
-void factorize(ll n, vector<ll>& divisors_list) {
+void factorize(ll n, unordered_map<ll, ll>& divisors_list) {
     if (n <= 1) return;
     divisors_list.clear(); 
-    divisors_list.resize(0);
 
     ll prime;
     for (ll i = 0; (prime = primes[i]) && n >= prime * prime; )  
         if (n % prime) 
             i++;
         else 
-            divisors_list.push_back(prime), n /= prime;
+            divisors_list[prime]++, n /= prime;
     if (n != 1) 
-        divisors_list.push_back(n);
+        divisors_list[n]++;
 }
 
-// [0, n]の範囲を全て素因数分解する。「飛び飛びの」高速化。結構速い。
-// n < 1,000,000で150ms
-// n < 10,000,000で1000ms 
-//
-// 配列rem[i]は、初めiが入っている。
-// 素数pを下から見るが、rem[i]を全て見る必要はなく、rem[p*i]だけでいい。
-void factorize(ll n, vector<unordered_map<ll, ll>>& fact) {
-    fact.clear();
-    fact.resize(n+1);
+// lcm(a)
+// a[i] < 1e7
+unordered_map<ll, ll> lcmSmall(set<ll>& a) {
+    if (!a.size()) return unordered_map<ll, ll>();
 
+    ll n = *(prev(a.end()));
     vector<ll> rem(n+1); 
     rep(i, n+1) rem[i] = i;
-    for (auto x : primes) 
-        for (ll i = x; i <= n; i += x) 
-            while (rem[i] % x == 0) 
-                rem[i] /= x, fact[i][x]++;
-}
-
-// lcm(a) mod 1e9+7, a must be sorted
-ll lcm(vector<ll>& a) {
-    if (!a.size()) return 1;
-
-    ll n = a.back();
-    vector<ll> rem(n+1); 
-    rep(i, n+1) rem[i] = i;
-    ll ret = 1;
+    unordered_map<ll, ll> ret;
     for (auto x : primes) {
         ll max_c = 0;
-        for (ll i = x; i <= n; i += x) {
+        for (ll i = x; i <= n; i += x) if (a.count(i)) {
             ll c = 0;
             while (rem[i] % x == 0) 
                 rem[i] /= x, c++;
             chmax(max_c, c);
         }
-        rep(i, max_c) 
-            (ret *= x) %= (ll)1e9+7;
+        ret[x] = max_c;
     }
     return ret;
 }
+
+// lcm(a)
+// a[i]>1e7
+unordered_map<ll, ll> lcmLarge(set<ll>& a) {
+    if (!a.size()) return unordered_map<ll, ll>();
+    
+    unordered_map<ll, ll> ret;
+    for (auto n : a) {
+        unordered_map<ll, ll> d;
+        factorize(n, d);
+        for (auto x : d) 
+            chmax(ret[x.fi], x.se);
+    }
+    return ret;
+}
+
 
 // 約数を全列挙する。
 void divisors(ll n, vector<ll>& divisors_list) {
