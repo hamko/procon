@@ -47,44 +47,20 @@ class CountryGroupHard {
         ll dp[105][105];
         vll a;
         ll rec(ll i, ll j) { // count [i, j] 
-            if (i == j) {
-                cout << i << " " << j << " " << (a[i] <= 1) << "#ret 1" << endl;
-                return a[i] <= 1;
-            }
-            if (i > j) { 
-                cout << i << " " << j << " " << 1 << "#ret range" << endl;
-                return 1;
-            }
-            if (dp[i][j] >= 0) {
-                cout << i << " " << j << " " << dp[i][j] << "#ret dp" << endl;
-                return dp[i][j];
-            }
-            cout << i << " " << j << endl;
+            if (i == j) return a[i] <= 1;
+            if (i > j)  return 1;
+            if (dp[i][j] >= 0) return dp[i][j];
             auto it = exists(a.begin() + i, a.begin() + j + 1, [&](ll x) { return x > 0; });
-            if (it == a.begin() + j + 1) {
-                cout << i << " " << j << " " << 2 << "#ret mul0" << endl;
-                return dp[i][j] = 2; // all 0
-            }
-            ll num = *it;
-            ll p = (ll)(it - a.begin());
-            cout <<  num << " " << p << "#num, p" << endl;
+            if (it == a.begin() + j + 1) return dp[i][j] = 2; // all 0
+            ll num = *it, p = (ll)(it - a.begin());
             
-            /*
-            if (forall((ci)i, (ci)(j+1), [&](ll x) { return a[x] == 0 || a[x] == num; }) && (j - i + 1 == num)) {
-                cout << i << " " << j << "#hit" << endl;
-                return dp[i][j] = 1;
-            }
-            */
-
             ll ret = 0;
             for (ll l = p - num + 1; l <= p; l++) {
                 ll r = l + num - 1;
                 if (l < i || j < r) continue;
                 if (!forall((ci)l, (ci)(r+1), [&](ll x) { return a[x] == 0 || a[x] == num; })) continue;
-                cout << l << " " << r << "#lr " << endl;
                 ret += rec(i, l-1) * rec(r+1, j);
             }
-            cout << i << " " << j << " " << min(2ll, ret) << "#ret end" << endl;
             return dp[i][j] = min(2ll, ret);
         }
         string solve(vector <int> a_) {
