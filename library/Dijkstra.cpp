@@ -49,77 +49,89 @@ static const long long mo = 1e9+7;
 // 型Sが状態としたダイクストラ。
 // 型Sは有限な状態ならば何でも入るが、かなり遅い上、メモリを多く消費する。
 int printSmilesGeneral(int n) {
-    using S = tuple<ll, ll>; // state
-    using T = tuple<ll, S>; // dist, (x, y)
-    priority_queue<T, vector<T>, greater<T>> q; // 未確定な頂点（距離が近い順）
+    using D = int16_t; // !! 距離の型
+    using state_t = int16_t; 
+    using S = tuple<state_t, state_t>; // !! 状態の型
 
-    unordered_map<S, ll> dist;
+    using T = tuple<D, S>; // (dist, state)
+    priority_queue<T, vector<T>, greater<T>> q; // 頂点集合昇順
+
+    q.push(mt(0, mt(1, 0))); // !! 初期値
+    auto f = [&](S& x) {  // !! 異常判定基準
+        state_t xx, yy; tie(xx, yy) = x; 
+        return (xx >= 1050 || xx <= 0 || yy >= 520 || yy <= 0); 
+    };
+
+    unordered_map<S, D> dist;
     unordered_set<S> used;
-    q.push(mt(0, mt(1, 0)));
-
     while (!q.empty()) {
-        // もうここに入った時点で処理するべき頂点（usedのダブりはこっちで処理）
-        ll d; S t; tie(d, t) = q.top(); q.pop();
-        ll x, y; tie(x, y) = t;
+        // この時点で、(d, t)が処理するべき頂点
+        // usedのダブりはループ内で処理
+        D d; S t; tie(d, t) = q.top(); q.pop();
 
-        if (used.count(t)) continue;
-        used.insert(t);
-        dist[t] = d;
+        if (used.count(t)) continue; // もう来てたら終わり
+        used.insert(t); 
+        dist[t] = d; 
 
-        vll xx = {2 * x, x - 1, x + y};
-        vll yy = {x, y, y};
-        vll cost = {2, 1, 1};
-        rep(i, 3) {
-            auto next_t = mt(xx[i], yy[i]);
-            auto f = [&](S& x) {  // 異常判定
-                const int M = 1200;
-                ll xx, yy; tie(xx, yy) = x; 
-                return (xx >= M || xx <= 0 || yy >= M || yy <= 0); 
-            };
-            if (f(next_t)) continue;
-            if (dist.count(next_t) && dist[next_t] <= d + cost[i]) continue;  // 枝刈り
-            q.push(mt(d + cost[i], mt(xx[i], yy[i])));
+        // !! 遷移の定義
+        vector<T> next_nodes;
+        state_t x, y; tie(x, y) = t;
+        next_nodes.pb(mt(2, mt(2*x, x)));
+        next_nodes.pb(mt(1, mt(x-1, y)));
+        next_nodes.pb(mt(1, mt(x+y, y)));
+
+        for (auto&& next_node : next_nodes) {
+            D nd; S nt; tie(nd, nt) = next_node;
+            if (f(nt)) continue;
+            if (dist.count(nt) && dist[nt] <= d + nd) continue;  // 枝刈り
+            q.push(mt(d + nd, nt));
         }
     }
 
-    ll ret = INF;
-    rep(y, M) if (dist.count(mt(n, y))) 
+    // !! 後処理
+    D ret = 10000; // INF
+    rep(y, 2000) if (dist.count(mt(n, y))) 
         chmin(ret, dist[mt(n, y)]);
 
     return ret;
 }
 
 int printSmilesArray(int n) {
-    const int M = 1200;
-    using S = tuple<ll, ll>; // state
+    using S = tuple<ll, ll>; // !! state
+
     using T = tuple<ll, S>; // dist, (x, y)
     priority_queue<T, vector<T>, greater<T>> q; // 未確定な頂点（距離が近い順）
 
+    const int M = 1200; // !! 状態を張る
     static ll dist[M][M]; rep(i, M) rep(j, M) dist[i][j] = INF;
     static bool used[M][M];
-    q.push(mt(0, mt(1, 0)));
+
+    auto f = [&](S x) {  // !! 異常判定
+        ll xx, yy; tie(xx, yy) = x; 
+        return (xx >= M || xx <= 0 || yy >= M || yy <= 0); 
+    };
+
+    q.push(mt(0, mt(1, 0))); // !! 初期値
     while (!q.empty()) {
         // もうここに入った時点で処理するべき頂点
         ll d; S t; tie(d, t) = q.top(); q.pop();
         ll x, y; tie(x, y) = t;
 
-        if (used[x][y]) continue;
+        if (used[x][y]) continue; // !! 状態に応じてもう来ていたら終わり
         used[x][y] = 1;
         dist[x][y] = d;
 
+        // !! 遷移の定義
         vll xx = {2 * x, x - 1, x + y};
         vll yy = {x, y, y};
         vll cost = {2, 1, 1};
         rep(i, 3) {
-            auto f = [&](S x) {  // 異常判定
-                ll xx, yy; tie(xx, yy) = x; 
-                return (xx >= M || xx <= 0 || yy >= M || yy <= 0); 
-            };
-            if (f(mt(xx[i], yy[i]))) continue;
-            if (dist[xx[i]][yy[i]] <= d + cost[i]) continue; 
-            q.push(mt(d + cost[i], mt(xx[i], yy[i])));
+            if (f(mt(xx[i], yy[i]))) continue; // !! 状態に応じて異常判定
+            if (dist[xx[i]][yy[i]] <= d + cost[i]) continue;  // !! 状態に応じて枝刈り
+            q.push(mt(d + cost[i], mt(xx[i], yy[i]))); // !! 状態に応じて次の状態を追加
         }
     }
+    // !! 後処理
     ll ret = INF;
     rep(y, M) 
         chmin(ret, dist[n][y]);
