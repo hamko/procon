@@ -101,7 +101,7 @@ void factorize(ll n, vector<unordered_map<ll, ll>>& fact) {
 
 // lcm(a) mod 1e9+7, a must be sorted
 ll lcm(vector<ll>& a) {
-    if (!a.size()) assert(0);
+    if (!a.size()) return 1;
 
     ll n = a.back();
     vector<ll> rem(n+1); 
