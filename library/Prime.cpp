@@ -75,9 +75,9 @@ extern vector<ll> primes;      // 素数リスト
 //
 // 小さい素数から見ていって、割れたら割って素因数リストに追加する
 // 残ったnが素数リストよりも大きければ、そのnは素数だと見なして返す。
-void factorize(ll n, unordered_map<ll, ll>& divisors_list) {
-    if (n <= 1) return;
-    divisors_list.clear(); 
+unordered_map<ll, ll> factorize(ll n) {
+    if (n <= 1) return unordered_map<ll, ll>();
+    unordered_map<ll, ll> divisors_list;
 
     ll prime;
     for (ll i = 0; (prime = primes[i]) && n >= prime * prime; )  
@@ -87,7 +87,25 @@ void factorize(ll n, unordered_map<ll, ll>& divisors_list) {
             divisors_list[prime]++, n /= prime;
     if (n != 1) 
         divisors_list[n]++;
+    return divisors_list;
 }
+
+// [0, n]の範囲を全て素因数分解する。「飛び飛びの」高速化。結構速い。
+// n < 1,000,000で150ms
+// n < 10,000,000で1000ms 
+//
+// 配列rem[i]は、初めiが入っている。
+// 素数pを下から見るが、rem[i]を全て見る必要はなく、rem[p*i]だけでいい。
+vector<unordered_map<ll, ll>> factorizeRange(ll n) {
+    vector<unordered_map<ll, ll>> fact(n+1);
+
+    vector<ll> rem(n+1); rep(i, n+1) rem[i] = i;
+    for (auto x : primes) for (ll i = x; i <= n; i += x) 
+        while (rem[i] % x == 0) 
+            rem[i] /= x, fact[i][x]++;
+    return fact;
+}
+
 
 // lcm(a)
 // a[i] < 1e7
@@ -106,7 +124,8 @@ unordered_map<ll, ll> lcmSmall(set<ll>& a) {
                 rem[i] /= x, c++;
             chmax(max_c, c);
         }
-        ret[x] = max_c;
+        if (max_c) 
+            ret[x] = max_c;
     }
     return ret;
 }
@@ -115,11 +134,10 @@ unordered_map<ll, ll> lcmSmall(set<ll>& a) {
 // a[i]>1e7
 unordered_map<ll, ll> lcmLarge(set<ll>& a) {
     if (!a.size()) return unordered_map<ll, ll>();
-    
+
     unordered_map<ll, ll> ret;
     for (auto n : a) {
-        unordered_map<ll, ll> d;
-        factorize(n, d);
+        auto d = factorize(n);
         for (auto x : d) 
             chmax(ret[x.fi], x.se);
     }
@@ -128,14 +146,10 @@ unordered_map<ll, ll> lcmLarge(set<ll>& a) {
 
 
 // 約数を全列挙する。
-void divisors(ll n, vector<ll>& divisors_list) {
-    divisors_list.clear(); divisors_list.resize(0);
+vector<ll> divisors(ll n) {
+    vector<ll> divisors_list;
 
-    vector<ll> fac_list;
-    factorize(n, fac_list);
-    map<ll, ll> counter;
-    for (auto x : fac_list) 
-        counter[x]++;
+    auto counter = factorize(n);
     divisors_list.push_back(1);
     for (auto x : counter) {
         ll tmp_size = divisors_list.size();
@@ -147,10 +161,11 @@ void divisors(ll n, vector<ll>& divisors_list) {
         }
     }
     sort(divisors_list.begin(), divisors_list.end());
+    return divisors_list;
 }
 
 ll getDivisorsNum(ll n) {
-    vector<ll> divisors_list; factorize(n, divisors_list);
+    unordered_map<ll, ll> divisors_list = factorize(n);
     map<ll, ll> num;
     rep(i, divisors_list.size()) 
         num[divisors_list[i]]++;
@@ -286,32 +301,26 @@ int main(void) {
     cout << endl;
 
     // 素因数分解
-    int m; vll f;
-    m = 1; factorize(m, f); cout << f << endl;
-    m = 2; factorize(m, f); cout << f << endl;
-    m = 4; factorize(m, f); cout << f << endl;
-    m = 8; factorize(m, f); cout << f << endl;
-    m = 3; factorize(m, f); cout << f << endl;
-    m = 120; factorize(m, f);  cout << f << endl;
-    m = 1000000007; factorize(m, f); cout << f << endl;
+    vll cands = {1, 2, 4, 8, 3, 120, 1000000007};
+    for (auto x : cands) 
+        cout << factorize(x) << endl;
 
     // 約数
-    vector<ll> d;
-    m = 120; divisors(m, d);
+    auto d = divisors(120);
     rep(i, d.size()) 
         cout << d[i] << " ";
-    cout << "# num = " << getDivisorsNum(m) << " ";
+    cout << "# num = " << getDivisorsNum(120) << " ";
     cout << endl;
 
     // 範囲素因数分解
-    vector<unordered_map<ll, ll>> fact;
-    factorize(10, fact);
+    auto fact = factorizeRange(10);
     rep(i, fact.size()) 
         cout << fact[i] << endl;
 
     // 範囲LCM
-    vector<ll> a = {2, 3, 4, 6, 8, 10};
-    cout << lcm(a) << endl;
+    set<ll> a = {2, 3, 4, 6, 8, 10};
+    cout << lcmSmall(a) << endl;
     return 0;
+
 }
 
