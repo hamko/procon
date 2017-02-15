@@ -91,15 +91,34 @@ void factorize(ll n, vector<unordered_map<ll, ll>>& fact) {
     fact.clear();
     fact.resize(n+1);
 
-    vector<ll> rem(n+1); rep(i, n+1) rem[i] = i;
+    vector<ll> rem(n+1); 
+    rep(i, n+1) rem[i] = i;
+    for (auto x : primes) 
+        for (ll i = x; i <= n; i += x) 
+            while (rem[i] % x == 0) 
+                rem[i] /= x, fact[i][x]++;
+}
+
+// lcm(a) mod 1e9+7, a must be sorted
+ll lcm(vector<ll>& a) {
+    if (!a.size()) assert(0);
+
+    ll n = a.back();
+    vector<ll> rem(n+1); 
+    rep(i, n+1) rem[i] = i;
+    ll ret = 1;
     for (auto x : primes) {
+        ll max_c = 0;
         for (ll i = x; i <= n; i += x) {
-            while (rem[i] % x == 0) {
-                rem[i] /= x;
-                fact[i][x]++;
-            }
+            ll c = 0;
+            while (rem[i] % x == 0) 
+                rem[i] /= x, c++;
+            chmax(max_c, c);
         }
+        rep(i, max_c) 
+            (ret *= x) %= (ll)1e9+7;
     }
+    return ret;
 }
 
 // 約数を全列挙する。
@@ -270,6 +289,7 @@ int main(void) {
     m = 120; factorize(m, f);  cout << f << endl;
     m = 1000000007; factorize(m, f); cout << f << endl;
 
+    // 約数
     vector<ll> d;
     m = 120; divisors(m, d);
     rep(i, d.size()) 
@@ -277,6 +297,15 @@ int main(void) {
     cout << "# num = " << getDivisorsNum(m) << " ";
     cout << endl;
 
+    // 範囲素因数分解
+    vector<unordered_map<ll, ll>> fact;
+    factorize(10, fact);
+    rep(i, fact.size()) 
+        cout << fact[i] << endl;
+
+    // 範囲LCM
+    vector<ll> a = {2, 3, 4, 6, 8, 10};
+    cout << lcm(a) << endl;
     return 0;
 }
 
