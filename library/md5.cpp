@@ -35,20 +35,18 @@ string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & 
 static const long long mo = 1e9+7;
 
 // http://www.zedwood.com/article/cpp-md5-function
-using size_internal_t = uint32_t; // must be 32bit
-using hash_t = uint64_t; // must be 32bit
+using size_internal_t = uint32_t; /* must be 32bit */ using hash64_t = uint64_t; using hash_t = pair<hash64_t, hash64_t>;
 class MD5
 {
     public:
-
         MD5();
         MD5(const string& text);
-        MD5(const void* data, hash_t data_size);
+        MD5(const void* data, hash64_t data_size);
         void update(const unsigned char *buf, size_internal_t length);
         void update(const char *buf, size_internal_t length);
         MD5& finalize();
         string hexdigest() const;
-        pair<hash_t, hash_t> integer() const;
+        hash_t integer() const;
         void* getMD5() const;
         friend ostream& operator<<(ostream&, MD5 md5);
 
@@ -99,7 +97,7 @@ MD5::MD5(const string &text) {
     update(text.c_str(), text.length());
     finalize();
 }
-MD5::MD5(const void* data, hash_t data_size) {
+MD5::MD5(const void* data, hash64_t data_size) {
     init();
     update((const unsigned char*)data, (size_internal_t)data_size);
     finalize();
@@ -263,13 +261,13 @@ string MD5::hexdigest() const {
     buf[32]=0;
     return string(buf);
 }
-pair<hash_t, hash_t> MD5::integer() const {
+hash_t MD5::integer() const {
     if (!finalized) return mp(0, 0);
-    hash_t ret_u = 0;
-    rep(i, 8) ret_u |= ((hash_t)digest[i] << (i * 8));
-    hash_t ret_l = 0;
-    rep(i, 8) ret_l |= ((hash_t)digest[i+8] << (i * 8));
-    return pair<hash_t, hash_t>(ret_u, ret_l);
+    hash64_t ret_u = 0;
+    rep(i, 8) ret_u |= ((hash64_t)digest[i] << (i * 8));
+    hash64_t ret_l = 0;
+    rep(i, 8) ret_l |= ((hash64_t)digest[i+8] << (i * 8));
+    return hash_t(ret_u, ret_l);
 }
 void* MD5::getMD5() const {
     if (!finalized) return NULL;
@@ -284,14 +282,14 @@ string md5String(const string &str) {
 
 // inputからinput_sizeビットのmd5 sumのうち、上位/下位64bitを取得する。
 // top 64bit of MD5
-pair<hash_t, hash_t> md5Raw(const void* input, hash_t input_size) {
+hash_t md5Raw(const void* input, hash64_t input_size) {
     MD5 md5 = MD5(input, input_size);
     return md5.integer();
 }
 
 // vectorのhashの128bitを取得する。
 template<typename T> 
-pair<hash_t, hash_t> md5Vector(vector<T> &input) {
+hash_t md5Vector(vector<T> &input) {
     if (input.size() == 0) return mp(0, 0); // この条件でruntime error: reference binding to null pointer of typeが出るので苦肉
     MD5 md5 = MD5(input.data(), sizeof(T) * input.size());
     return md5.integer();
@@ -300,31 +298,15 @@ pair<hash_t, hash_t> md5Vector(vector<T> &input) {
 
 int main(int argc, char *argv[])
 {
-    /*
     cout << sizeof(size_t) << endl;
     cout << "md5 of 'grape': " << md5String("grape") << endl;
-
-    rep(i, 10) {
-        vll a;
-        rep(j, rand() % 10 + 2) 
-            a.pb(rand() % 10000);
-//        cout << "md5 of random number: " << a << " " << md5Vector(a).fi << endl;
-    }
-
-    rep(i, 10) {
-        vector<P> a;
-        rep(j, rand() % 10 + 2000) 
-            a.push_back(P(rand() % 10000, rand() % 10000));
-//        cout << "md5 of random number: " << a << " " << md5Vector(a).fi << endl;
-    }
-
-    */
+    system("echo -n \"grape\" | md5sum");
 
     {
         ll n = 100000;
         cout << sizeof(size_t) << "#size_t" << endl;
         repi(bitshift, 1, 128) {
-            set<pair<size_t, size_t>> memo;
+            set<hash_t> memo;
             ll hit = 0;
             rep(counter, n) {
                 vll tmp; rep(i, 3+rand() % 1000) tmp.pb(rand());
@@ -337,7 +319,6 @@ int main(int argc, char *argv[])
                     h.fi >>= (64 - bitshift);
                 }
                 if (memo.count(h)) {
-//                  cout << "FOUND!!!" << counter << " " << h << endl;
                     hit++;
                 }
                 memo.insert(h);
@@ -345,26 +326,6 @@ int main(int argc, char *argv[])
             cout << bitshift << " " << hit << endl;
         }
     }
-
-    /*
-
-    {
-        set<pair<size_t, size_t>> memo;
-        rep(counter, 1000000000) {
-            if (counter % 10000000 == 0) {
-                cout << counter << endl;
-            }
-            vll tmp; rep(i, 3+rand() % 1000) tmp.pb(rand());
-
-            auto h = md5Vector(tmp);
-            if (memo.count(h)) {
-                cout << "FOUND!!!" << counter << endl;
-                break;
-            }
-            memo.insert(h);
-        }
-    }
-    */
 
     return 0;
 }
