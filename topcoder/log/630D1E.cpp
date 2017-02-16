@@ -48,14 +48,36 @@ static const long long mo = 1e9+7;
 class Egalitarianism3 {
     public:
         int maxCities(int n, vector <int> a, vector <int> b, vector <int> len) {
+            if (n == 1) return 1;
+
             vvll d(n, vll(n, INF));
             rep(i, n) d[i][i] = 0;
             rep(i, a.size()) d[a[i]-1][b[i]-1] = d[b[i]-1][a[i]-1] = len[i];
-
             rep(_, n) rep(l, n) rep(r, n) chmin(d[l][r], d[l][_] + d[_][r]);
 
+            auto f = [&](set<ll>& s){ 
+                ll dist = -1;
+                for (auto x : s) for (auto y : s) if (x != y) {
+                    if (dist != -1 && dist != d[x][y]) 
+                        return false;
+                    dist = d[x][y];
+                }
+                return true;
+            };
 
-
+            ll ret = 2;
+            rep(i, n) rep(j, n) if (i > j) {
+                // sは(i, j)から始めた、全ての距離が同じとなる集合
+                set<ll> s; s.insert(i); s.insert(j);
+                rep(_, 2500) {
+                    ll k = _ % n;
+                    if (s.count(k)) continue;
+                    s.insert(k);
+                    if (!f(s))
+                        s.erase(k);
+                }
+                chmax(ret, s.size());
+            }
 
             return ret;
         }
