@@ -70,9 +70,13 @@ int printSmilesGeneral(int n) {
         if (dist.count(t)) continue; // もう来てたら終わり
         dist[t] = d; 
 
+        // !! 状態
+        state_t x, y; tie(x, y) = t;
+        if (x == n) // !! 見つかったら即帰る
+            return d;
+
         // !! 遷移の定義
         vector<T> next_nodes;
-        state_t x, y; tie(x, y) = t;
         next_nodes.pb(mt(2, mt(2*x, x)));
         next_nodes.pb(mt(1, mt(x-1, y)));
         next_nodes.pb(mt(1, mt(x+y, y)));
@@ -115,6 +119,8 @@ int printSmilesArray(int n) {
 
         if (dist[x][y] != INF) continue; // !! 状態に応じてもう来ていたら終わり
         dist[x][y] = d;
+        if (x == n) // !! 見つかったら即帰る
+            return d;
 
         // !! 遷移の定義
         vll xx = {2 * x, x - 1, x + y};
@@ -133,7 +139,70 @@ int printSmilesArray(int n) {
     return ret;
 }
 
+// 0n-BFS
+int printSmilesBFS(int n) {
+    using D = int16_t; // !! 距離の型
+    using state_t = int16_t; 
+    using S = tuple<state_t, state_t>; // !! 状態の型
+    using T = tuple<D, S>; // 遷移の型
+
+    // !! q[d]: 時間dステップ後に処理されるべき頂点集合
+    // 遷移の重みが整数かつW以下ならば、サイズをW+1にする
+    deque<vector<S>> q(3); 
+    q[0].push_back(mt(1, 0)); // !! 初期値
+
+    auto f = [&](S& x) {  // !! 異常判定基準（BFSでは無くてもいい）
+        state_t xx, yy; tie(xx, yy) = x; 
+        return (xx >= 1050 || xx <= 0 || yy >= 520 || yy <= 0); 
+    };
+
+    // 距離兼、usedフラグ
+    // 本当はboolのusedで良いのだが、情報をリッチにするためにdistを使っている
+    unordered_map<S, D> dist;
+
+    // dを1ずつシミュレーションするBFS
+    ll d = 0; 
+    while (!q[0].empty() || !q[1].empty() || !q[2].empty()) {
+        // 距離0のものを一時退避
+        auto nodes = q.front();
+        q.front() = {};
+
+        for (auto s : nodes) {
+            // もう来てたら終わり
+            if (dist.count(s)) continue; 
+            dist[s] = d; 
+
+            // !! 状態
+            state_t x, y; tie(x, y) = s;
+            if (x == n) // !! 見つかったら即帰る
+                return d;
+
+            // !! 遷移の定義
+            vector<T> next_nodes;
+            next_nodes.pb(mt(2, mt(2*x, x)));
+            next_nodes.pb(mt(1, mt(x-1, y)));
+            next_nodes.pb(mt(1, mt(x+y, y)));
+
+            // 遷移
+            for (auto&& next_node : next_nodes) {
+                D nd; S nt; tie(nd, nt) = next_node;
+                if (f(nt)) continue; // !! 異常判定。あってもなくてもいい
+                if (dist.count(nt) && dist[nt] <= d + nd) continue;  // 枝刈り
+                q[nd].push_back(nt);
+            }
+        }
+        if (q[0].empty()) { // 重み0の辺がある場合は、この条件が必要
+            q.pop_front();
+            q.push_back({});
+            d++;
+        }
+    }
+
+    return -1;
+}
+
 int main(void) {
+    cout << printSmilesDFS(1000) << endl;
     cout << printSmilesGeneral(1000) << endl;
     cout << printSmilesArray(1000) << endl;
 
