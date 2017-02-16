@@ -50,7 +50,6 @@ class EmoticonsDiv1 {
             priority_queue<T, vector<T>, greater<T>> q;
 
             vvll dist(M, vll(M, INF));
-            vector<vector<bool>> used(M, vector<bool>(M, 0));
             q.push(mt(0, mt(1, 0)));
             while (!q.empty()) {
                 // もうここに入った時点で処理するべき頂点
@@ -58,8 +57,7 @@ class EmoticonsDiv1 {
                 ll x, y; tie(x, y) = t;
 //                cout << t << endl;
 
-                if (used[x][y]) continue;
-                used[x][y] = 1;
+                if (dist[x][y] != INF) continue;
                 dist[x][y] = d;
 
                 vll xx = {2 * x, x - 1, x + y};

@@ -63,14 +63,11 @@ int printSmilesGeneral(int n) {
     };
 
     unordered_map<S, D> dist;
-    unordered_set<S> used;
     while (!q.empty()) {
         // この時点で、(d, t)が処理するべき頂点
-        // usedのダブりはループ内で処理
         D d; S t; tie(d, t) = q.top(); q.pop();
 
-        if (used.count(t)) continue; // もう来てたら終わり
-        used.insert(t); 
+        if (dist.count(t)) continue; // もう来てたら終わり
         dist[t] = d; 
 
         // !! 遷移の定義
@@ -104,7 +101,6 @@ int printSmilesArray(int n) {
 
     const int M = 1200; // !! 状態を張る
     static ll dist[M][M]; rep(i, M) rep(j, M) dist[i][j] = INF;
-    static bool used[M][M];
 
     auto f = [&](S x) {  // !! 異常判定
         ll xx, yy; tie(xx, yy) = x; 
@@ -117,8 +113,7 @@ int printSmilesArray(int n) {
         ll d; S t; tie(d, t) = q.top(); q.pop();
         ll x, y; tie(x, y) = t;
 
-        if (used[x][y]) continue; // !! 状態に応じてもう来ていたら終わり
-        used[x][y] = 1;
+        if (dist[x][y] != INF) continue; // !! 状態に応じてもう来ていたら終わり
         dist[x][y] = d;
 
         // !! 遷移の定義
