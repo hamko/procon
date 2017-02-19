@@ -35,7 +35,7 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, 
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
 template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
-string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); reverse(all(s)); return s; }
+string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
@@ -46,18 +46,20 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 // http://www.zedwood.com/article/cpp-md5-function
-using size_internal_t = uint32_t; /* must be 32bit */ using hash64_t = uint64_t; using hash_t = pair<hash64_t, hash64_t>;
+using size_internal_t = uint32_t; // must be 32bit
+using hash_t = uint64_t; // must be 32bit
 class MD5
 {
     public:
+
         MD5();
         MD5(const string& text);
-        MD5(const void* data, hash64_t data_size);
+        MD5(const void* data, hash_t data_size);
         void update(const unsigned char *buf, size_internal_t length);
         void update(const char *buf, size_internal_t length);
         MD5& finalize();
         string hexdigest() const;
-        hash_t integer() const;
+        pair<hash_t, hash_t> integer() const;
         void* getMD5() const;
         friend ostream& operator<<(ostream&, MD5 md5);
 
@@ -108,7 +110,7 @@ MD5::MD5(const string &text) {
     update(text.c_str(), text.length());
     finalize();
 }
-MD5::MD5(const void* data, hash64_t data_size) {
+MD5::MD5(const void* data, hash_t data_size) {
     init();
     update((const unsigned char*)data, (size_internal_t)data_size);
     finalize();
@@ -272,13 +274,13 @@ string MD5::hexdigest() const {
     buf[32]=0;
     return string(buf);
 }
-hash_t MD5::integer() const {
+pair<hash_t, hash_t> MD5::integer() const {
     if (!finalized) return mp(0, 0);
-    hash64_t ret_u = 0;
-    rep(i, 8) ret_u |= ((hash64_t)digest[i] << (i * 8));
-    hash64_t ret_l = 0;
-    rep(i, 8) ret_l |= ((hash64_t)digest[i+8] << (i * 8));
-    return hash_t(ret_u, ret_l);
+    hash_t ret_u = 0;
+    rep(i, 8) ret_u |= ((hash_t)digest[i] << (i * 8));
+    hash_t ret_l = 0;
+    rep(i, 8) ret_l |= ((hash_t)digest[i+8] << (i * 8));
+    return pair<hash_t, hash_t>(ret_u, ret_l);
 }
 void* MD5::getMD5() const {
     if (!finalized) return NULL;
@@ -293,50 +295,257 @@ string md5String(const string &str) {
 
 // inputからinput_sizeビットのmd5 sumのうち、上位/下位64bitを取得する。
 // top 64bit of MD5
-hash_t md5Raw(const void* input, hash64_t input_size) {
+pair<hash_t, hash_t> md5Raw(const void* input, hash_t input_size) {
     MD5 md5 = MD5(input, input_size);
     return md5.integer();
 }
 
 // vectorのhashの128bitを取得する。
 template<typename T> 
-hash_t md5Vector(vector<T> &input) {
+pair<hash_t, hash_t> md5Vector(vector<T> &input) {
     if (input.size() == 0) return mp(0, 0); // この条件でruntime error: reference binding to null pointer of typeが出るので苦肉
     MD5 md5 = MD5(input.data(), sizeof(T) * input.size());
     return md5.integer();
 }
 /****************************************************************/
 
-int main(int argc, char *argv[])
-{
-    cout << sizeof(size_t) << endl;
-    cout << "md5 of 'grape': " << md5String("grape") << endl;
-    system("echo -n \"grape\" | md5sum");
 
-    {
-        ll n = 100000;
-        cout << sizeof(size_t) << "#size_t" << endl;
-        repi(bitshift, 1, 128) {
-            unordered_set<hash_t> memo;
-            ll hit = 0;
-            rep(counter, n) {
-                vll tmp; rep(i, 3+rand() % 1000) tmp.pb(rand());
+class PotentialArithmeticSequence {
+    public:
+        int numberOfSubsequences(vector <int> a) {
+            ll n = a.size();
 
-                auto h = md5Vector(tmp);
-                if (bitshift >= 64) {
-                    h.se >>= (bitshift - 64);
-                } else {
-                    h.se = 0;
-                    h.fi >>= (64 - bitshift);
+            vll patt(128);
+            patt[0] = INF;
+            rep(i, patt.size()) if (i) {
+                ll tmp = 0;
+                ll ii = i;
+                while (ii % 2 == 0) {
+                    ii /= 2, tmp++;
                 }
-                if (memo.count(h)) {
-                    hit++;
-                }
-                memo.insert(h);
+                patt[i] = tmp;
             }
-            cout << bitshift << " " << hit << endl;
-        }
-    }
+            cout << patt << endl;
 
-    return 0;
+            unordered_set<pair<hash_t, hash_t>> memo;
+            repi(i, 1, patt.size()) repi(j, 1, patt.size()) if (i <= j) {
+                vll tmp; repi(k, i, j+1) tmp.pb(patt[k]);
+                memo.insert(md5Vector(tmp));
+            }
+
+            ll ret = 0;
+            rep(i, n) rep(j, n) if (i <= j) {
+                ll six = 0; repi(k, i, j+1) six += (a[k] >= 6); 
+                if (six >= 2) continue;
+                vll tmp; repi(k, i, j+1) tmp.pb(min<ll>(6, a[k]));
+                if (memo.count(md5Vector(tmp))) ret++;
+            }
+            return ret;
+
+        }
+};
+
+// BEGIN KAWIGIEDIT TESTING
+// Generated by KawigiEdit-pf 2.3.0
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ctime>
+#include <cmath>
+using namespace std;
+bool KawigiEdit_RunTest(int testNum, vector <int> p0, bool hasAnswer, int p1) {
+	cout << "Test " << testNum << ": [" << "{";
+	for (int i = 0; int(p0.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p0[i];
+	}
+	cout << "}";
+	cout << "]" << endl;
+	PotentialArithmeticSequence *obj;
+	int answer;
+	obj = new PotentialArithmeticSequence();
+	clock_t startTime = clock();
+	answer = obj->numberOfSubsequences(p0);
+	clock_t endTime = clock();
+	delete obj;
+	bool res;
+	res = true;
+	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
+	if (hasAnswer) {
+		cout << "Desired answer:" << endl;
+		cout << "\t" << p1 << endl;
+	}
+	cout << "Your answer:" << endl;
+	cout << "\t" << answer << endl;
+	if (hasAnswer) {
+		res = answer == p1;
+	}
+	if (!res) {
+		cout << "DOESN'T MATCH!!!!" << endl;
+	} else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
+		cout << "FAIL the timeout" << endl;
+		res = false;
+	} else if (hasAnswer) {
+		cout << "Match :-)" << endl;
+	} else {
+		cout << "OK, but is it right?" << endl;
+	}
+	cout << "" << endl;
+	return res;
 }
+int main() {
+	bool all_right;
+	bool disabled;
+	bool tests_disabled;
+	all_right = true;
+	tests_disabled = false;
+	
+	vector <int> p0;
+	int p1;
+	
+	// ----- test 0 -----
+	disabled = false;
+	p0 = {0,1,0,2,0,1,0};
+	p1 = 28;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 1 -----
+	disabled = false;
+	p0 = {0,0,0,0,0,0,0};
+	p1 = 7;
+	all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 2 -----
+	disabled = false;
+	p0 = {0,0,0,0,1,1,1};
+	p1 = 8;
+	all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 3 -----
+	disabled = false;
+	p0 = {0,100,0,2,0};
+	p1 = 11;
+	all_right = (disabled || KawigiEdit_RunTest(3, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 4 -----
+	disabled = false;
+	p0 = {1,11,3,0,1,0,1,0,1,0,1,0,3,0,2,0,0,0,0,1,2,3,20};
+	p1 = 49;
+	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	if (all_right) {
+		if (tests_disabled) {
+			cout << "You're a stud (but some test cases were disabled)!" << endl;
+		} else {
+			cout << "You're a stud (at least on given cases)!" << endl;
+		}
+	} else {
+		cout << "Some of the test cases had errors." << endl;
+	}
+	return 0;
+}
+// PROBLEM STATEMENT
+// 
+// We have a sequence of N positive integers: a[0] through a[N-1].
+// You do not know these integers.
+// All you know is the number of trailing zeros in their binary representations.
+// You are given a vector <int> d with N elements.
+// For each i, d[i] is the number of trailing zeros in the binary representation of a[i].
+// 
+// 
+// 
+// For example, suppose that a[0]=40.
+// In binary, 40 is 101000 which ends in three zeros.
+// Therefore, d[0] will be 3.
+// 
+// 
+// 
+// You like arithmetic sequences with difference 1.
+// (That is, sequences in which each element is 1 greater than the previous one. For example, {4,5,6,7}.)
+// For simplicity, we will call these sequences "incrementing sequences".
+// 
+// 
+// 
+// You would like to count all non-empty contiguous subsequences of the sequence a[0], a[1], ..., a[N-1] that can be incrementing sequences (given the information you have in d).
+// 
+// 
+// 
+// More precisely:
+// For each pair (i,j) such that 0 <= i <= j <= N-1, we ask the following question: "Given the values d[i] through d[j], is it possible that the values a[i] through a[j] form an incrementing sequence?"
+// 
+// 
+// 
+// For example, suppose that d = {0,1,0,2,1}.
+// For i=0 and j=3 the answer is positive: it is possible that the values a[0] through a[3] are {1,2,3,4} which is an incrementing sequence.
+// For i=1 and j=4 the answer is negative: there is no incrementing sequence with these numbers of trailing zeros in binary.
+// 
+// 
+// 
+// Compute and return the number of contiguous subsequences of a[0], a[1], ..., a[N-1] that can be incrementing sequences.
+// 
+// 
+// DEFINITION
+// Class:PotentialArithmeticSequence
+// Method:numberOfSubsequences
+// Parameters:vector <int>
+// Returns:int
+// Method signature:int numberOfSubsequences(vector <int> d)
+// 
+// 
+// CONSTRAINTS
+// -n will be between 1 and 50, inclusive.
+// -d will contain exactly N elements.
+// -Each element of d will be between 0 and 1,000,000,000 (10^9), inclusive.
+// 
+// 
+// EXAMPLES
+// 
+// 0)
+// {0,1,0,2,0,1,0}
+// 
+// Returns: 28
+// 
+// It is possible that the sequence a[0] through a[6] is {1,2,3,4,5,6,7}. All contiguous subsequences of this sequence are incrementing sequences.
+// 
+// 1)
+// {0,0,0,0,0,0,0}
+// 
+// Returns: 7
+// 
+// 
+// 
+// 2)
+// {0,0,0,0,1,1,1}
+// 
+// Returns: 8
+// 
+// 
+// 
+// 3)
+// {0,100,0,2,0}
+// 
+// Returns: 11
+// 
+// 
+// 
+// 4)
+// {1,11,3,0,1,0,1,0,1,0,1,0,3,0,2,0,0,0,0,1,2,3,20}
+// 
+// Returns: 49
+// 
+// 
+// 
+// END KAWIGIEDIT TESTING
+//Powered by KawigiEdit-pf 2.3.0!

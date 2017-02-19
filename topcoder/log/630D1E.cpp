@@ -45,50 +45,39 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class EmoticonsDiv1 {
+class Egalitarianism3 {
     public:
-        int printSmiles(int n) {
-            using D = int16_t; // 距離の型
-            using state_t = int16_t; 
-            using S = tuple<state_t, state_t>; // 状態の型
+        int maxCities(int n, vector <int> a, vector <int> b, vector <int> len) {
+            if (n == 1) return 1;
 
-            using T = tuple<D, S>; // (dist, state)
-            priority_queue<T, vector<T>, greater<T>> q; // 頂点集合昇順
+            vvll d(n, vll(n, INF));
+            rep(i, n) d[i][i] = 0;
+            rep(i, a.size()) d[a[i]-1][b[i]-1] = d[b[i]-1][a[i]-1] = len[i];
+            rep(_, n) rep(l, n) rep(r, n) chmin(d[l][r], d[l][_] + d[_][r]);
 
-            q.push(mt(0, mt(1, 0))); // 初期値
-            auto f = [&](S& x) {  // 異常判定基準
-                state_t xx, yy; tie(xx, yy) = x; 
-                return (xx >= 1050 || xx <= 0 || yy >= 520 || yy <= 0); 
+            auto f = [&](set<ll>& s){ 
+                ll dist = -1;
+                for (auto x : s) for (auto y : s) if (x != y) {
+                    if (dist != -1 && dist != d[x][y]) 
+                        return false;
+                    dist = d[x][y];
+                }
+                return true;
             };
 
-            unordered_map<S, D> dist;
-            while (!q.empty()) {
-                // この時点で、(d, t)が処理するべき頂点
-                // usedのダブりはループ内で処理
-                D d; S t; tie(d, t) = q.top(); q.pop();
-
-                if (dist.count(t)) continue; // もう来てたら終わり
-                dist[t] = d; 
-
-                // 遷移の定義
-                vector<T> next_nodes;
-                state_t x, y; tie(x, y) = t;
-                next_nodes.pb(mt(2, mt(2*x, x)));
-                next_nodes.pb(mt(1, mt(x-1, y)));
-                next_nodes.pb(mt(1, mt(x+y, y)));
-
-                for (auto&& next_node : next_nodes) {
-                    D nd; S nt; tie(nd, nt) = next_node;
-                    if (f(nt)) continue;
-                    if (dist.count(nt) && dist[nt] <= d + nd) continue;  // 枝刈り
-                    q.push(mt(d + nd, nt));
+            ll ret = 2;
+            rep(i, n) rep(j, n) if (i > j) {
+                // sは(i, j)から始めた、全ての距離が同じとなる集合
+                set<ll> s; s.insert(i); s.insert(j);
+                rep(_, 2500) {
+                    ll k = _ % n;
+                    if (s.count(k)) continue;
+                    s.insert(k);
+                    if (!f(s))
+                        s.erase(k);
                 }
+                chmax(ret, s.size());
             }
-
-            // 後処理
-            D ret = 10000; // INF
-            rep(y, 2000) if (dist.count(mt(n, y))) 
-                chmin(ret, dist[mt(n, y)]);
 
             return ret;
         }
@@ -102,14 +91,35 @@ class EmoticonsDiv1 {
 #include <ctime>
 #include <cmath>
 using namespace std;
-bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
-	cout << "Test " << testNum << ": [" << p0;
+bool KawigiEdit_RunTest(int testNum, int p0, vector <int> p1, vector <int> p2, vector <int> p3, bool hasAnswer, int p4) {
+	cout << "Test " << testNum << ": [" << p0 << "," << "{";
+	for (int i = 0; int(p1.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p1[i];
+	}
+	cout << "}" << "," << "{";
+	for (int i = 0; int(p2.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p2[i];
+	}
+	cout << "}" << "," << "{";
+	for (int i = 0; int(p3.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p3[i];
+	}
+	cout << "}";
 	cout << "]" << endl;
-	EmoticonsDiv1 *obj;
+	Egalitarianism3 *obj;
 	int answer;
-	obj = new EmoticonsDiv1();
+	obj = new Egalitarianism3();
 	clock_t startTime = clock();
-	answer = obj->printSmiles(p0);
+	answer = obj->maxCities(p0, p1, p2, p3);
 	clock_t endTime = clock();
 	delete obj;
 	bool res;
@@ -117,12 +127,12 @@ bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
 	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
 	if (hasAnswer) {
 		cout << "Desired answer:" << endl;
-		cout << "\t" << p1 << endl;
+		cout << "\t" << p4 << endl;
 	}
 	cout << "Your answer:" << endl;
 	cout << "\t" << answer << endl;
 	if (hasAnswer) {
-		res = answer == p1;
+		res = answer == p4;
 	}
 	if (!res) {
 		cout << "DOESN'T MATCH!!!!" << endl;
@@ -145,45 +155,52 @@ int main() {
 	tests_disabled = false;
 	
 	int p0;
-	int p1;
+	vector <int> p1;
+	vector <int> p2;
+	vector <int> p3;
+	int p4;
 	
 	// ----- test 0 -----
 	disabled = false;
-	p0 = 2;
-	p1 = 2;
-	all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
+	p0 = 4;
+	p1 = {1,1,1};
+	p2 = {2,3,4};
+	p3 = {1,1,1};
+	p4 = 3;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, p2, p3, true, p4) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 1 -----
 	disabled = false;
-	p0 = 4;
-	p1 = 4;
-	all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
+	p0 = 6;
+	p1 = {1,2,3,2,3};
+	p2 = {2,3,4,5,6};
+	p3 = {2,1,3,2,3};
+	p4 = 3;
+	all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, p2, p3, true, p4) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 2 -----
 	disabled = false;
-	p0 = 6;
-	p1 = 5;
-	all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
+	p0 = 10;
+	p1 = {1,1,1,1,1,1,1,1,1};
+	p2 = {2,3,4,5,6,7,8,9,10};
+	p3 = {1000,1000,1000,1000,1000,1000,1000,1000,1000};
+	p4 = 9;
+	all_right = (disabled || KawigiEdit_RunTest(2, p0, p1, p2, p3, true, p4) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 3 -----
 	disabled = false;
-	p0 = 18;
-	p1 = 8;
-	all_right = (disabled || KawigiEdit_RunTest(3, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 4 -----
-	disabled = false;
-	p0 = 11;
-	p1 = 8;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
+	p0 = 1;
+	p1 = {};
+	p2 = {};
+	p3 = {};
+	p4 = 1;
+	all_right = (disabled || KawigiEdit_RunTest(3, p0, p1, p2, p3, true, p4) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
@@ -199,83 +216,91 @@ int main() {
 	return 0;
 }
 // PROBLEM STATEMENT
-// You are very happy because you advanced to the next round of a very important programming contest.
-// You want your best friend to know how happy you are.
-// Therefore, you are going to send him a lot of smile emoticons.
-// You are given an int smiles: the exact number of emoticons you want to send.
+// In Treeland there are n cities, numbered 1 through n.
+// The cities are linked by n-1 bidirectional roads.
+// Each road connects a pair of cities.
+// The roads are built in such a way that each city is reachable from each other city by roads.
+// (In other words, the topology of the road network is a tree.)
 // 
-// You have already typed one emoticon into the chat.
-// Then, you realized that typing is slow.
-// Instead, you will produce the remaining emoticons using copy, paste, and possibly some deleting.
 // 
-// You can only do three different operations:
+// You are given the int n and three vector <int>s that describe the road network: a, b, and len.
+// For each i between 0 and n-2, inclusive, there is a road of length len[i] that connects the cities a[i] and b[i].
 // 
-// Copy all the emoticons you currently have into the clipboard.
-// Paste all emoticons from the clipboard.
-// Delete one emoticon from the message.
 // 
-// Each operation takes precisely one second.
-// Copying replaces the old content of the clipboard.
-// Pasting does not empty the clipboard.
-// You are not allowed to copy just a part of the emoticons you already have.
-// You are not allowed to delete an emoticon from the clipboard.
+// The distance between two cities is the sum of lengths of roads on the sequence of roads that connects them. (Note that this sequence of roads is always unique.)
 // 
-// Return the smallest number of seconds in which you can turn the one initial emoticon into smiles emoticons.
+// 
+// You want to select k cities in such a way that all pairwise distances between the selected cities are the same.
+// In other words, there must be a distance d such that the distance between every two selected cities is d.
+// Return the largest possible value of k for which this is possible.
+// 
 // 
 // DEFINITION
-// Class:EmoticonsDiv1
-// Method:printSmiles
-// Parameters:int
+// Class:Egalitarianism3
+// Method:maxCities
+// Parameters:int, vector <int>, vector <int>, vector <int>
 // Returns:int
-// Method signature:int printSmiles(int smiles)
+// Method signature:int maxCities(int n, vector <int> a, vector <int> b, vector <int> len)
 // 
 // 
 // CONSTRAINTS
-// -smiles will be between 2 and 1000, inclusive.
+// -n will be between 1 and 50, inclusive.
+// -a will contain exactly n-1 elements.
+// -b will contain exactly n-1 elements.
+// -len will contain exactly n-1 elements.
+// -Each element in a will be between 1 and n, inclusive.
+// -Each element in b will be between 1 and n, inclusive.
+// -Each element in len will be between 1 and 1,000, inclusive.
+// -The graph described by a and b will be a tree.
 // 
 // 
 // EXAMPLES
 // 
 // 0)
-// 2
+// 4
+// {1,1,1}
+// {2,3,4}
+// {1,1,1}
 // 
-// Returns: 2
+// Returns: 3
 // 
-// First use copy, then use paste. The first operation copies one emoticon into the clipboard, the second operation pastes it into the message, so now you have two emoticons and you are done.
+// There are 4 cities and 3 roads, each of length 1.
+// The roads connect the following pairs of cities: (1,2), (1,3), and (1,4).
+// The optimal answer is k=3.
+// We can select three cities in the required way: we select the cities {2, 3, 4}.
+// The distance between any two of these cities is 2.
 // 
 // 1)
-// 4
+// 6
+// {1,2,3,2,3}
+// {2,3,4,5,6}
+// {2,1,3,2,3}
 // 
-// Returns: 4
+// Returns: 3
 // 
-// One optimal solution is to copy the initial emoticon and then to paste it three times. Another optimal solution is to copy the one emoticon, paste it, copy the two emoticons you currently have, and paste two more.
+// Again, the largest possible k is 3.
+// There are two ways to select three equidistant cities: {1, 4, 6} and {4, 5, 6}.
+// (In both cases the common distance is 6.)
 // 
 // 2)
-// 6
+// 10
+// {1,1,1,1,1,1,1,1,1}
+// {2,3,4,5,6,7,8,9,10}
+// {1000,1000,1000,1000,1000,1000,1000,1000,1000}
 // 
-// Returns: 5
+// Returns: 9
 // 
-// 
-// Copy. This puts one emoticon into the clipboard.
-// Paste. You now have 2 emoticons in the message.
-// Copy. The clipboard now contains 2 emoticons.
-// Paste. You now have 4 emoticons in the message.
-// Paste. You now have 6 emoticons in the message and you are done.
 // 
 // 
 // 3)
-// 18
+// 1
+// {}
+// {}
+// {}
 // 
-// Returns: 8
+// Returns: 1
 // 
-// 
-// 
-// 4)
-// 11
-// 
-// Returns: 8
-// 
-// Sometimes we actually do delete an emoticon in the optimal solution.
+// Note that n can be 1.
 // 
 // END KAWIGIEDIT TESTING
 //Powered by KawigiEdit-pf 2.3.0!

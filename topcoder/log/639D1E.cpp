@@ -19,6 +19,9 @@ using ld = long double;  using vld = vector<ld>;
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using Pos = complex<double>;
 
+namespace std{ namespace { template <class T> inline void hash_combine(size_t& seed, T const& v) { seed ^= hash<T>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2); } template <class Tuple, size_t Index = tuple_size<Tuple>::value - 1> struct HashValueImpl { static void apply(size_t& seed, Tuple const& tuple) { HashValueImpl<Tuple, Index-1>::apply(seed, tuple); hash_combine(seed, get<Index>(tuple)); } }; template <class Tuple> struct HashValueImpl<Tuple,0> { static void apply(size_t& seed, Tuple const& tuple) { hash_combine(seed, get<0>(tuple)); } }; } template <typename ... TT> struct hash<tuple<TT...>> { size_t operator()(tuple<TT...> const& tt) const { size_t seed = 0; HashValueImpl<tuple<TT...> >::apply(seed, tt); return seed; } }; } 
+namespace std { template<typename U, typename V> struct hash<pair<U, V>> { size_t operator()(pair<U, V> const& v) const { return v.first ^ v.second; } }; } struct pairhash { public: template <typename T, typename U> size_t operator()(const pair<T, U> &x) const { return hash<T>()(x.first) ^ hash<U>()(x.second); } };
+
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -41,42 +44,26 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
-class EmoticonsDiv1 {
+
+class AliceGame {
     public:
-        int printSmiles(int n) {
-            const int M = 1200;
-            using T = tuple<ll, P>; // dist, (x, y)
-            priority_queue<T, vector<T>, greater<T>> q;
+        long long findMinimumValue(long long x, long long y) {
+            ll m = x + y;
+            ll n = sqrt(m);
+            if (n * n != m) 
+                return -1;
+            
+            vll tmp; rep(i, n) tmp.pb(2*i+1);
+            reverse(all(tmp));
+            ll ret = 0;
+            rep(i, n) 
+                if (tmp[i] <= x && x - tmp[i] != 2) 
+                    x-=tmp[i], ret++;
 
-            vvll dist(M, vll(M, INF));
-            vector<vector<bool>> used(M, vector<bool>(M, 0));
-            q.push(mt(0, P(1, 0)));
-            while (!q.empty()) {
-                // もうここに入った時点で処理するべき頂点
-                ll d; P t; tie(d, t) = q.top(); q.pop();
-                ll x = t.fi, y = t.se;
-//                cout << t << endl;
-
-                if (used[x][y]) continue;
-                used[x][y] = 1;
-                dist[x][y] = d;
-
-                vll xx = {2 * x, x - 1, x + y};
-                vll yy = {x, y, y};
-                vll cost = {2, 1, 1};
-                rep(i, 3) {
-                    if (xx[i] >= M) continue;
-                    if (yy[i] >= M) continue;
-                    if (xx[i] <= 0) continue;
-                    if (yy[i] <= 0) continue;
-                    q.push(mt(d + cost[i], P(xx[i], yy[i])));
-                }
-            }
-            ll ret = INF;
-            rep(y, M) {
-                chmin(ret, dist[n][y]);
-            }
-            return ret;
+            if (x == 0) 
+                return ret;
+            else 
+                return -1;
         }
 };
 
@@ -88,14 +75,14 @@ class EmoticonsDiv1 {
 #include <ctime>
 #include <cmath>
 using namespace std;
-bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
-	cout << "Test " << testNum << ": [" << p0;
+bool KawigiEdit_RunTest(int testNum, long long p0, long long p1, bool hasAnswer, long long p2) {
+	cout << "Test " << testNum << ": [" << p0 << "," << p1;
 	cout << "]" << endl;
-	EmoticonsDiv1 *obj;
-	int answer;
-	obj = new EmoticonsDiv1();
+	AliceGame *obj;
+	long long answer;
+	obj = new AliceGame();
 	clock_t startTime = clock();
-	answer = obj->printSmiles(p0);
+	answer = obj->findMinimumValue(p0, p1);
 	clock_t endTime = clock();
 	delete obj;
 	bool res;
@@ -103,12 +90,12 @@ bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
 	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
 	if (hasAnswer) {
 		cout << "Desired answer:" << endl;
-		cout << "\t" << p1 << endl;
+		cout << "\t" << p2 << endl;
 	}
 	cout << "Your answer:" << endl;
 	cout << "\t" << answer << endl;
 	if (hasAnswer) {
-		res = answer == p1;
+		res = answer == p2;
 	}
 	if (!res) {
 		cout << "DOESN'T MATCH!!!!" << endl;
@@ -130,72 +117,60 @@ int main() {
 	all_right = true;
 	tests_disabled = false;
 	
-	int p0;
-	int p1;
+	long long p0;
+	long long p1;
+	long long p2;
 	
 	// ----- test 0 -----
 	disabled = false;
-	p0 = 2;
-	p1 = 2;
-	all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
+	p0 = 8ll;
+	p1 = 17ll;
+	p2 = 2ll;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, true, p2) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
-		// ----- test 4 -----
-	disabled = false;
-	p0 = 998;
-	p1 = 22;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-		// ----- test 4 -----
-	disabled = false;
-	p0 = 997;
-	p1 = 23;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
-			// ----- test 4 -----
-	disabled = false;
-	p0 = 512;
-	p1 = 18;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
-				// ----- test 4 -----
-	disabled = false;
-	p0 = 513;
-	p1 = 19;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
-	
-
 	// ----- test 1 -----
 	disabled = false;
-	p0 = 4;
-	p1 = 4;
-	all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
+	p0 = 17ll;
+	p1 = 8ll;
+	p2 = 3ll;
+	all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, true, p2) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 2 -----
 	disabled = false;
-	p0 = 6;
-	p1 = 5;
-	all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
+	p0 = 0ll;
+	p1 = 0ll;
+	p2 = 0ll;
+	all_right = (disabled || KawigiEdit_RunTest(2, p0, p1, true, p2) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 3 -----
 	disabled = false;
-	p0 = 18;
-	p1 = 8;
-	all_right = (disabled || KawigiEdit_RunTest(3, p0, true, p1) ) && all_right;
+	p0 = 9ll;
+	p1 = 9ll;
+	p2 = -1ll;
+	all_right = (disabled || KawigiEdit_RunTest(3, p0, p1, true, p2) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 4 -----
 	disabled = false;
-	p0 = 11;
-	p1 = 8;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
+	p0 = 500000ll;
+	p1 = 500000ll;
+	p2 = 294ll;
+	all_right = (disabled || KawigiEdit_RunTest(4, p0, p1, true, p2) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
+		disabled = false;
+	p0 = 2000001;
+	p1 = 999997999999ll;
+	p2 = 3ll;
+	all_right = (disabled || KawigiEdit_RunTest(5, p0, p1, true, p2) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
 
 	if (all_right) {
 		if (tests_disabled) {
@@ -209,83 +184,77 @@ int main() {
 	return 0;
 }
 // PROBLEM STATEMENT
-// You are very happy because you advanced to the next round of a very important programming contest.
-// You want your best friend to know how happy you are.
-// Therefore, you are going to send him a lot of smile emoticons.
-// You are given an int smiles: the exact number of emoticons you want to send.
 // 
-// You have already typed one emoticon into the chat.
-// Then, you realized that typing is slow.
-// Instead, you will produce the remaining emoticons using copy, paste, and possibly some deleting.
+// Alice and Kirito just played a game.
+// The game consisted of a finite (possibly empty) sequence of turns.
+// You do not know the exact number of turns.
+// The turns were numbered starting from 1.
+// In each turn, exactly one of our two players won.
+// The winner of turn i scored 2*i-1 points.
 // 
-// You can only do three different operations:
 // 
-// Copy all the emoticons you currently have into the clipboard.
-// Paste all emoticons from the clipboard.
-// Delete one emoticon from the message.
 // 
-// Each operation takes precisely one second.
-// Copying replaces the old content of the clipboard.
-// Pasting does not empty the clipboard.
-// You are not allowed to copy just a part of the emoticons you already have.
-// You are not allowed to delete an emoticon from the clipboard.
+// You are given two long longs x and y.
+// Find out whether it is possible that at the end of the game Alice had exactly x points and Kirito had exactly y points.
+// If it is possible, return the smallest number of turns Alice could have won.
+// If the given final result is not possible, return -1 instead.
 // 
-// Return the smallest number of seconds in which you can turn the one initial emoticon into smiles emoticons.
 // 
 // DEFINITION
-// Class:EmoticonsDiv1
-// Method:printSmiles
-// Parameters:int
-// Returns:int
-// Method signature:int printSmiles(int smiles)
+// Class:AliceGame
+// Method:findMinimumValue
+// Parameters:long long, long long
+// Returns:long long
+// Method signature:long long findMinimumValue(long long x, long long y)
 // 
 // 
 // CONSTRAINTS
-// -smiles will be between 2 and 1000, inclusive.
+// -x and y are between 0 and 1,000,000,000,000, inclusive.
 // 
 // 
 // EXAMPLES
 // 
 // 0)
-// 2
+// 8
+// 17
 // 
 // Returns: 2
 // 
-// First use copy, then use paste. The first operation copies one emoticon into the clipboard, the second operation pastes it into the message, so now you have two emoticons and you are done.
+// This final result is possible.
+// Alice must have won at least two turns.
+// One possibility is that Alice won turns 2 and 3 (for 3+5 = 8 points) and Kirito won turns 1, 4, and 5 (for 1+7+9 = 17 points).
 // 
 // 1)
-// 4
+// 17
+// 8
 // 
-// Returns: 4
+// Returns: 3
 // 
-// One optimal solution is to copy the initial emoticon and then to paste it three times. Another optimal solution is to copy the one emoticon, paste it, copy the two emoticons you currently have, and paste two more.
+// 
 // 
 // 2)
-// 6
+// 0
+// 0
 // 
-// Returns: 5
+// Returns: 0
 // 
-// 
-// Copy. This puts one emoticon into the clipboard.
-// Paste. You now have 2 emoticons in the message.
-// Copy. The clipboard now contains 2 emoticons.
-// Paste. You now have 4 emoticons in the message.
-// Paste. You now have 6 emoticons in the message and you are done.
 // 
 // 
 // 3)
-// 18
+// 9
+// 9
 // 
-// Returns: 8
+// Returns: -1
 // 
 // 
 // 
 // 4)
-// 11
+// 500000
+// 500000
 // 
-// Returns: 8
+// Returns: 294
 // 
-// Sometimes we actually do delete an emoticon in the optimal solution.
+// 
 // 
 // END KAWIGIEDIT TESTING
 //Powered by KawigiEdit-pf 2.3.0!

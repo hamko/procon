@@ -45,51 +45,21 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class EmoticonsDiv1 {
+class WaitingForBus {
     public:
-        int printSmiles(int n) {
-            using D = int16_t; // 距離の型
-            using state_t = int16_t; 
-            using S = tuple<state_t, state_t>; // 状態の型
-
-            using T = tuple<D, S>; // (dist, state)
-            priority_queue<T, vector<T>, greater<T>> q; // 頂点集合昇順
-
-            q.push(mt(0, mt(1, 0))); // 初期値
-            auto f = [&](S& x) {  // 異常判定基準
-                state_t xx, yy; tie(xx, yy) = x; 
-                return (xx >= 1050 || xx <= 0 || yy >= 520 || yy <= 0); 
-            };
-
-            unordered_map<S, D> dist;
-            while (!q.empty()) {
-                // この時点で、(d, t)が処理するべき頂点
-                // usedのダブりはループ内で処理
-                D d; S t; tie(d, t) = q.top(); q.pop();
-
-                if (dist.count(t)) continue; // もう来てたら終わり
-                dist[t] = d; 
-
-                // 遷移の定義
-                vector<T> next_nodes;
-                state_t x, y; tie(x, y) = t;
-                next_nodes.pb(mt(2, mt(2*x, x)));
-                next_nodes.pb(mt(1, mt(x-1, y)));
-                next_nodes.pb(mt(1, mt(x+y, y)));
-
-                for (auto&& next_node : next_nodes) {
-                    D nd; S nt; tie(nd, nt) = next_node;
-                    if (f(nt)) continue;
-                    if (dist.count(nt) && dist[nt] <= d + nd) continue;  // 枝刈り
-                    q.push(mt(d + nd, nt));
+        double whenWillBusArrive(vector <int> t, vector <int> p, int s) {
+            if (!s) return 0;
+            vector<double> dp(1000000); dp[0] = 1;
+            rep(i, s) {
+                rep(j, t.size()) {
+                    ll next = i + t[j];
+                    if (next >= dp.size()) continue;
+                    dp[next] += dp[i] * (double)p[j] / 100.0;
                 }
             }
-
-            // 後処理
-            D ret = 10000; // INF
-            rep(y, 2000) if (dist.count(mt(n, y))) 
-                chmin(ret, dist[mt(n, y)]);
-
+            double ret = 0;
+            for (ll i = s; i < dp.size(); i++) 
+                ret += dp[i] * (double)(i - s);
             return ret;
         }
 };
@@ -102,14 +72,28 @@ class EmoticonsDiv1 {
 #include <ctime>
 #include <cmath>
 using namespace std;
-bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
-	cout << "Test " << testNum << ": [" << p0;
+bool KawigiEdit_RunTest(int testNum, vector <int> p0, vector <int> p1, int p2, bool hasAnswer, double p3) {
+	cout << "Test " << testNum << ": [" << "{";
+	for (int i = 0; int(p0.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p0[i];
+	}
+	cout << "}" << "," << "{";
+	for (int i = 0; int(p1.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p1[i];
+	}
+	cout << "}" << "," << p2;
 	cout << "]" << endl;
-	EmoticonsDiv1 *obj;
-	int answer;
-	obj = new EmoticonsDiv1();
+	WaitingForBus *obj;
+	double answer;
+	obj = new WaitingForBus();
 	clock_t startTime = clock();
-	answer = obj->printSmiles(p0);
+	answer = obj->whenWillBusArrive(p0, p1, p2);
 	clock_t endTime = clock();
 	delete obj;
 	bool res;
@@ -117,12 +101,12 @@ bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
 	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
 	if (hasAnswer) {
 		cout << "Desired answer:" << endl;
-		cout << "\t" << p1 << endl;
+		cout << "\t" << p3 << endl;
 	}
 	cout << "Your answer:" << endl;
 	cout << "\t" << answer << endl;
 	if (hasAnswer) {
-		res = answer == p1;
+		res = answer == answer && fabs(p3 - answer) <= 1e-9 * max(1.0, fabs(p3));
 	}
 	if (!res) {
 		cout << "DOESN'T MATCH!!!!" << endl;
@@ -144,46 +128,58 @@ int main() {
 	all_right = true;
 	tests_disabled = false;
 	
-	int p0;
-	int p1;
+	vector <int> p0;
+	vector <int> p1;
+	int p2;
+	double p3;
 	
 	// ----- test 0 -----
 	disabled = false;
-	p0 = 2;
-	p1 = 2;
-	all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
+	p0 = {5,100};
+	p1 = {90,10};
+	p2 = 5;
+	p3 = 9.5;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 1 -----
 	disabled = false;
-	p0 = 4;
-	p1 = 4;
-	all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
+	p0 = {5};
+	p1 = {100};
+	p2 = 101;
+	p3 = 4.0;
+	all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 2 -----
 	disabled = false;
-	p0 = 6;
-	p1 = 5;
-	all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
+	p0 = {5,10};
+	p1 = {50,50};
+	p2 = 88888;
+	p3 = 3.666666666666667;
+	all_right = (disabled || KawigiEdit_RunTest(2, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 3 -----
 	disabled = false;
-	p0 = 18;
-	p1 = 8;
-	all_right = (disabled || KawigiEdit_RunTest(3, p0, true, p1) ) && all_right;
+	p0 = {1,2,3,4};
+	p1 = {10,20,30,40};
+	p2 = 1000;
+	p3 = 1.166666666666667;
+	all_right = (disabled || KawigiEdit_RunTest(3, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 4 -----
 	disabled = false;
-	p0 = 11;
-	p1 = 8;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
+	p0 = {10,100,1000,10000,100000};
+	p1 = {90,4,3,2,1};
+	p2 = 100000;
+	p3 = 21148.147303578935;
+	all_right = (disabled || KawigiEdit_RunTest(4, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
@@ -199,83 +195,114 @@ int main() {
 	return 0;
 }
 // PROBLEM STATEMENT
-// You are very happy because you advanced to the next round of a very important programming contest.
-// You want your best friend to know how happy you are.
-// Therefore, you are going to send him a lot of smile emoticons.
-// You are given an int smiles: the exact number of emoticons you want to send.
 // 
-// You have already typed one emoticon into the chat.
-// Then, you realized that typing is slow.
-// Instead, you will produce the remaining emoticons using copy, paste, and possibly some deleting.
+// The bus station in Joseph's town operates randomly.
+// Before the bus station opens, there are N buses at the station.
+// The buses are numbered 0 through N-1.
+// Whenever a bus has to depart the station, one of these buses is chosen at random.
+// Different buses may be chosen with different probabilities.
+// More precisely, for each i, the probability that bus i will be chosen is prob[i]/100.
+// After bus i departs the station, it follows its specific route.
+// The time the bus needs to complete its route is time[i].
 // 
-// You can only do three different operations:
 // 
-// Copy all the emoticons you currently have into the clipboard.
-// Paste all emoticons from the clipboard.
-// Delete one emoticon from the message.
 // 
-// Each operation takes precisely one second.
-// Copying replaces the old content of the clipboard.
-// Pasting does not empty the clipboard.
-// You are not allowed to copy just a part of the emoticons you already have.
-// You are not allowed to delete an emoticon from the clipboard.
+// The bus station opens at time 0.
+// At that time, the first random bus will depart.
+// During the day, as soon as a bus returns from its route, a new bus is randomly chosen to depart in that same moment.
+// (The probability distribution is the same for each random choice, and the random choices are mutually independent.
+// It is possible that the bus chosen to depart will again be the bus that just arrived.)
 // 
-// Return the smallest number of seconds in which you can turn the one initial emoticon into smiles emoticons.
+// 
+// 
+// Joseph just arrived to the bus station.
+// The current time is s.
+// He is going to wait for the next bus.
+// (If there is a bus departing precisely at the time s, Joseph can still catch it.
+// In this case, his waiting time is zero.)
+// 
+// 
+// 
+// You are given the vector <int>s time and prob, and the int s.
+// Return Joseph's expected waiting time.
+// 
 // 
 // DEFINITION
-// Class:EmoticonsDiv1
-// Method:printSmiles
-// Parameters:int
-// Returns:int
-// Method signature:int printSmiles(int smiles)
+// Class:WaitingForBus
+// Method:whenWillBusArrive
+// Parameters:vector <int>, vector <int>, int
+// Returns:double
+// Method signature:double whenWillBusArrive(vector <int> time, vector <int> prob, int s)
+// 
+// 
+// NOTES
+// -Your return value must have an absolute or relative error smaller than 1e-6
 // 
 // 
 // CONSTRAINTS
-// -smiles will be between 2 and 1000, inclusive.
+// -time will contain between 1 and 100 elements, inclusive.
+// -prob will contain the same number of elements as time
+// -Each element of time will be between 1 and 10^5, inclusive.
+// -Each element of prob will be between 1 and 100, inclusive.
+// -The sum of all elements of prob will be exactly 100. 
+// -s will be between 0 and 10^5, inclusive. 
 // 
 // 
 // EXAMPLES
 // 
 // 0)
-// 2
+// {5,100}
+// {90,10}
+// 5
 // 
-// Returns: 2
+// Returns: 9.5
 // 
-// First use copy, then use paste. The first operation copies one emoticon into the clipboard, the second operation pastes it into the message, so now you have two emoticons and you are done.
+// 
+// Joseph will arrive to the bus station at time 5.
+// At time 0, one of the two buses was chosen.
+// With probability 90% it was bus 0.
+// This bus will return to the station at time 5.
+// Therefore, a new bus will be chosen to depart at time 5 and Joseph can board it immediately.
+// With probability 10% the bus that departed the station at time 0 was bus 1.
+// If this was the case, the next bus will depart the station at time 100, which means that Joseph's waiting time will be 95.
+// Thus, the expected waiting time is 0.9 * 0 + 0.1 * 95 = 9.5.
+// 
 // 
 // 1)
-// 4
+// {5}
+// {100}
+// 101
 // 
-// Returns: 4
+// Returns: 4.0
 // 
-// One optimal solution is to copy the initial emoticon and then to paste it three times. Another optimal solution is to copy the one emoticon, paste it, copy the two emoticons you currently have, and paste two more.
+// 
 // 
 // 2)
-// 6
+// {5,10}
+// {50,50}
+// 88888
 // 
-// Returns: 5
+// Returns: 3.666666666666667
 // 
-// 
-// Copy. This puts one emoticon into the clipboard.
-// Paste. You now have 2 emoticons in the message.
-// Copy. The clipboard now contains 2 emoticons.
-// Paste. You now have 4 emoticons in the message.
-// Paste. You now have 6 emoticons in the message and you are done.
 // 
 // 
 // 3)
-// 18
+// {1,2,3,4}
+// {10,20,30,40}
+// 1000
 // 
-// Returns: 8
+// Returns: 1.166666666666667
 // 
 // 
 // 
 // 4)
-// 11
+// {10,100,1000,10000,100000}
+// {90,4,3,2,1}
+// 100000
 // 
-// Returns: 8
+// Returns: 21148.147303578935
 // 
-// Sometimes we actually do delete an emoticon in the optimal solution.
+// 
 // 
 // END KAWIGIEDIT TESTING
 //Powered by KawigiEdit-pf 2.3.0!

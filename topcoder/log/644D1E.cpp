@@ -45,51 +45,26 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class EmoticonsDiv1 {
+class OkonomiyakiParty {
     public:
-        int printSmiles(int n) {
-            using D = int16_t; // 距離の型
-            using state_t = int16_t; 
-            using S = tuple<state_t, state_t>; // 状態の型
-
-            using T = tuple<D, S>; // (dist, state)
-            priority_queue<T, vector<T>, greater<T>> q; // 頂点集合昇順
-
-            q.push(mt(0, mt(1, 0))); // 初期値
-            auto f = [&](S& x) {  // 異常判定基準
-                state_t xx, yy; tie(xx, yy) = x; 
-                return (xx >= 1050 || xx <= 0 || yy >= 520 || yy <= 0); 
-            };
-
-            unordered_map<S, D> dist;
-            while (!q.empty()) {
-                // この時点で、(d, t)が処理するべき頂点
-                // usedのダブりはループ内で処理
-                D d; S t; tie(d, t) = q.top(); q.pop();
-
-                if (dist.count(t)) continue; // もう来てたら終わり
-                dist[t] = d; 
-
-                // 遷移の定義
-                vector<T> next_nodes;
-                state_t x, y; tie(x, y) = t;
-                next_nodes.pb(mt(2, mt(2*x, x)));
-                next_nodes.pb(mt(1, mt(x-1, y)));
-                next_nodes.pb(mt(1, mt(x+y, y)));
-
-                for (auto&& next_node : next_nodes) {
-                    D nd; S nt; tie(nd, nt) = next_node;
-                    if (f(nt)) continue;
-                    if (dist.count(nt) && dist[nt] <= d + nd) continue;  // 枝刈り
-                    q.push(mt(d + nd, nt));
-                }
+        static const int M = 55;
+        ll dp[M][M][M];
+        int count(vector <int> a, int m, int k) {
+            ll n = a.size();
+            sort(all(a));
+            rep(i, M) rep(j, M) rep(h, M) dp[i][j][h] = 0;
+            dp[0][0][M-1] = 1;
+            rep(i, n) rep(j, m + 1) rep(h, M) {
+                if (j == 1 && h == M-1) 
+                    (dp[i+1][j][i] = 1) %= mo;
+                if (j > 1 && abs(a[i] - a[h]) <= k) 
+                    (dp[i+1][j][h] += dp[i][j-1][h]) %= mo;
+                (dp[i+1][j][h] +=  dp[i][j][h]) %= mo;
             }
 
-            // 後処理
-            D ret = 10000; // INF
-            rep(y, 2000) if (dist.count(mt(n, y))) 
-                chmin(ret, dist[mt(n, y)]);
-
+            ll ret = 0;
+            rep(h, n) 
+                (ret += dp[n][m][h]) %= mo;
             return ret;
         }
 };
@@ -102,14 +77,21 @@ class EmoticonsDiv1 {
 #include <ctime>
 #include <cmath>
 using namespace std;
-bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
-	cout << "Test " << testNum << ": [" << p0;
+bool KawigiEdit_RunTest(int testNum, vector <int> p0, int p1, int p2, bool hasAnswer, int p3) {
+	cout << "Test " << testNum << ": [" << "{";
+	for (int i = 0; int(p0.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p0[i];
+	}
+	cout << "}" << "," << p1 << "," << p2;
 	cout << "]" << endl;
-	EmoticonsDiv1 *obj;
+	OkonomiyakiParty *obj;
 	int answer;
-	obj = new EmoticonsDiv1();
+	obj = new OkonomiyakiParty();
 	clock_t startTime = clock();
-	answer = obj->printSmiles(p0);
+	answer = obj->count(p0, p1, p2);
 	clock_t endTime = clock();
 	delete obj;
 	bool res;
@@ -117,12 +99,12 @@ bool KawigiEdit_RunTest(int testNum, int p0, bool hasAnswer, int p1) {
 	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
 	if (hasAnswer) {
 		cout << "Desired answer:" << endl;
-		cout << "\t" << p1 << endl;
+		cout << "\t" << p3 << endl;
 	}
 	cout << "Your answer:" << endl;
 	cout << "\t" << answer << endl;
 	if (hasAnswer) {
-		res = answer == p1;
+		res = answer == p3;
 	}
 	if (!res) {
 		cout << "DOESN'T MATCH!!!!" << endl;
@@ -144,46 +126,58 @@ int main() {
 	all_right = true;
 	tests_disabled = false;
 	
-	int p0;
+	vector <int> p0;
 	int p1;
+	int p2;
+	int p3;
 	
 	// ----- test 0 -----
 	disabled = false;
-	p0 = 2;
+	p0 = {1,4,6,7,9};
 	p1 = 2;
-	all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
+	p2 = 3;
+	p3 = 6;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 1 -----
 	disabled = false;
-	p0 = 4;
+	p0 = {1,6,2,7,4,2,6,1,5,2,4};
 	p1 = 4;
-	all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
+	p2 = 3;
+	p3 = 60;
+	all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 2 -----
 	disabled = false;
-	p0 = 6;
-	p1 = 5;
-	all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
+	p0 = {1,4,5,7,10,11,13,16,18};
+	p1 = 4;
+	p2 = 5;
+	p3 = 0;
+	all_right = (disabled || KawigiEdit_RunTest(2, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 3 -----
 	disabled = false;
-	p0 = 18;
-	p1 = 8;
-	all_right = (disabled || KawigiEdit_RunTest(3, p0, true, p1) ) && all_right;
+	p0 = {55,2,7,232,52,5,5332,623,52,6,532,5147};
+	p1 = 6;
+	p2 = 10000;
+	p3 = 924;
+	all_right = (disabled || KawigiEdit_RunTest(3, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 4 -----
 	disabled = false;
-	p0 = 11;
-	p1 = 8;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
+	p0 = {5781,8708,1754,4750,9888,3675,4810,1020,922,9834,5695,1101,1236,2496,8431,6727,1376,3373,4423,1839,7438,9407,1851,6966,8715,2905,542,535,8980,2602,2603,3117,3452,5682,7775,4356,5140,8923,9801,3729};
+	p1 = 15;
+	p2 = 4003;
+	p3 = 114514;
+	all_right = (disabled || KawigiEdit_RunTest(4, p0, p1, p2, true, p3) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
@@ -199,83 +193,93 @@ int main() {
 	return 0;
 }
 // PROBLEM STATEMENT
-// You are very happy because you advanced to the next round of a very important programming contest.
-// You want your best friend to know how happy you are.
-// Therefore, you are going to send him a lot of smile emoticons.
-// You are given an int smiles: the exact number of emoticons you want to send.
+// Wolf Sothe is planning a party for his M friends.
+// He wants to give them some okonomiyaki at the party.
+// (Okonomiyaki is a Japanese pancake.)
 // 
-// You have already typed one emoticon into the chat.
-// Then, you realized that typing is slow.
-// Instead, you will produce the remaining emoticons using copy, paste, and possibly some deleting.
+// Sothe just came to an okonomiyaki restaurant.
+// The restaurant makes several types of okonomiyaki.
+// Each type of okonomiyaki has its specific size.
+// You are given the sizes of all okonomiyaki types as a vector <int> osize.
 // 
-// You can only do three different operations:
+// Sothe would like to buy exactly M okonomiyaki.
+// They must all have different types, so that the people at the party have the most options to choose from.
+// Additionally, they must all have roughly the same sizes, so that nobody feels disappointed.
+// More precisely, the difference between the size of the largest and smallest okonomiyaki ordered by Sothe must be K or less.
 // 
-// Copy all the emoticons you currently have into the clipboard.
-// Paste all emoticons from the clipboard.
-// Delete one emoticon from the message.
-// 
-// Each operation takes precisely one second.
-// Copying replaces the old content of the clipboard.
-// Pasting does not empty the clipboard.
-// You are not allowed to copy just a part of the emoticons you already have.
-// You are not allowed to delete an emoticon from the clipboard.
-// 
-// Return the smallest number of seconds in which you can turn the one initial emoticon into smiles emoticons.
+// You are given the vector <int> osize and the ints M and K.
+// Compute and return the number of different orders Sothe could place at the restaurant, modulo 1,000,000,007.
 // 
 // DEFINITION
-// Class:EmoticonsDiv1
-// Method:printSmiles
-// Parameters:int
+// Class:OkonomiyakiParty
+// Method:count
+// Parameters:vector <int>, int, int
 // Returns:int
-// Method signature:int printSmiles(int smiles)
+// Method signature:int count(vector <int> osize, int M, int K)
 // 
 // 
 // CONSTRAINTS
-// -smiles will be between 2 and 1000, inclusive.
+// -osize will contain between 2 and 50 elements, inclusive.
+// -Each element in osize will be between 1 and 10,000, inclusive.
+// -M will be between 2 and the number of elements in osize, inclusive.
+// -K will be between 1 and 10,000, inclusive.
 // 
 // 
 // EXAMPLES
 // 
 // 0)
+// {1,4,6,7,9}
 // 2
+// 3
 // 
-// Returns: 2
+// Returns: 6
 // 
-// First use copy, then use paste. The first operation copies one emoticon into the clipboard, the second operation pastes it into the message, so now you have two emoticons and you are done.
+// There are five types of okonomiyaki.
+// Let's call them types A, B, C, D, and E.
+// (Type A has size 1, type B has size 4, and so on.)
+// Sothe wants to buy M=2 different okonomiyaki and their sizes must differ by K=3 or less.
+// There are 6 valid orders: A+B, B+C, B+D, C+D, C+E, and D+E.
+// 
+// Note that B+A is the same order as A+B: you get one pancake of type A and one pancake of type B.
 // 
 // 1)
+// {1,6,2,7,4,2,6,1,5,2,4}
 // 4
+// 3
 // 
-// Returns: 4
+// Returns: 60
 // 
-// One optimal solution is to copy the initial emoticon and then to paste it three times. Another optimal solution is to copy the one emoticon, paste it, copy the two emoticons you currently have, and paste two more.
+// Different types of okonomiyaki may have equal sizes.
+// An order may contain multiple okonomiyaki of the same size, they are only required to have different types.
 // 
 // 2)
-// 6
+// {1,4,5,7,10,11,13,16,18}
+// 4
+// 5
 // 
-// Returns: 5
+// Returns: 0
 // 
-// 
-// Copy. This puts one emoticon into the clipboard.
-// Paste. You now have 2 emoticons in the message.
-// Copy. The clipboard now contains 2 emoticons.
-// Paste. You now have 4 emoticons in the message.
-// Paste. You now have 6 emoticons in the message and you are done.
-// 
+// In this test case there is no valid order: regardless of which 4 pancakes Sothe wants, the difference between their sizes will be too large.
 // 
 // 3)
-// 18
+// {55,2,7,232,52,5,5332,623,52,6,532,5147}
+// 6
+// 10000
 // 
-// Returns: 8
+// Returns: 924
 // 
 // 
 // 
 // 4)
-// 11
+// {5781,8708,1754,4750,9888,3675,4810,1020,922,9834,5695,1101,1236,2496,8431,6727,
+// 1376,3373,4423,1839,7438,9407,1851,6966,8715,2905,542,535,8980,2602,2603,3117,3452,
+// 5682,7775,4356,5140,8923,9801,3729}
+// 15
+// 4003
 // 
-// Returns: 8
+// Returns: 114514
 // 
-// Sometimes we actually do delete an emoticon in the optimal solution.
+// 
 // 
 // END KAWIGIEDIT TESTING
 //Powered by KawigiEdit-pf 2.3.0!

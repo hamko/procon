@@ -40,81 +40,81 @@ class TheConsecutiveIntegersDivOne {
 #include <cmath>
 using namespace std;
 bool KawigiEdit_RunTest(int testNum, vector <int> p0, int p1, bool hasAnswer, int p2) {
-    cout << "Test " << testNum << ": [" << "{";
-    for (int i = 0; int(p0.size()) > i; ++i) {
-        if (i > 0) {
-            cout << ",";
-        }
-        cout << p0[i];
-    }
-    cout << "}" << "," << p1;
-    cout << "]" << endl;
-    TheConsecutiveIntegersDivOne *obj;
-    int answer;
-    obj = new TheConsecutiveIntegersDivOne();
-    clock_t startTime = clock();
-    answer = obj->find(p0, p1);
-    clock_t endTime = clock();
-    delete obj;
-    bool res;
-    res = true;
-    cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
-    if (hasAnswer) {
-        cout << "Desired answer:" << endl;
-        cout << "\t" << p2 << endl;
-    }
-    cout << "Your answer:" << endl;
-    cout << "\t" << answer << endl;
-    if (hasAnswer) {
-        res = answer == p2;
-    }
-    if (!res) {
-        cout << "DOESN'T MATCH!!!!" << endl;
-    } else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
-        cout << "FAIL the timeout" << endl;
-        res = false;
-    } else if (hasAnswer) {
-        cout << "Match :-)" << endl;
-    } else {
-        cout << "OK, but is it right?" << endl;
-    }
-    cout << "" << endl;
-    return res;
+	cout << "Test " << testNum << ": [" << "{";
+	for (int i = 0; int(p0.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p0[i];
+	}
+	cout << "}" << "," << p1;
+	cout << "]" << endl;
+	TheConsecutiveIntegersDivOne *obj;
+	int answer;
+	obj = new TheConsecutiveIntegersDivOne();
+	clock_t startTime = clock();
+	answer = obj->find(p0, p1);
+	clock_t endTime = clock();
+	delete obj;
+	bool res;
+	res = true;
+	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
+	if (hasAnswer) {
+		cout << "Desired answer:" << endl;
+		cout << "\t" << p2 << endl;
+	}
+	cout << "Your answer:" << endl;
+	cout << "\t" << answer << endl;
+	if (hasAnswer) {
+		res = answer == p2;
+	}
+	if (!res) {
+		cout << "DOESN'T MATCH!!!!" << endl;
+	} else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
+		cout << "FAIL the timeout" << endl;
+		res = false;
+	} else if (hasAnswer) {
+		cout << "Match :-)" << endl;
+	} else {
+		cout << "OK, but is it right?" << endl;
+	}
+	cout << "" << endl;
+	return res;
 }
 int main() {
-    bool all_right;
-    bool disabled;
-    bool tests_disabled;
-    all_right = true;
-    tests_disabled = false;
-
-    vector <int> p0;
-    int p1;
-    int p2;
-
-    // ----- test 0 -----
-    disabled = false;
-    p0 = {4,7,47};
-    p1 = 2;
-    p2 = 2;
-    all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, true, p2) ) && all_right;
-    tests_disabled = tests_disabled || disabled;
-    // ------------------
-
-    // ----- test 1 -----
-    disabled = false;
-    p0 = {1,100};
-    p1 = 1;
-    p2 = 0;
-    all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, true, p2) ) && all_right;
-    tests_disabled = tests_disabled || disabled;
-    // ------------------
-
-    // ----- test 2 -----
-    disabled = false;
-    p0 = {-96,-53,82,-24,6,-75};
-    p1 = 2;
-    p2 = 20;
+	bool all_right;
+	bool disabled;
+	bool tests_disabled;
+	all_right = true;
+	tests_disabled = false;
+	
+	vector <int> p0;
+	int p1;
+	int p2;
+	
+	// ----- test 0 -----
+	disabled = false;
+	p0 = {4,7,47};
+	p1 = 2;
+	p2 = 2;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, true, p2) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 1 -----
+	disabled = false;
+	p0 = {1,100};
+	p1 = 1;
+	p2 = 0;
+	all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, true, p2) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 2 -----
+	disabled = false;
+	p0 = {-96,-53,82,-24,6,-75};
+	p1 = 2;
+	p2 = 20;
 	all_right = (disabled || KawigiEdit_RunTest(2, p0, p1, true, p2) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
@@ -134,24 +134,6 @@ int main() {
 	p1 = 4;
 	p2 = 90;
 	all_right = (disabled || KawigiEdit_RunTest(4, p0, p1, true, p2) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 5 -----
-	disabled = false;
-	p0 = {46,-27,61,-5,-10,76,-69};
-	p1 = 2;
-	p2 = 4;
-	all_right = (disabled || KawigiEdit_RunTest(5, p0, p1, true, p2) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 6 -----
-	disabled = false;
-	p0 = {-4845232, -5077278, -1696332, 9685053, -8008906, -2041580, -2825611, 7330935, -1994531, -5206896, -202206, -1506777, 8005773};
-	p1 = 9;
-	p2 = 12555151;
-	all_right = (disabled || KawigiEdit_RunTest(6, p0, p1, true, p2) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
