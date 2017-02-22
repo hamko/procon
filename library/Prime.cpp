@@ -51,6 +51,7 @@ static const long long mo = 1e9+7;
 vector<bool> is_prime;
 vector<ll> primes;      // 素数リスト
 void constructPrime(ll n) {
+    if (n > 10000000) assert(0);
     is_prime.resize(n);
     primes.resize(0);
     for (ll i = 2; i < n; ++i)
