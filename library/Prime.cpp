@@ -182,75 +182,47 @@ ll getDivisorsNum(ll n) {
 // Millar-Rabin Test
 
 using ull = unsigned long long;
-bool isPrimeSmall(const ll &n){
-    if(n == 2) return true;
-    if(n < 2 || n%2 == 0) return false;
-    const ll m = n-1, d = m / (m & -m);
-    auto modpow = [&](ll a, ll b){
-        ll res = 1;
-        while(b){
-            if(b&1) res = res*a%n;
-            a = a*a%n;
-            b >>= 1;
-        }
-        return res;
-    };
-    auto suspect = [&](ll a, ll t){
-        a = modpow(a,t);
-        while(t != -1+n && a != 1 && a != -1+n){
-            a = a*a%n;
-            t *= 2;
-        }
-        return a == n-1 || t%2 == 1;
-    };
-    static const ll witness[] = {2,7,61,0}; // n <= 2^32
-    for(const ll *w = witness; *w < n && *w; w++){
-        if(!suspect(*w,d)) return false;
-    }
-    return true;
-}
-
-bool isPrimeLarge(const ll &n){
-    if(n == 2) return true;
-    if(n < 2 || n%2 == 0) return false;
-    const ll m = n-1, d = m / (m & -m);
-    auto modmul = [&](ll a, ll b){
-        ll res = 0;
-        while(b){
-            if(b&1) res = ((ull)res+a)%n;
-            a = ((ull)a+a)%n;
-            b >>= 1;
-        }
-        return res;
-    };
-    auto modpow = [&](ll a, ll b){
-        ll res = 1;
-        while(b){
-            if(b&1) res = modmul(res,a);
-            a = modmul(a,a);
-            b >>= 1;
-        }
-        return res;
-    };
-    auto suspect = [&](ll a, ll t){
-        a = modpow(a,t);
-        while(t != -1+n && a != 1 && a != -1+n){
-            a = modmul(a,a);
-            t *= 2;
-        }
-        return a == n-1 || t%2 == 1;
-    };
-    static const ll witness[] = {2,325,9375,28178,450775,9780504,1795265022,0}; // n <= 2^64
-    for(const ll *w = witness; *w < n && *w; w++){
-        if(!suspect(*w,d)) return false;
-    }
-    return true;
-}
-
+static const vll cands = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
+static const vll rev_cands = {2047, 1373653, 25326001, 3215031751, 2152302898747, 3474749660383, 341550071728321, 341550071728321, 3825123056546413051, 3825123056546413051, 3825123056546413051, LLONG_MAX /*318665857834031151167461*/, }; // https://oeis.org/A006945
 bool isPrime(const ll &n){
-    return n < INT_MAX ? isPrimeSmall(n) : isPrimeLarge(n);
+    if (n < 2)
+        return false;
+
+    ll needed = 0;
+    while (rev_cands[needed++] <= n);
+
+    rep(i, needed) 
+        if (n == cands[i]) 
+            return true; 
+        else if (n % cands[i] == 0) 
+            return false;
+
+    const ll m = n - 1, d = m / (m & -m);
+    auto modpow = [&](ll a, ll b){
+        ll res = 1;
+        while (b){
+            if (b & 1) res = res * a % n;
+            a = a * a % n;
+            b >>= 1;
+        }
+        return res;
+    };
+    auto suspect = [&](ll a, ll t){
+        a = modpow(a,t);
+        while(t != n - 1 && a != 1 && a != n - 1){
+            a = a * a % n;
+            t *= 2;
+        }
+        return a == n - 1 || t % 2 == 1;
+    };
+
+    rep(i, needed) 
+        if(!suspect(cands[i], d))
+            return false;
+    return true;
 }
 
+ 
 // ガウス素数＝複素数の素数判定
 bool isGaussianPrime(ll a, ll b) {
     if (a < 0) a = -a;
@@ -290,10 +262,14 @@ vector<ll> iterativeSieve() {
 
 
 
-ll n = 100000;
+ll n = 1000000;
 int main(void) {
     // 構築O(n log n), 参照O(log n)
     constructPrime(n);
+
+    // Millar Rubin Testのチェック
+    rep(i, n) 
+        assert(is_prime[i] == isPrime(i));
 
     // [0, 30)の素数
     rep(i, 30) 
