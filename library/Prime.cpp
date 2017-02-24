@@ -176,60 +176,13 @@ ll getDivisorsNum(ll n) {
     return p;
 }
 
-/**********************************************************/
-// 前処理なしの素数判定
-/**********************************************************/
-// Millar-Rabin Test
-
-using ull = unsigned long long;
-static const vll cands = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
-static const vll rev_cands = {2047, 1373653, 25326001, 3215031751, 2152302898747, 3474749660383, 341550071728321, 341550071728321, 3825123056546413051, 3825123056546413051, 3825123056546413051, LLONG_MAX /*318665857834031151167461*/, }; // https://oeis.org/A006945
-bool isPrime(const ll &n){
-    if (n < 2)
-        return false;
-
-    ll needed = 0;
-    while (rev_cands[needed++] <= n);
-
-    rep(i, needed) 
-        if (n == cands[i]) 
-            return true; 
-        else if (n % cands[i] == 0) 
-            return false;
-
-    const ll m = n - 1, d = m / (m & -m);
-    auto modpow = [&](ll a, ll b){
-        ll res = 1;
-        while (b){
-            if (b & 1) res = res * a % n;
-            a = a * a % n;
-            b >>= 1;
-        }
-        return res;
-    };
-    auto suspect = [&](ll a, ll t){
-        a = modpow(a,t);
-        while(t != n - 1 && a != 1 && a != n - 1){
-            a = a * a % n;
-            t *= 2;
-        }
-        return a == n - 1 || t % 2 == 1;
-    };
-
-    rep(i, needed) 
-        if(!suspect(cands[i], d))
-            return false;
-    return true;
-}
-
- 
 // ガウス素数＝複素数の素数判定
 bool isGaussianPrime(ll a, ll b) {
     if (a < 0) a = -a;
     if (b < 0) b = -b;
-    if (a == 0) return b % 4 == 3 && isPrime(b);
-    if (b == 0) return a % 4 == 3 && isPrime(a);
-    return isPrime(a*a+b*b);
+    if (a == 0) return b % 4 == 3 && is_prime[b];
+    if (b == 0) return a % 4 == 3 && is_prime[a];
+    return is_prime[a*a+b*b];
 }
 
 // 区間篩
@@ -261,6 +214,54 @@ vector<ll> iterativeSieve() {
 }
 
 
+
+/**********************************************************/
+// 前処理なしの素数判定
+/**********************************************************/
+// Millar-Rabin Test
+
+using ull = unsigned long long;
+static vll cands_small = {2, 7, 61,};
+static vll cands_large = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
+bool isPrime(const ll &n){
+    vll& cands = cands_small;
+    if (n >= (1ll << 32)) 
+        cands = cands_large;
+
+    if (n == 2) 
+        return true;
+    else if (n < 2)
+        return false;
+    else if (!(n & 1))
+        return false;
+
+    ll needed = cands.size();
+
+    const ll m = n - 1, d = m / (m & -m);
+    auto modpow = [&](ll a, ll b){
+        ll res = 1;
+        while (b) {
+            if (b & 1) res = res * a % n;
+            a = a * a % n;
+            b >>= 1;
+        }
+        return res;
+    };
+    auto suspect = [&](ll a, ll t){
+        a = modpow(a,t);
+        while (t != n - 1 && a != 1 && a != n - 1){
+            a = a * a % n;
+            t <<= 1;
+        }
+        return a == n - 1 || (t & 1);
+    };
+
+    rep(i, needed) 
+        if(cands[i] % n && !suspect(cands[i], d))
+            return false;
+
+    return true;
+}
 
 ll n = 1000000;
 int main(void) {
