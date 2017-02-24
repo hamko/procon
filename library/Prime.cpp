@@ -176,44 +176,6 @@ ll getDivisorsNum(ll n) {
     return p;
 }
 
-// ガウス素数＝複素数の素数判定
-bool isGaussianPrime(ll a, ll b) {
-    if (a < 0) a = -a;
-    if (b < 0) b = -b;
-    if (a == 0) return b % 4 == 3 && is_prime[b];
-    if (b == 0) return a % 4 == 3 && is_prime[a];
-    return is_prime[a*a+b*b];
-}
-
-// 区間篩
-// O( n log n )．
-const ll N = 100000000; // MAXPRIME 
-const ll M = 10000;     // SQRT(N)
-const ll K = 6000000;   // NUMBER OF PRIMES, CHOOSE 9/8 * N / LOG(N)
-vector<ll> iterativeSieve() {
-    static ll p[K], table[M];
-    for (ll i = 2; i < M; ++i) p[i] = i;
-    for (ll i = 2; i*i < M; ++i)
-        if (p[i])
-            for (ll j = i*i; j < M; j += i)
-                p[j] = 0;
-    p[0] = p[1] = 0;
-    ll num = remove(p, p+M, 0) - p;
-    for (ll m = M; m < N; m += M) {
-        for (ll x = m; x < m+M; ++x)
-            table[x-m] = x;
-        for (ll i = 0, j; p[i]*p[i] < m+M; ++i) {
-            if (p[i] >= m)          j = p[i] * p[i];
-            else if (m % p[i] == 0) j = m;
-            else                    j = m - (m % p[i]) + p[i];
-            for (; j < m+M; j += p[i]) table[j-m] = 0;
-        }
-        num = remove_copy(table, table+M, p+num, 0) - p;
-    }
-    return vector<ll>(p, p+num);
-}
-
-
 
 /**********************************************************/
 // 前処理なしの素数判定
@@ -262,6 +224,45 @@ bool isPrime(const ll &n){
 
     return true;
 }
+
+// ガウス素数＝複素数の素数判定
+bool isGaussianPrime(ll a, ll b) {
+    if (a < 0) a = -a;
+    if (b < 0) b = -b;
+    if (a == 0) return b % 4 == 3 && is_prime[b];
+    if (b == 0) return a % 4 == 3 && is_prime[a];
+    return is_prime[a*a+b*b];
+}
+
+// 区間篩
+// O( n log n )．
+const ll N = 100000000; // MAXPRIME 
+const ll M = 10000;     // SQRT(N)
+const ll K = 6000000;   // NUMBER OF PRIMES, CHOOSE 9/8 * N / LOG(N)
+vector<ll> iterativeSieve() {
+    static ll p[K], table[M];
+    for (ll i = 2; i < M; ++i) p[i] = i;
+    for (ll i = 2; i*i < M; ++i)
+        if (p[i])
+            for (ll j = i*i; j < M; j += i)
+                p[j] = 0;
+    p[0] = p[1] = 0;
+    ll num = remove(p, p+M, 0) - p;
+    for (ll m = M; m < N; m += M) {
+        for (ll x = m; x < m+M; ++x)
+            table[x-m] = x;
+        for (ll i = 0, j; p[i]*p[i] < m+M; ++i) {
+            if (p[i] >= m)          j = p[i] * p[i];
+            else if (m % p[i] == 0) j = m;
+            else                    j = m - (m % p[i]) + p[i];
+            for (; j < m+M; j += p[i]) table[j-m] = 0;
+        }
+        num = remove_copy(table, table+M, p+num, 0) - p;
+    }
+    return vector<ll>(p, p+num);
+}
+
+
 
 ll n = 1000000;
 int main(void) {
