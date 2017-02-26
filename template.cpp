@@ -53,7 +53,7 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    int n; cin >> n;
+    ll n; cin >> n;
     vll a(n); cin >> a;
     return 0;
 }
