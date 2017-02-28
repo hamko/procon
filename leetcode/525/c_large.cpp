@@ -45,22 +45,30 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class <%:class-name%> {
+class Solution {
     public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+        int findMaxLength(vector<int>& nums) {
+            ll n = nums.size();
+            ll s = 0;
+            unordered_map<ll, vector<ll>> memo;
+            memo[0].pb(0);
+            rep(i, n) {
+                s += (nums[i] == 0 ? -1 : +1);
+                memo[s].pb(i+1);
+            }
+            ll ret = 0;
+            for (auto&& x : memo) if (x.se.size()) {
+                chmax(ret, x.se.back() - x.se[0]);
+            }
+
+            return ret;
         }
 };
 
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
-
-
-
-
-
-
-
-
-
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+    ll n; cin >> n;
+    vi a(n); cin >> a;
+    Solution s; cout << s.findMaxLength(a) << endl; 
+    return 0;
+}

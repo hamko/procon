@@ -45,22 +45,22 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class <%:class-name%> {
+class Solution {
     public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+        bool detectCapitalUse(string word) {
+            vll a(word.size());
+            rep(i, word.size()) 
+                a[i] = ('A' <= word[i] && word[i] <= 'Z');
+
+            if (forall(all(a), [&](ll x){ return x == 0; })) return true;
+            if (forall(all(a), [&](ll x){ return x == 1; })) return true;
+            if (a[0] && forall(a.begin()+1, a.end(), [&](ll x){ return x == 0; })) return true;
+            return false;
         }
 };
-
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
-
-
-
-
-
-
-
-
-
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+    string word; cin >> word;
+    Solution s; cout  << s.detectCapitalUse(word) << endl; 
+    return 0;
+}

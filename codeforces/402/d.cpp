@@ -52,8 +52,80 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+// 整数二分探索
+// f: 単調増加関数. 000111, 111111, 000000を許容する（11110000で探索したい場合は、自分でfを反転すること）
+// 閉区間[rl, rr]から単調関数fを満たす最小の数を返す。
+// 全て1なら0を返す（定義通り）、全て0ならrr+1を返す（異常検出用）！
+//
+// xが大で1を返すような関数を作ると思うと間違えない
+//
+// O(log(range))
+ll BinarySearch(ll rl, ll rr, function<bool(ll)> f) { 
+    ll lo = rl-1, ro = rr+1;
+    while (ro - lo != 1) {
+        ll m = (lo + ro) / 2; 
+        ((m!=rl-1&&f(m))?ro:lo)=m; 
+    }
+    return ro;
+}
+void BinarySearchInteractive(ll rl, ll rr, function<bool(ll)> f) { 
+    while (1) {
+        cout << "####" << endl;
+        ll tmp; cin >> tmp;
+        if (rl > tmp) {cout << "Out of range: too small" << endl; continue; }
+        if (rr < tmp) {cout << "Out of range: too large" << endl; continue; }
+        ll ret = f(tmp); cout << tmp << " : " << ret << endl;
+    }
+}
+void BinarySearchPrint(ll rl, ll rr, function<bool(ll)> f) { 
+    for (int i = rl; i <= rr; i++) cout << f(i); cout << endl;
+}
+void BinarySearchAssert(ll rl, ll rr, function<bool(ll)> f) { 
+    bool p = false;
+    for (int i = rl; i <= rr; i++) {
+        bool t = f(i);
+        if (p && !t) cerr << i << ": F NOT MONOTONIC INCREASE" << endl, exit(1);
+        p |= t;
+    }
+}
+
+bool g(string& s, string& t) {
+    ll n = s.length();
+    ll m = t.length();
+
+    ll i = 0, j = 0;
+    // t[j]に対応する最小のiを探していく
+    for (; j < m; j++) {
+        while (i < n && s[i] != t[j]) i++;
+        if (i == n) return 0;
+        i++;
+    }
+    return 1;
+}
+
 int main(void) {
-    ll n; cin >> n;
+    string s, t; cin >> s >> t;
+//    cout << g(s, t) << endl;
+    ll n = s.length();
+    ll m = t.length();
+
     vll a(n); cin >> a;
+
+    // x文字消して部分列が構成できるか？
+    // できれば0, できなければ1
+    auto f = [&](ll x){
+        auto ss = s;
+        rep(i, x+1) {
+            ss[a[i]-1] = '*';
+        }
+
+//        cout << x << " " << ss << " " << t << " " << !g(ss, t) << endl;
+        return !g(ss, t); // 二分探索用反転
+    };
+//    BinarySearchPrint(0, n, f);
+//        BinarySearchInteractive(0, INF, f);
+    ll ret = BinarySearch(0, n, f);
+    cout << ret << endl;
+
     return 0;
 }

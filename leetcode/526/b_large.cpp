@@ -45,22 +45,33 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class <%:class-name%> {
+class Solution {
     public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+        int countArrangement(int n) {
+            vector<int> a;
+            function<ll(void)> f = [&](void){ 
+                if (a.size() == n) {
+                    return 1;
+                }
+
+                int ret = 0;
+                rep(i, n) if (find(all(a), i + 1) == a.end()) {
+                    if ((a.size() + 1) % (i + 1) == 0 || (i + 1) % (a.size() + 1) == 0) { // a[a.size]にi+1を入れていいか？
+                        a.pb(i+1);
+                        ret += f();
+                        a.pop_back();
+                    }
+                }
+                return ret;
+            };
+            return f();
         }
 };
 
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
-
-
-
-
-
-
-
-
-
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+    rep(i, 100) {
+        Solution s; cout  << i + 1 << " " << s.countArrangement(i + 1) << endl; 
+    }
+    return 0;
+}

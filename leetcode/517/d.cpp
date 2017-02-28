@@ -17,6 +17,7 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
+/*
 using Pos = complex<double>;
 
 namespace std{ namespace { template <class T> inline void hash_combine(size_t& seed, T const& v) { seed ^= hash<T>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2); } template <class Tuple, size_t Index = tuple_size<Tuple>::value - 1> struct HashValueImpl { static void apply(size_t& seed, Tuple const& tuple) { HashValueImpl<Tuple, Index-1>::apply(seed, tuple); hash_combine(seed, get<Index>(tuple)); } }; template <class Tuple> struct HashValueImpl<Tuple,0> { static void apply(size_t& seed, Tuple const& tuple) { hash_combine(seed, get<0>(tuple)); } }; } template <typename ... TT> struct hash<tuple<TT...>> { size_t operator()(tuple<TT...> const& tt) const { size_t seed = 0; HashValueImpl<tuple<TT...> >::apply(seed, tt); return seed; } }; } 
@@ -40,27 +41,51 @@ template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
 
+*/
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class <%:class-name%> {
+class Solution {
     public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+        int findMinMoves(vector<int>& a_) {
+            ll n = a_.size();
+            if (accumulate(all(a_), 0ll) % n!= 0) return -1;
+            ll t = accumulate(all(a_), 0ll) /n ;
+
+            deque<int> a;
+            rep(i, n) a.pb(a_[i]);
+
+            ll ret = INF;
+            rep(i, n) {
+                ll M = 0;
+                vll ss;
+                ll sum = 0;
+                rep(j, n) {
+                    sum += (a[j] - t);
+                    ss.pb(sum);
+                }
+//                cout << ss << endl;
+                rep(j, ss.size()-1) {
+                    chmax(M, abs(ss[j]) + abs(ss[j+1]));
+                }
+//                rep(j, n) cout << a[j] << " ";
+//                cout  << " :: " ;
+//                cout << M << endl;
+                a.push_back(a.front()); a.pop_front();
+                chmin(ret, M);
+            }
+
+            chmax(ret, *max_element(all(a))-t);
+            chmax(ret, t - *min_element(all(a)));
+            return ret;
         }
 };
-
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
-
-
-
-
-
-
-
-
-
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+    ll n; cin >> n;
+    vi a(n); cin >> a;
+    Solution s; cout << s.findMinMoves(a) << endl; 
+    return 0;
+}

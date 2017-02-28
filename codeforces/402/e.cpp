@@ -53,7 +53,118 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll n, m;  cin >> n >> m;
+    unordered_map<string, ll> name_for;
+    unordered_map<ll, string> name_rev;
+
+    vector<string> val(n+1, "*");
+    using op_t = tuple<ll, ll, ll>; // 1個目のbit操作で、2個目と3個目を繋ぐ。
+    // op 0: or
+    // op 1: and
+    // op 2: xor
+
+    /*
+    cout << endl; 
+    cout << endl; 
+    */
+    vector<op_t> op(n+1, mt(-1, -1, -1));
+    ll name_id = 0;
+    rep(i, n) {
+        string name; cin >> name;
+        if (!name_for.count(name)) {
+            name_for[name] = name_id;
+            name_id++;
+        }
+        string _; cin >> _;
+        string x; cin >> x;
+
+        if (!(x[0] == '0' || x[0] == '1')) {
+
+            if (!name_for.count(x)) {
+                name_for[x] = name_id;
+                name_id++;
+            }
+            string y, z; cin >> y >> z;
+            if (!name_for.count(z)) {
+                name_for[z] = name_id;
+                name_id++;
+            }
+            ll optype = -1;
+            if (y == "OR") 
+                optype = 0;
+            else if (y == "AND") 
+                optype = 1;
+            else 
+                optype = 2;
+            op[name_for[name]] = tie(optype, name_for[x], name_for[z]);
+        } else {
+            val[name_for[name]] = x;
+        }
+    }
+    for (auto x : name_for) 
+        name_rev[x.se] = x.fi;
+
+    /*
+    cout << name_for << endl;
+    cout << name_rev << endl;
+    cout << val << endl;
+    cout << op << endl;
+    */
+
+    // TODO ?はある？
+    string retmin, retmax;
+    rep(bit, m) {
+        vll ret(2);
+        rep(q, 2) {
+            vector<ll> v(name_for.size(), -1); // 0で0確定、1で1確定、-1でまだ手出ししていない。
+            if (name_for.count("?")) 
+                v[name_for["?"]] = q;
+
+            for (auto s : name_for) if (s.fi != "?") { 
+                ll i = s.se;
+                if (val[i] == "*") continue;
+                v[i] = val[i][bit] == '1';
+            }
+//            cout << v << "#v"  << endl;
+            function<bool(ll)> dfs = [&](ll x) -> bool {  
+                if (v[x] != -1)
+                    return (bool)(v[x]);
+                ll optype, l, r; tie(optype, l, r) = op[x];
+                if (optype == 0) { 
+                    return dfs(l) | dfs(r);
+                } else if (optype == 1) {
+                    return dfs(l) & dfs(r);
+                } else {
+                    return dfs(l) ^ dfs(r);
+                }
+            };
+            rep(i, n+1) if (v[i] == -1) {
+                v[i] = dfs(i);
+            }
+//            cout << v << "#vaft"  << endl;
+            rep(i, v.size()) {
+                if (name_rev[i] != "?") {
+                    assert(v[i] != -1);
+                    ret[q] += v[i];
+                }
+            }
+        }
+//        cout << ret<< "#ret " << endl;
+        {
+            if (ret[0] <= ret[1]) 
+                retmin += "0";
+            else 
+                retmin += "1";
+        }
+        {
+            if (ret[0] >= ret[1]) 
+                retmax += "0";
+            else 
+                retmax += "1";
+        }
+    }
+
+    cout << retmin << endl;
+    cout << retmax << endl;
     return 0;
 }

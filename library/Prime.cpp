@@ -51,6 +51,7 @@ static const long long mo = 1e9+7;
 vector<bool> is_prime;
 vector<ll> primes;      // 素数リスト
 void constructPrime(ll n) {
+    if (n > 10000000) assert(0);
     is_prime.resize(n);
     primes.resize(0);
     for (ll i = 2; i < n; ++i)
@@ -75,9 +76,9 @@ extern vector<ll> primes;      // 素数リスト
 //
 // 小さい素数から見ていって、割れたら割って素因数リストに追加する
 // 残ったnが素数リストよりも大きければ、そのnは素数だと見なして返す。
-void factorize(ll n, unordered_map<ll, ll>& divisors_list) {
-    if (n <= 1) return;
-    divisors_list.clear(); 
+unordered_map<ll, ll> factorize(ll n) {
+    if (n <= 1) return unordered_map<ll, ll>();
+    unordered_map<ll, ll> divisors_list;
 
     ll prime;
     for (ll i = 0; (prime = primes[i]) && n >= prime * prime; )  
@@ -87,7 +88,25 @@ void factorize(ll n, unordered_map<ll, ll>& divisors_list) {
             divisors_list[prime]++, n /= prime;
     if (n != 1) 
         divisors_list[n]++;
+    return divisors_list;
 }
+
+// [0, n]の範囲を全て素因数分解する。「飛び飛びの」高速化。結構速い。
+// n < 1,000,000で150ms
+// n < 10,000,000で1000ms 
+//
+// 配列rem[i]は、初めiが入っている。
+// 素数pを下から見るが、rem[i]を全て見る必要はなく、rem[p*i]だけでいい。
+vector<unordered_map<ll, ll>> factorizeRange(ll n) {
+    vector<unordered_map<ll, ll>> fact(n+1);
+
+    vector<ll> rem(n+1); rep(i, n+1) rem[i] = i;
+    for (auto x : primes) for (ll i = x; i <= n; i += x) 
+        while (rem[i] % x == 0) 
+            rem[i] /= x, fact[i][x]++;
+    return fact;
+}
+
 
 // lcm(a)
 // a[i] < 1e7
@@ -106,7 +125,8 @@ unordered_map<ll, ll> lcmSmall(set<ll>& a) {
                 rem[i] /= x, c++;
             chmax(max_c, c);
         }
-        ret[x] = max_c;
+        if (max_c) 
+            ret[x] = max_c;
     }
     return ret;
 }
@@ -115,11 +135,10 @@ unordered_map<ll, ll> lcmSmall(set<ll>& a) {
 // a[i]>1e7
 unordered_map<ll, ll> lcmLarge(set<ll>& a) {
     if (!a.size()) return unordered_map<ll, ll>();
-    
+
     unordered_map<ll, ll> ret;
     for (auto n : a) {
-        unordered_map<ll, ll> d;
-        factorize(n, d);
+        auto d = factorize(n);
         for (auto x : d) 
             chmax(ret[x.fi], x.se);
     }
@@ -128,14 +147,10 @@ unordered_map<ll, ll> lcmLarge(set<ll>& a) {
 
 
 // 約数を全列挙する。
-void divisors(ll n, vector<ll>& divisors_list) {
-    divisors_list.clear(); divisors_list.resize(0);
+vector<ll> divisors(ll n) {
+    vector<ll> divisors_list;
 
-    vector<ll> fac_list;
-    factorize(n, fac_list);
-    map<ll, ll> counter;
-    for (auto x : fac_list) 
-        counter[x]++;
+    auto counter = factorize(n);
     divisors_list.push_back(1);
     for (auto x : counter) {
         ll tmp_size = divisors_list.size();
@@ -147,10 +162,11 @@ void divisors(ll n, vector<ll>& divisors_list) {
         }
     }
     sort(divisors_list.begin(), divisors_list.end());
+    return divisors_list;
 }
 
 ll getDivisorsNum(ll n) {
-    vector<ll> divisors_list; factorize(n, divisors_list);
+    unordered_map<ll, ll> divisors_list = factorize(n);
     map<ll, ll> num;
     rep(i, divisors_list.size()) 
         num[divisors_list[i]]++;
@@ -160,88 +176,62 @@ ll getDivisorsNum(ll n) {
     return p;
 }
 
+
 /**********************************************************/
 // 前処理なしの素数判定
 /**********************************************************/
 // Millar-Rabin Test
 
 using ull = unsigned long long;
-bool isPrimeSmall(const ll &n){
-    if(n == 2) return true;
-    if(n < 2 || n%2 == 0) return false;
-    const ll m = n-1, d = m / (m & -m);
-    auto modpow = [&](ll a, ll b){
-        ll res = 1;
-        while(b){
-            if(b&1) res = res*a%n;
-            a = a*a%n;
-            b >>= 1;
-        }
-        return res;
-    };
-    auto suspect = [&](ll a, ll t){
-        a = modpow(a,t);
-        while(t != -1+n && a != 1 && a != -1+n){
-            a = a*a%n;
-            t *= 2;
-        }
-        return a == n-1 || t%2 == 1;
-    };
-    static const ll witness[] = {2,7,61,0}; // n <= 2^32
-    for(const ll *w = witness; *w < n && *w; w++){
-        if(!suspect(*w,d)) return false;
-    }
-    return true;
-}
-
-bool isPrimeLarge(const ll &n){
-    if(n == 2) return true;
-    if(n < 2 || n%2 == 0) return false;
-    const ll m = n-1, d = m / (m & -m);
-    auto modmul = [&](ll a, ll b){
-        ll res = 0;
-        while(b){
-            if(b&1) res = ((ull)res+a)%n;
-            a = ((ull)a+a)%n;
-            b >>= 1;
-        }
-        return res;
-    };
-    auto modpow = [&](ll a, ll b){
-        ll res = 1;
-        while(b){
-            if(b&1) res = modmul(res,a);
-            a = modmul(a,a);
-            b >>= 1;
-        }
-        return res;
-    };
-    auto suspect = [&](ll a, ll t){
-        a = modpow(a,t);
-        while(t != -1+n && a != 1 && a != -1+n){
-            a = modmul(a,a);
-            t *= 2;
-        }
-        return a == n-1 || t%2 == 1;
-    };
-    static const ll witness[] = {2,325,9375,28178,450775,9780504,1795265022,0}; // n <= 2^64
-    for(const ll *w = witness; *w < n && *w; w++){
-        if(!suspect(*w,d)) return false;
-    }
-    return true;
-}
-
+static vll cands_small = {2, 7, 61,};
+static vll cands_large = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
 bool isPrime(const ll &n){
-    return n < INT_MAX ? isPrimeSmall(n) : isPrimeLarge(n);
+    vll& cands = cands_small;
+    if (n >= (1ll << 32)) 
+        cands = cands_large;
+
+    if (n == 2) 
+        return true;
+    else if (n < 2)
+        return false;
+    else if (!(n & 1))
+        return false;
+
+    ll needed = cands.size();
+
+    const ll m = n - 1, d = m / (m & -m);
+    auto modpow = [&](ll a, ll b){
+        ll res = 1;
+        while (b) {
+            if (b & 1) res = res * a % n;
+            a = a * a % n;
+            b >>= 1;
+        }
+        return res;
+    };
+    auto suspect = [&](ll a, ll t){
+        a = modpow(a,t);
+        while (t != n - 1 && a != 1 && a != n - 1){
+            a = a * a % n;
+            t <<= 1;
+        }
+        return a == n - 1 || (t & 1);
+    };
+
+    rep(i, needed) 
+        if(cands[i] % n && !suspect(cands[i], d))
+            return false;
+
+    return true;
 }
 
 // ガウス素数＝複素数の素数判定
 bool isGaussianPrime(ll a, ll b) {
     if (a < 0) a = -a;
     if (b < 0) b = -b;
-    if (a == 0) return b % 4 == 3 && isPrime(b);
-    if (b == 0) return a % 4 == 3 && isPrime(a);
-    return isPrime(a*a+b*b);
+    if (a == 0) return b % 4 == 3 && is_prime[b];
+    if (b == 0) return a % 4 == 3 && is_prime[a];
+    return is_prime[a*a+b*b];
 }
 
 // 区間篩
@@ -274,10 +264,14 @@ vector<ll> iterativeSieve() {
 
 
 
-ll n = 100000;
+ll n = 1000000;
 int main(void) {
     // 構築O(n log n), 参照O(log n)
     constructPrime(n);
+
+    // Millar Rubin Testのチェック
+    rep(i, n) 
+        assert(is_prime[i] == isPrime(i));
 
     // [0, 30)の素数
     rep(i, 30) 
@@ -286,32 +280,26 @@ int main(void) {
     cout << endl;
 
     // 素因数分解
-    int m; vll f;
-    m = 1; factorize(m, f); cout << f << endl;
-    m = 2; factorize(m, f); cout << f << endl;
-    m = 4; factorize(m, f); cout << f << endl;
-    m = 8; factorize(m, f); cout << f << endl;
-    m = 3; factorize(m, f); cout << f << endl;
-    m = 120; factorize(m, f);  cout << f << endl;
-    m = 1000000007; factorize(m, f); cout << f << endl;
+    vll cands = {1, 2, 4, 8, 3, 120, 1000000007};
+    for (auto x : cands) 
+        cout << factorize(x) << endl;
 
     // 約数
-    vector<ll> d;
-    m = 120; divisors(m, d);
+    auto d = divisors(120);
     rep(i, d.size()) 
         cout << d[i] << " ";
-    cout << "# num = " << getDivisorsNum(m) << " ";
+    cout << "# num = " << getDivisorsNum(120) << " ";
     cout << endl;
 
     // 範囲素因数分解
-    vector<unordered_map<ll, ll>> fact;
-    factorize(10, fact);
+    auto fact = factorizeRange(10);
     rep(i, fact.size()) 
         cout << fact[i] << endl;
 
     // 範囲LCM
-    vector<ll> a = {2, 3, 4, 6, 8, 10};
-    cout << lcm(a) << endl;
+    set<ll> a = {2, 3, 4, 6, 8, 10};
+    cout << lcmSmall(a) << endl;
     return 0;
+
 }
 

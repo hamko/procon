@@ -53,7 +53,102 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll h, w; cin >> h >> w;
+    vector<vector<ll>> b(h-1, vector<ll>(w));
+    vll prev(w); cin >> prev;
+    rep(i, h-1) {
+        vll tmp(w); cin >> tmp;
+        rep(j, w) {
+            b[i][j] = (prev[j] > tmp[j]);
+        }
+        swap(tmp, prev);
+    }
+//    cout << b << endl;
+
+    ll n = h - 1;
+
+    vll counter(w);
+    vll ret(n);
+    ll l = 0;
+    for (ll r = 0; r < n; r++) {
+        rep(i, w) {
+            counter[i] += b[r][i];
+        }
+//        cout <<l << " " << r << " " << counter << endl;
+
+        while (l < r && forall(all(counter), [&](ll x){ return x > 0; } /*[l, r]のcounterが全部正*/)) {
+            rep(i, w) 
+                counter[i] -= b[l][i];
+            l++;
+        }
+//        cout << l << " " << r << endl;
+
+        if (r == l) {
+            if (forall(all(b[r]), [&](ll x){ return x > 0; }))
+                ret[r] = INF;
+            else 
+                ret[r] = r;
+        } else {
+            ret[r] = l;
+        }
+    }
+//    cout << ret << endl;
+
+    // lからr, inclusiveが降順 : s[r] = s[l]
+    ll k; cin >> k;
+    vll lv(k), rv(k);
+    rep(i, k) {
+        cin >> lv[i] >> rv[i]; lv[i]--, rv[i]--;
+    }
+    vector<bool> res(k);
+    rep(j, k) {
+        ll l = lv[j], r = rv[j];
+        if (l == r) {
+            res[j] = 1;
+            cout << "Yes" << endl;
+            continue;
+        }
+
+        if (ret[r-1] > l) {
+            res[j] = 0;
+            cout << "No" << endl;
+        } else {
+            res[j] = 1;
+            cout << "Yes" << endl;
+        }
+    }
+
+    /******************************/
+    /*
+    vector<vector<ll>> s(h, vector<ll>(w));
+    rep(i, h-1) {
+        rep(j, w) {
+            s[i+1][j] = s[i][j] + b[i][j];
+        }
+    }
+    cout << s << endl;
+
+    // lからr, inclusiveが降順 : s[r] = s[l]
+    rep(j, k) {
+        ll l = lv[j], r = rv[j];
+        if (l == r) {
+            assert(res[j] == 1);
+            continue;
+        }
+
+        ll flag = 0;
+        rep(i, w) {
+            if (s[r][i] == s[l][i]) {
+                flag = 1;
+                break;
+            }
+        }
+        if (flag) {
+            assert(res[j] == 1);
+        } else {
+            assert(res[j] == 0);
+        }
+    }
+    */
     return 0;
 }

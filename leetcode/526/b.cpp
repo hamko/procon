@@ -45,22 +45,32 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class <%:class-name%> {
+class Solution {
     public:
-        <%:return-type%> <%:method-name%>(<%:param-list%>) {
-            ll n = a.size();
-            <%:set-caret%>
+        int countArrangement(int n) {
+            vll a(n);
+            rep(i, n) a[i] = i + 1;
+            ll ret = 0;
+            do {
+                bool f = 1;
+                rep(i, n) {
+                    if (!(a[i] % (i + 1) == 0 || (i + 1) % a[i] == 0)) {
+                        f = 0;
+                        break;
+                    }
+                }
+                if (f) {
+                    ret++;
+//                    cout << a << endl;
+                }
+            } while ( next_permutation(all(a)) );
+            return ret;
         }
 };
-
-<%:testing-code%>
-//Powered by <%:kawigi-edit-version%>!
-
-
-
-
-
-
-
-
-
+int main(void) {
+    cin.tie(0); ios::sync_with_stdio(false);
+    rep(i, 15) {
+        Solution s; cout  << i + 1 << " " << s.countArrangement(i + 1) << endl; 
+    }
+    return 0;
+}
