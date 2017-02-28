@@ -52,40 +52,47 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-const int M = 1e6+10;
-vvll g(M);
-vll have13(M, -1);
-vll memo(M);
-vll t(M);
+vvll g;
+vll have13;
+vll memo;
+vll t;
 ll s = 0;
 void dfs(ll v, ll p) {
-    ll treesize = 0;
+//    cout << v << endl;
+    if (memo[v] != -1) return;
+    memo[v] = t[v];
     vll have13s;
     for (auto x : g[v]) if (x != p) {
         dfs(x, v);
-        treesize += memo[x];
+        memo[v] += memo[x];
         if (have13[x] != -1) {
             have13[v] = have13[x];
-            have13s.pb(x);
+            have13s.pb(have13[x]);
         }
     }
-    memo[v] = t[v] + treesize;
+    if (memo[v] == s) 
+        have13[v] = v;
+//    cout << v << " " << memo[v] << " " << have13[v] << " " << have13s << endl;
 
     // 子にhave13が2つ以上ある
     if (have13s.size() >= 2) {
-        cout << have13s[0] << " " << have13s[1] << endl;
+        cout << have13s[0] + 1 << " " << have13s[1] + 1<< endl;
         exit(0);
     }
 
     // 子にhave13が1つあって、自分がs*2
-    if (have13s.size() == 1 && treesize == s * 2) {
-        cout << have13s[0] << " " << v << endl;
+    if (s && have13s.size() == 1 && memo[v] == s * 2) {
+        cout << have13s[0] + 1 << " " << v + 1 << endl;
         exit(0);
     }
 }
 
 int main(void) {
     int n; cin >> n;
+    g = vvll(n);
+    have13 = vll(n, -1);
+    memo = vll(n, -1);
+    t = vll(n);
     ll root = -1;
     rep(i, n) {
         ll p; cin >> p >> t[i];
@@ -106,5 +113,6 @@ int main(void) {
 
     dfs(root, -1);
     cout << -1 << endl;
+
     return 0;
 }
