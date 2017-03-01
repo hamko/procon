@@ -53,7 +53,26 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    string s; cin >> s;
+    ll k; cin >> k;
+    ll len = s.length();
+
+    if (count(all(s), '0') < k) {
+        cout << len-1 << endl;
+        return 0;
+    }
+
+    ll c = k;
+    ll ret = 0;
+    for (ll i = len-1; i>= 0; i--)  {
+        if (!c) break;
+        if (s[i] == '0') 
+            c--;
+        else 
+            ret++;
+    }
+
+    cout << (min<ll>(len-1, ret)) << endl;
+
     return 0;
 }

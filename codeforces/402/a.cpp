@@ -53,7 +53,19 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    int n; cin >> n;
+    vll a(n), b(n); cin >> a >> b;
+    auto ca = counter(a);
+    auto cb = counter(b);
+    ll ret = 0;
+    rep(i, 6) {
+        if ((ca[i] + cb[i]) % 2) {
+            cout << -1 << endl;
+            return 0;
+        }
+        ret += (abs<ll>(ca[i] - cb[i]));
+    }
+    cout << ret / 4 << endl;
+
     return 0;
 }

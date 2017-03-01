@@ -52,8 +52,49 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+ll solve(ll n, ll x) {
+    n %= 6;
+    rep(i, 3) {
+        ll s = i;
+        rep(j, n) {
+            if (j % 2 == 0) {
+                if (s == 0) 
+                    s = 1;
+                else if (s == 1)
+                    s = 0;
+                else 
+                    s = 2;
+            } else {
+                if (s == 0) 
+                    s = 0;
+                else if (s == 1)
+                    s = 2;
+                else 
+                    s = 1;
+            }
+        }
+        if (s == x) {
+            return i;
+        }
+    }
+}
+ll solve2(ll n, ll x) {
+    if (x == 0 && (n % 6 == 5 || n % 6 == 0)) {
+        return 0;
+    }
+    int ans1[6][3] = {0,1,2,1,0,2,2,0,1,2,1,0,1,2,0,0,2,1,};
+    int ans2[6][3] = {0,1,2,0,2,1,1,2,0,2,1,0,2,0,1,1,0,2,};
+    if (n % 2) {
+        return ans1[n%6][x];
+    } else {
+        return ans2[n%6][x];
+    }
+}
+
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    rep(n, 100) rep(x, 3) {
+        assert(solve(n, x)== solve2(n, x));
+    }
+
     return 0;
 }
