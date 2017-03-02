@@ -52,15 +52,17 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+
+const int fail = 0;
 // パターンマッチングの頂点
 // 256個の子を持つ多分木
 struct pma {
     // trie木では、非0ならば遷移可能
     //
     // Aho-Crasickでは、
-    // next[0]が、failure辺として特別扱いとなる。
-    // (1) thisがrootなら、next[0]は0となる。
-    // (2) thisがrootでないなら、next[0]はfailure辺となる。
+    // next[0]が、failure辺として特別扱いとなる。fail = 0である。
+    // (1) thisがrootなら、next[fail]はNULLとなる。
+    // (2) thisがrootでないなら、next[fail]は失敗辺の行き先となる。
     //
     // next[i]は、rootの時のみ特別扱いとなる。
     // (3) thisがrootなら、next[i]がない時は自己ループになる。
@@ -97,25 +99,25 @@ pma* buildTrie(vector<string> p) {
 // 頂点iのマッチング失敗辺failure(i)を既知とする。
 // 
 // この時、頂点iの次の頂点j=goto(i, c)での失敗辺は、
-// goto(failure(i), c)である。
+// cで遷移可能になるまで戻る関数failure(i)に対して、goto(failure(i), c)である。
 void buildAhoCrasick(pma* root) {
     queue<pma*> q;
 
     // rootの失敗辺と、rootに直接つながっている成功辺の失敗辺の初期化
     repi(i, 1, 256) 
         if (root->next[i]) 
-            root->next[i]->next[0] = root, q.push(root->next[i]); // rootの直後で失敗したらrootに戻る
+            root->next[i]->next[fail] = root, q.push(root->next[i]); // rootの直後で失敗したらrootに戻る
         else 
             root->next[i] = root; // (3)
     
     while (q.size()) {
         auto now = q.front(); q.pop();
-        // (2) 
+        // 以下が(2) 
         repi(i, 1, 256) if (now->next[i]) {
             // iでの遷移が成功するところまで、失敗辺をたどってから進んだところが、新たな失敗辺
-            auto now_f = now->next[0];
-            while (!now_f->next[i]) now_f = now_f->next[0];
-            now->next[i]->next[0] = now_f->next[i];
+            auto now_f = now->next[fail];
+            while (!now_f->next[i]) now_f = now_f->next[fail];
+            now->next[i]->next[fail] = now_f->next[i];
 
             for (auto x : now_f->next[i]->matched) // 失敗辺の先のマッチングを継承する。パターンが互いに含まないなら不要
                 now->next[i]->matched.insert(x);
@@ -124,15 +126,18 @@ void buildAhoCrasick(pma* root) {
     }
 }
 
+// 頂点pから遷移cによって、次の頂点へと遷移する。
+// 1回の遷移によるマッチング増加は、transite(p, c)->matchingによって計算できる。
+pma* transite(pma* p, int c) {
+    while (!p->next[c]) p = p->next[fail];
+    p = p->next[c];
+    return p;
+}
+
 // AhoCrasick pを構築したパターンが、sに何個入っているかをresに副作用で返す。
 void match(pma* &p, string s, vll& res) {
     rep(i, s.length()) {
-        // 成功していたら、そのまま進む
-        // 失敗したら成功するところまで戻ってから進む
-        int c = s[i];
-        while (!p->next[c]) p = p->next[0]; 
-        p = p->next[c];
-        // その結果、マッチしてたら答えを更新
+        p = transite(p, s[i]);
         for (auto x : p->matched) 
             res[x]++; 
     }
