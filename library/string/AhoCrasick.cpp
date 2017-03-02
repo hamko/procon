@@ -72,13 +72,16 @@ struct pma {
     pma() {}
     ~pma() { rep(i, 256) if (next[i]) delete next[i]; }
 };
+unordered_map<pma*, ll> name; // ネームサーバ
 
 // rootに文字列sをパターンsiとして登録する。
 void add(pma* root, string& s, ll si) {
     pma* now = root;
     for (int c : s) {
-        if (!now->next[c]) 
+        if (!now->next[c]) {
             now->next[c] = new pma;
+            ll name_size = name.size(); name[now->next[c]] = name_size; // for name server
+        }
         now = now->next[c];
     }
     now->matched.insert(si);
@@ -86,7 +89,9 @@ void add(pma* root, string& s, ll si) {
 
 // パターン集合pによってtrie木を構築する。
 pma* buildTrie(vector<string> p) {
+    name.clear();
     pma* root = new pma;
+    name[root] = 0; // for name server
 
     ll pn = p.size();
     rep(si, pn) 
