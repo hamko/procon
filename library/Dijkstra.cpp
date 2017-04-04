@@ -62,7 +62,7 @@ int printSmilesGeneral(int n) {
         return (xx >= 1050 || xx <= 0 || yy >= 520 || yy <= 0); 
     };
 
-    unordered_map<S, D> dist;
+    map<S, D> dist;
     while (!q.empty()) {
         // この時点で、(d, t)が処理するべき頂点
         D d; S t; tie(d, t) = q.top(); q.pop();
