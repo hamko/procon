@@ -54,6 +54,27 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     ll n; cin >> n;
-    vll a(n); cin >> a;
+    rep(_, n) {
+        ll a; cin >> a; 
+        if (!a) {
+            cout << "Case #" << _+1 << ": " << "INSOMNIA" << endl;
+            continue;
+        }
+        vll ten(10);
+        repi(i, 1, 1e7) {
+            ll tmp = a * i;
+            string s = to_string(tmp);
+            rep(j, s.length()) {
+                ten[s[j]-'0'] = 1;
+            }
+            if (accumulate(all(ten), 0ll) == 10) {
+                cout << "Case #" << _+1 << ": " << tmp << endl;
+                goto SKIP;
+            }
+        }
+        cout << "Case #" << _+1 << ": " << "INSOMNIA" << endl;
+        SKIP:;
+    }
+
     return 0;
 }

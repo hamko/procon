@@ -52,8 +52,67 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+vvll g;
+vll have13;
+vll memo;
+vll t;
+ll s = 0;
+void dfs(ll v, ll p) {
+//    cout << v << endl;
+    if (memo[v] != -1) return;
+    memo[v] = t[v];
+    vll have13s;
+    for (auto x : g[v]) if (x != p) {
+        dfs(x, v);
+        memo[v] += memo[x];
+        if (have13[x] != -1) {
+            have13[v] = have13[x];
+            have13s.pb(have13[x]);
+        }
+    }
+    if (memo[v] == s) 
+        have13[v] = v;
+//    cout << v << " " << memo[v] << " " << have13[v] << " " << have13s << endl;
+
+    // 子にhave13が2つ以上ある
+    if (have13s.size() >= 2) {
+        cout << have13s[0] + 1 << " " << have13s[1] + 1<< endl;
+        exit(0);
+    }
+
+    // 子にhave13が1つあって、自分がs*2
+    if (s && have13s.size() == 1 && memo[v] == s * 2) {
+        cout << have13s[0] + 1 << " " << v + 1 << endl;
+        exit(0);
+    }
+}
+
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    int n; cin >> n;
+    g = vvll(n);
+    have13 = vll(n, -1);
+    memo = vll(n, -1);
+    t = vll(n);
+    ll root = -1;
+    rep(i, n) {
+        ll p; cin >> p >> t[i];
+        p--;
+        if (p < 0) {
+            root = i;
+        } else {
+            g[p].pb(i);
+            g[i].pb(p);
+        }
+        s += t[i];
+    }
+    if (s % 3) {
+        cout << -1 << endl;
+        return 0;
+    }
+    s /= 3;
+
+    dfs(root, -1);
+    cout << -1 << endl;
+
     return 0;
 }

@@ -54,6 +54,18 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     ll n; cin >> n;
-    vll a(n); cin >> a;
+    rep(_, n) {
+        string s; cin >> s;
+        char prev = s[0];
+        string t; t += prev;
+        repi(i, 1, s.length()) {
+            if (s[i] != prev) {
+                t += s[i];
+            }
+            prev = s[i];
+        }
+        cerr << t << endl;
+        cout << "Case #" << _+1 << ": " << (t.length() - 1 + (t.back() == '-')) << endl;
+    }
     return 0;
 }

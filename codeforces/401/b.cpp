@@ -52,8 +52,56 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    int n; cin >> n;
+    string a, b; cin >> a >> b;
+    vll an(10); rep(i, n) an[a[i] - '0']++;
+    vll bn(10); rep(i, n) bn[b[i] - '0']++;
+    vll an_backup = an;
+    vll bn_backup = bn;
+//    cout << an << " " << bn << endl;
+
+    ll ret;
+
+    ret = 0;
+    rep(i, 10) {
+        while (an[i]) {
+            ll no = 1;
+            repi(j, i, 10) {
+                if (bn[j]) {
+                    no = 0;
+                    an[i]--;
+                    bn[j]--;
+                    ret++;
+                    break;
+                }
+            }
+            if (no) break;
+        }
+    }
+    cout << n - ret << endl;
+
+    an = an_backup;
+    bn = bn_backup;
+
+    ret = 0;
+    rep(i, 10) {
+        while (an[i]) {
+            ll no = 1;
+            repi(j, i+1, 10) {
+                if (bn[j]) {
+                    no = 0;
+                    an[i]--;
+                    bn[j]--;
+                    ret++;
+                    break;
+                }
+            }
+            if (no) break;
+        }
+    }
+    cout << ret << endl;
+
     return 0;
 }

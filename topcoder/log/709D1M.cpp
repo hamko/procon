@@ -45,104 +45,128 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class Softmatch {
+const int fail = 0;
+// パターンマッチングの頂点
+// 256個の子を持つ多分木
+struct pma {
+    // trie木では、非0ならば遷移可能
+    //
+    // Aho-Crasickでは、
+    // next[0]が、failure辺として特別扱いとなる。fail = 0である。
+    // (1) thisがrootなら、next[fail]はNULLとなる。
+    // (2) thisがrootでないなら、next[fail]は失敗辺の行き先となる。
+    //
+    // next[i]は、rootの時のみ特別扱いとなる。
+    // (3) thisがrootなら、next[i]がない時は自己ループになる。
+    pma* next[256] = {}; 
+
+    unordered_set<ll> matched; // 正にこの頂点を表す文字列パターンの集合（昇順）
+    pma() {}
+    ~pma() { rep(i, 256) if (next[i]) delete next[i]; }
+};
+
+// rootに文字列sをパターンsiとして登録する。
+void add(pma* root, string& s, ll si) {
+    pma* now = root;
+    for (int c : s) {
+        if (!now->next[c]) {
+            now->next[c] = new pma;
+        }
+        now = now->next[c];
+    }
+    now->matched.insert(si);
+}
+
+// パターン集合pによってtrie木を構築する。
+pma* buildTrie(vector<string> p) {
+    pma* root = new pma;
+
+    ll pn = p.size();
+    rep(si, pn) 
+        add(root, p[si], si);
+    return root;
+}
+
+// 今のTrie木に対して、AhoCrasickによって失敗辺を構築する。
+//
+// 頂点iのマッチング失敗辺failure(i)を既知とする。
+// 
+// この時、頂点iの次の頂点j=goto(i, c)での失敗辺は、
+// cで遷移可能になるまで戻る関数failure(i)に対して、goto(failure(i), c)である。
+void buildAhoCrasick(pma* root) {
+    queue<pma*> q;
+
+    // rootの失敗辺と、rootに直接つながっている成功辺の失敗辺の初期化
+    repi(i, 1, 256) 
+        if (root->next[i]) 
+            root->next[i]->next[fail] = root, q.push(root->next[i]); // rootの直後で失敗したらrootに戻る
+        else 
+            root->next[i] = root; // (3)
+    
+    while (q.size()) {
+        auto now = q.front(); q.pop();
+        // 以下が(2) 
+        repi(i, 1, 256) if (now->next[i]) {
+            // iでの遷移が成功するところまで、失敗辺をたどってから進んだところが、新たな失敗辺
+            auto now_f = now->next[fail];
+            while (!now_f->next[i]) now_f = now_f->next[fail];
+            now->next[i]->next[fail] = now_f->next[i];
+
+            for (auto x : now_f->next[i]->matched) // 失敗辺の先のマッチングを継承する。パターンが互いに含まないなら不要
+                now->next[i]->matched.insert(x);
+            q.push(now->next[i]);
+        }
+    }
+}
+
+// 頂点pから遷移cによって、次の頂点へと遷移する。
+// 1回の遷移によるマッチング増加は、transite(p, c)->matchingによって計算できる。
+pma* transite(pma* p, int c) {
+    while (!p->next[c]) p = p->next[fail];
+    p = p->next[c];
+    return p;
+}
+
+class Softmatch
+{
     public:
-        bool match(char c, ll d) {
-            if (c == 'a') return d == 0 || d == 1;
-            if (c == 'A') return d == 2 || d == 3;
-            if (c == 'b') return d == 0 || d == 2;
-            if (c == 'B') return d == 1 || d == 3;
-            return 0;
-        }
-        ll matchNum(string patt, string s) {
+        int count(string s, vector<string> patt)
+        {
+            ll n = s.size();
+            auto root = buildTrie(patt);
+            buildAhoCrasick(root);
+
+            // dp[i][mask] = ちょうど上からi文字見た時、
+            //               PMA上集合maskに到達可能である場合のマッチングの最大値
+            vector<map<set<pma*>, ll>> dp(n+1);
+            dp[0][{root}] = 0;
+            rep(i, n) for (auto&& _ : dp[i]) {
+                set<pma*> now_s = _.fi; ll v = _.se;
+
+                vvll next;
+                if (s[i] == 'a') 
+                    next = {{'0', '1'}, {'2', '3'}};
+                else 
+                    next = {{'0', '2'}, {'1', '3'}};
+
+                // now_sを全部、p0とp1でtransiteしたときのマッチング個数を計算する。
+                for (auto p : next) {
+                    set<ll> matched;
+                    set<pma*> next_set;
+                    for (auto&& now : now_s) for (auto id : p) {
+                        auto tmp = transite(now, id);
+                        next_set.insert(tmp);
+                        for (auto y : tmp->matched) 
+                            matched.insert(y);
+                    }
+                    chmax(dp[i+1][next_set], v + matched.size());
+                }
+            }
+
             ll ret = 0;
-            rep(h, patt.size() - s.size() + 1) {
-                ll faf = 1;
-                rep(l, s.size()) {
-                    if (!match(patt[h+l], s[l] - '0')) {
-                        faf = 0;
-                        break;
-                    }
-                }
-                ret += faf;
-            }
-            return ret;
-        }
-
-        int count(string s, vector <string> p) {
-            ll n = p.size();
-
-            ll pnum = min<ll>(5, s.length());
-            vvll dp(60, vll(1<<pnum));
-
-            /*
-            cout << matchNum("AAAAA", "00000") << endl;;
-            cout << matchNum("AAAAA", "23232") << endl;;
-            cout << matchNum("AAAAA", "232") << endl;;
-            */
-            map<string, ll> memo;
-            rep(i, 1<<pnum) {
-                rep(j, 1<<pnum) {
-                    string t;
-                    rep(j, pnum) t += ((i & (1ll << j)) ? "b" : "a");
-                    rep(h, pnum) t[h] += ((j & (1ll << h)) ? 'A' - 'a' : 0);
-                    ll ret = 0;
-                    rep(k, n) {
-                        ret += matchNum(t, p[k]);
-                    }
-                    memo[t] = ret;
-                }
-            }
-
-            if (s.length() <= 5) {
-                ll ret = 0;
-                rep(i, 1<<s.length()) {
-                    string tmp = s;
-                    rep(j, s.length()) {
-                        tmp[j] += ((i & (1ll << j)) ? 'A' - 'a' : 0);
-                    }
-                    chmax(ret, memo[tmp]);
-                }
-                return ret;
-            }
-
-            cout << memo << endl;
-            rep(i, 1ll<<pnum) {
-                string tmp = s;
-                rep(j, s.length()) {
-                    tmp[j] += ((i & (1ll << j)) ? 'A' - 'a' : 0);
-                }
-                dp[5][i] = memo[tmp];
-
-            }
-
-            repi(i, 5, s.length()) {
-                rep(j, 1<<pnum) {
-                    ll mask0 = (j>>1)+(0<<(pnum-1)); // 0????
-                    ll mask1 = (j>>1)+(1<<(pnum-1)); // 1????
-
-                    string t0, t1, tj;
-                    // ????# = j
-                    // 0???? = mask0
-                    // 1???? = mask1
-                    //
-                    // ----????#
-                    // ---0???? -> dp[---0????] + memo[????#] - memo[0????]
-                    // ---1???? -> dp[---1????] + memo[????#] - memo[1????]
-                    rep(k, pnum) t0 += s[i-pnum+k] + ((mask0 & (1ll << k)) ? 'A' - 'a' : 0);
-                    rep(k, pnum) t1 += s[i-pnum+k] + ((mask1 & (1ll << k)) ? 'A' - 'a' : 0);
-                    rep(k, pnum) tj += s[i-pnum+k+1] + ((j     & (1ll << k)) ? 'A' - 'a' : 0);
-                    cout << t0 << " " << t1 << " " << tj << endl;
-
-                    chmax(dp[i+1][j], dp[i][mask0] + memo[tj] - memo[t0]);
-                    chmax(dp[i+1][j], dp[i][mask1] + memo[tj] - memo[t1]);
-                }
-            }
-            ll ret = 0;
-            rep(i, 1ll<<pnum) {
-                chmax(ret, dp[n][i]);
-            }
-
+            for (auto x : dp[n]) 
+                chmax(ret, x.se);
+            
             return ret;
         }
 };
@@ -214,64 +238,72 @@ int main() {
     p1 = {"03","21"};
     p2 = 2;
     all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, true, p2) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 1 -----
-	disabled = false;
-	p0 = "aba";
-	p1 = {"03","11"};
-	p2 = 3;
-	all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, true, p2) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 2 -----
-	disabled = false;
-	p0 = "bba";
-	p1 = {"00","00"};
-	p2 = 4;
-	all_right = (disabled || KawigiEdit_RunTest(2, p0, p1, true, p2) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 3 -----
-	disabled = false;
-	p0 = "bbbbbb";
-	p1 = {"1110","011","100"};
-	p2 = 3;
-	all_right = (disabled || KawigiEdit_RunTest(3, p0, p1, true, p2) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 4 -----
-	disabled = false;
-	p0 = "abbaa";
-	p1 = {"123"};
-	p2 = 2;
-	all_right = (disabled || KawigiEdit_RunTest(4, p0, p1, true, p2) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 5 -----
-	disabled = false;
-	p0 = "aababbaab";
-	p1 = {"012","332","101","0313"};
-	p2 = 7;
-	all_right = (disabled || KawigiEdit_RunTest(5, p0, p1, true, p2) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	if (all_right) {
-		if (tests_disabled) {
-			cout << "You're a stud (but some test cases were disabled)!" << endl;
-		} else {
-			cout << "You're a stud (at least on given cases)!" << endl;
-		}
-	} else {
-		cout << "Some of the test cases had errors." << endl;
-	}
-	return 0;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    // ----- test 1 -----
+    disabled = false;
+    p0 = "aba";
+    p1 = {"03","11"};
+    p2 = 3;
+    all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, true, p2) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    // ----- test 2 -----
+    disabled = false;
+    p0 = "bba";
+    p1 = {"00","00"};
+    p2 = 4;
+    all_right = (disabled || KawigiEdit_RunTest(2, p0, p1, true, p2) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    // ----- test 3 -----
+    disabled = false;
+    p0 = "bbbbbb";
+    p1 = {"1110","011","100"};
+    p2 = 3;
+    all_right = (disabled || KawigiEdit_RunTest(3, p0, p1, true, p2) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    // ----- test 4 -----
+    disabled = false;
+    p0 = "abbaa";
+    p1 = {"123"};
+    p2 = 2;
+    all_right = (disabled || KawigiEdit_RunTest(4, p0, p1, true, p2) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    // ----- test 5 -----
+    disabled = false;
+    p0 = "aababbaab";
+    p1 = {"012","332","101","0313"};
+    p2 = 7;
+    all_right = (disabled || KawigiEdit_RunTest(5, p0, p1, true, p2) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+    // ----- test 5 -----
+    disabled = false;
+    p0 = "ababbbaabaabababbbbbbabba";
+    p1 = {"232123", "003220", "022231", "200122"};
+    p2 = 9;
+    all_right = (disabled || KawigiEdit_RunTest(5, p0, p1, true, p2) ) && all_right;
+    tests_disabled = tests_disabled || disabled;
+    // ------------------
+
+    if (all_right) {
+        if (tests_disabled) {
+            cout << "You're a stud (but some test cases were disabled)!" << endl;
+        } else {
+            cout << "You're a stud (at least on given cases)!" << endl;
+        }
+    } else {
+        cout << "Some of the test cases had errors." << endl;
+    }
+    return 0;
 }
 // PROBLEM STATEMENT
 // Hero has a collection of (not necessarily distinct) strings.

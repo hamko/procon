@@ -53,7 +53,20 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll n, k; cin >> n >> k;
+    vll a(n), b(n); cin >> a >> b;
+    vll d(n);
+    rep(i, n) {
+        d[i] = a[i] - b[i];
+    }
+    sort(all(d));
+    ll ret = accumulate(all(b), 0ll) + accumulate(d.begin(), d.begin() + k, 0ll);
+    repi(i, k, n) {
+        if (d[i] < 0) 
+            ret += d[i];
+        else 
+            break;
+    }
+    cout << ret << endl;
     return 0;
 }

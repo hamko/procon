@@ -53,7 +53,29 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll t; cin >> t;
+    rep(_, t) {
+        cout << "Case #" << _+1 << ":";
+
+        ll k, c, s; cin >> k >> c >> s;
+        if (s * c < k) {
+            cout << " IMPOSSIBLE" << endl;
+            continue;
+        }
+
+        vll ret; 
+        ll index = 0;
+        rep(i, s) {
+            ll tmp = 0;
+            rep(y, c) {
+                tmp = tmp * k + (index % k); 
+                index++;
+            }
+            ret.pb(tmp);
+            if (index >= k) break;
+        }
+
+        for (auto x : ret) cout << " " << x + 1; cout << endl;
+    }
     return 0;
 }

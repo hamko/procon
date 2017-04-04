@@ -1,0 +1,251 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
+#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
+#define pb push_back
+#define all(x) (x).begin(), (x).end()
+#define fi first
+#define se second
+#define mt make_tuple
+#define mp make_pair
+template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
+template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
+#define exists find_if
+#define forall all_of
+
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ld = long double;  using vld = vector<ld>; 
+using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
+using Pos = complex<double>;
+
+namespace std{ namespace { template <class T> inline void hash_combine(size_t& seed, T const& v) { seed ^= hash<T>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2); } template <class Tuple, size_t Index = tuple_size<Tuple>::value - 1> struct HashValueImpl { static void apply(size_t& seed, Tuple const& tuple) { HashValueImpl<Tuple, Index-1>::apply(seed, tuple); hash_combine(seed, get<Index>(tuple)); } }; template <class Tuple> struct HashValueImpl<Tuple,0> { static void apply(size_t& seed, Tuple const& tuple) { hash_combine(seed, get<0>(tuple)); } }; } template <typename ... TT> struct hash<tuple<TT...>> { size_t operator()(tuple<TT...> const& tt) const { size_t seed = 0; HashValueImpl<tuple<TT...> >::apply(seed, tt); return seed; } }; } 
+namespace std { template<typename U, typename V> struct hash<pair<U, V>> { size_t operator()(pair<U, V> const& v) const { return v.first ^ v.second; } }; } struct pairhash { public: template <typename T, typename U> size_t operator()(const pair<T, U> &x) const { return hash<T>()(x.first) ^ hash<U>()(x.second); } };
+
+template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
+template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
+template<class Ch, class Tr, class Tuple, size_t... Is>
+void print_tuple(basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){ using s = int[]; (void)s{0, (void(os << (Is == 0? "" : ", ") << get<Is>(t)), 0)...}; }
+template<class Ch, class Tr, class... Args> 
+auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
+ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
+template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
+template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
+string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
+template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
+string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
+struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
+
+static const double EPS = 1e-14;
+static const long long INF = 1e18;
+static const long long mo = 1e9+7;
+#define ldout fixed << setprecision(40) 
+
+class ANewHope {
+    public:
+        int count(vector <int> a, vector <int> b, int d) {
+            ll n = a.size();
+            ll ret = 0;
+            rep(i, n) rep(j, n) if (a[i] == b[j])
+                chmax(ret, i - j);
+            cout << ret << "  " << n-d << endl;
+            return ret / (n - d) + 1 + !!(ret % (n - d));
+         }
+};
+
+// BEGIN KAWIGIEDIT TESTING
+// Generated by KawigiEdit-pf 2.3.0
+#include <iostream>
+#include <string>
+#include <vector>
+#include <ctime>
+#include <cmath>
+using namespace std;
+bool KawigiEdit_RunTest(int testNum, vector <int> p0, vector <int> p1, int p2, bool hasAnswer, int p3) {
+	cout << "Test " << testNum << ": [" << "{";
+	for (int i = 0; int(p0.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p0[i];
+	}
+	cout << "}" << "," << "{";
+	for (int i = 0; int(p1.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p1[i];
+	}
+	cout << "}" << "," << p2;
+	cout << "]" << endl;
+	ANewHope *obj;
+	int answer;
+	obj = new ANewHope();
+	clock_t startTime = clock();
+	answer = obj->count(p0, p1, p2);
+	clock_t endTime = clock();
+	delete obj;
+	bool res;
+	res = true;
+	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
+	if (hasAnswer) {
+		cout << "Desired answer:" << endl;
+		cout << "\t" << p3 << endl;
+	}
+	cout << "Your answer:" << endl;
+	cout << "\t" << answer << endl;
+	if (hasAnswer) {
+		res = answer == p3;
+	}
+	if (!res) {
+		cout << "DOESN'T MATCH!!!!" << endl;
+	} else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
+		cout << "FAIL the timeout" << endl;
+		res = false;
+	} else if (hasAnswer) {
+		cout << "Match :-)" << endl;
+	} else {
+		cout << "OK, but is it right?" << endl;
+	}
+	cout << "" << endl;
+	return res;
+}
+int main() {
+	bool all_right;
+	bool disabled;
+	bool tests_disabled;
+	all_right = true;
+	tests_disabled = false;
+	
+	vector <int> p0;
+	vector <int> p1;
+	int p2;
+	int p3;
+	
+	// ----- test 0 -----
+	disabled = false;
+	p0 = {1,2,3,4};
+	p1 = {4,3,2,1};
+	p2 = 3;
+	p3 = 4;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, p2, true, p3) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 1 -----
+	disabled = false;
+	p0 = {8,5,4,1,7,6,3,2};
+	p1 = {2,4,6,8,1,3,5,7};
+	p2 = 3;
+	p3 = 3;
+	all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, p2, true, p3) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 2 -----
+	disabled = false;
+	p0 = {1,2,3,4};
+	p1 = {1,2,3,4};
+	p2 = 2;
+	p3 = 1;
+	all_right = (disabled || KawigiEdit_RunTest(2, p0, p1, p2, true, p3) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	if (all_right) {
+		if (tests_disabled) {
+			cout << "You're a stud (but some test cases were disabled)!" << endl;
+		} else {
+			cout << "You're a stud (at least on given cases)!" << endl;
+		}
+	} else {
+		cout << "Some of the test cases had errors." << endl;
+	}
+	return 0;
+}
+// PROBLEM STATEMENT
+// In a galaxy far far away... each week has N days.
+// Luke Skywalker has exactly N shirts.
+// The shirts are numbered 1 through N.
+// Each day he wears one of those N shirts.
+// Each week he wears each shirt exactly once.
+// 
+// In different weeks Luke may wear his shirts in different orders.
+// However, not all orders are always possible.
+// Whenever Luke wears a shirt for a day, he has to wash it before he can use it again.
+// Washing and drying a shirt takes D-1 full days.
+// In other words, if he wears a shirt on day x, the earliest day when he can wear it again is day x+D.
+// 
+// Master Yoda recently sent Luke on a training mission that lasted for some unknown number of full N-day weeks.
+// He remembers the order in which he wore his shirts during the first week of the mission.
+// He also remembers the order in which he wore his shirts during the last week of the mission.
+// You are given this information in vector <int>s firstWeek and lastWeek.
+// Each of these vector <int>s contains N elements: the numbers of shirts he wore during that week, in order.
+// You are also given the number of days D that it takes to wash a shirt.
+// 
+// For example, assume that N = 4, firstWeek = {1,2,3,4}, and lastWeek = {4,3,2,1} and D = 3.
+// It is possible that this particular mission took four weeks.
+// One possible order in which Luke could have worn his shirts looks as follows:
+// 
+// week 1: {1,2,3,4}
+// week 2: {2,3,4,1}
+// week 3: {3,4,2,1}
+// week 4: {4,3,2,1}
+// 
+// 
+// Given firstWeek, lastWeek and D, compute and return the smallest number of weeks the mission could have taken.
+// 
+// DEFINITION
+// Class:ANewHope
+// Method:count
+// Parameters:vector <int>, vector <int>, int
+// Returns:int
+// Method signature:int count(vector <int> firstWeek, vector <int> lastWeek, int D)
+// 
+// 
+// NOTES
+// -N can be calculated as the number of elements of firstWeek
+// 
+// 
+// CONSTRAINTS
+// -firstWeek will contain between 2 and 2500 integers inclusive.
+// -firstWeek and lastWeek will contain the same number of elements.
+// -firstWeek and lastWeek will represent permutations of the first N positive integers.
+// -D will be between 1 and N-1 inclusive.
+// 
+// 
+// EXAMPLES
+// 
+// 0)
+// {1,2,3,4}
+// {4,3,2,1}
+// 3
+// 
+// Returns: 4
+// 
+// The example from the problem statement.
+// 
+// 1)
+// {8,5,4,1,7,6,3,2}
+// {2,4,6,8,1,3,5,7}
+// 3
+// 
+// Returns: 3
+// 
+// 
+// 
+// 2)
+// {1,2,3,4}
+// {1,2,3,4}
+// 2
+// 
+// Returns: 1
+// 
+// Be careful, the first week and the last week can be the same week.
+// 
+// END KAWIGIEDIT TESTING
+//Powered by KawigiEdit-pf 2.3.0!

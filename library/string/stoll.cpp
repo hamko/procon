@@ -1,17 +1,27 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#ifdef _WIN32
+#define scanfll(x) scanf("%I64d", x)
+#define printfll(x) printf("%I64d", x)
+#else
+#define scanfll(x) scanf("%lld", x)
+#define printfll(x) printf("%lld", x)
+#endif
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
+#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
 using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>;
+vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using P = pair<ll, ll>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -25,52 +35,46 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+void printbits(ll mask, ll n) { rep(i, n) { cout << !!(mask & (1ll << i)); } cout << endl; }
+#define ldout fixed << setprecision(40) 
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+const ll NO_INPUT = -1;
+const ll LEADING_ZERO = -2;
+const ll OVERFLOW_DETECTED = -3;
+const ll NOT_A_NUMBER = -4;
+// stollで、オーバーフローと入力なしとリーディング0を許容しないもの。
+ll stoll_no_leading_zero(string s) {
+    if (!s.size()) return NO_INPUT;
+    if (!all_of(all(s), [&](ll x){return '0'<=x&&x<='9';})) return NOT_A_NUMBER;
+    if (s.size() > 1 && s[0] == '0') return LEADING_ZERO;
+    if (stod(s) > LLONG_MAX) return OVERFLOW_DETECTED;
+    return stoll(s);
+}
+// stollで、オーバーフローと入力なしを許容しないもの。
+ll stoll_permitting_leading_zero(string s) {
+    if (!s.size()) return NO_INPUT;
+    if (!all_of(all(s), [&](ll x){return '0'<=x&&x<='9';})) return NOT_A_NUMBER;
+    if (stod(s) > LLONG_MAX) return OVERFLOW_DETECTED;
+    return stoll(s);
+}
+
 int main(void) {
-    cin.tie(0); ios::sync_with_stdio(false);
-
-    using test = tuple<ll, ll, string>;
-    vector<test> a;
-    //    vector<tuple<ll, ll, string>> a;
-    a.pb(mt(1, 1, "test"));
-    a.pb(mt(2, 1, "test"));
-    a.pb(mt(1, 2, "test"));
-    a.pb(mt(3, 1, "test"));
-    sort(all(a));
-    cout << a << endl;
-
-    P b(1, 2);
-    cout << b << endl;
-
-    vector<int> c = {1, 2, 3};
-    cout << c << endl;
-
-    vector<P> d;
-    d.pb(P(3, 2));
-    d.pb(P(100, 4));
-    cout << d << endl;
-
-    map<P, P> e;
-    e[P(1, 2)] = P(3, 4);
-    e[P(3, 2)] = P(8, 7);
-    cout << e << endl;
-
-    unordered_map<ll, P> f;
-    f[1] = P(3, 4);
-    f[3] = P(8, 7);
-    cout << f << endl;
-
-    set<P> g;
-    g.insert(P(3, 4));
-    g.insert(P(8, 7));
-    cout << g << endl;
-
-    vvll h = {{1, 2}, {4, 5}, {8, 9}};
-    cout << h << endl;
+    // stoll
+    {
+        cout << "####" << endl;
+        cout << stoll_no_leading_zero("") << endl;
+        cout << stoll_no_leading_zero("12a854321") << endl;
+        cout << stoll_no_leading_zero("12") << endl;
+        cout << stoll_no_leading_zero("012") << endl;
+        cout << stoll_no_leading_zero("0") << endl;
+        cout << stoll_no_leading_zero("39857893275") << endl;
+        cout << stoll_no_leading_zero("9869048328802353780942329058340") << endl;
+        cout << stoll("9869048328802353780942329058340") << endl;;
+    }
 
     return 0;
 }
