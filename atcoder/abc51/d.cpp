@@ -43,44 +43,30 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n, m; cin >> n >> m;
-    ll d[105][105];
-    rep(i, 105) rep(j, 105) d[i][j] = INF;
-    rep(i, 105) d[i][i] = 0;
+    vvll g(n, vll(n, INF));
+    rep(i, n) g[i][i] = 0;
     vector<P> edges;
     rep(i, m) {
         ll a ,b, c;
         cin >> a >> b >> c; a--; b--;
-        d[a][b] = c;
-        d[b][a] = c;
+        g[a][b] = c;
+        g[b][a] = c;
         edges.pb(P(a, b));
     }
-    for(int k = 0; k < n; ++k)
-        for(int i = 0; i < n; ++i)
-            for(int j = 0; j < n; ++j) d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
-
-    rep(i, n) {
-        rep(j, n) {
-            cout << d[i][j] << " ";
-        }
-        cout << endl;
-    }
-
+    vvll d = g;
+    rep(_, n) rep(i, n) rep(j, n) chmin(d[i][j], d[i][_] + d[_][j]);
 
     ll ret = 0;
     for (auto x : edges) {
-        ll s = x.fi, t = x.se;
-        rep(i, n) if (i != s) if (i != t) {
-            if (d[s][i] + d[i][t]) { 
-                goto skip;
-            }
-        }
-        ret++;
-        skip:;
+        ll u = x.fi, v = x.se;
+        ll ok = 1;
+        rep(i, n) rep(j, n) ok &= d[i][j] != d[i][u] + g[u][v] + d[v][j];
+        ret += ok;
     }
     cout << ret << endl;
-
     return 0;
 }

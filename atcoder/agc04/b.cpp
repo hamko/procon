@@ -42,36 +42,68 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
+// スパーステーブル
+// 構築O(n log n)
+// クエリO(log (log n))
+//
+// rmq(i, j)    [i, j)の最小値・最大値を求める
+struct SparseTable {
+    // 構築時データ
+    vector<ll> val;
+    
+    // max_flag==trueならRange Maximum Query
+    // デフォルトMinimum
+    bool max_flag;
+
+    // table[i][j]: [i, i+2^j)の最小値を取る添字
+    vector<vector<ll>> table;
+
+    inline ll MSB(ll x) { return x>0?31-__builtin_clz(x):-1; }
+    SparseTable(void){}
+    SparseTable(const vector<ll> a, bool max_flag_ = false) : val(a), max_flag(max_flag_) {
+        ll n = a.size(), ln = MSB(n);
+        table = vector<vector<ll>>(n, vector<ll>(ln + 1,0));
+        rep(i,n)
+            table[i][0] = i;
+
+        ll k = 1;
+        rep(j, ln) {
+            rep(i, n){
+                ll id1 = table[i][j], id2 = (i+k<n)?table[i+k][j]:id1;
+                table[i][j+1] = (max_flag ? (val[id1]>=val[id2]) : (val[id1]<=val[id2]))?id1:id2;
+            }
+            k <<= 1;
+        }
+    }
+
+    inline ll rmqi(ll l, ll r){
+        ll ln = MSB(r-l);
+        ll id1 = table[l][ln], id2 = table[r-(1<<ln)][ln];
+        return (max_flag ? (val[id1]>=val[id2]) : (val[id1]<=val[id2]))?id1:id2;
+    }
+
+    inline ll rmq(ll l, ll r){ 
+        if (l >= r) return max_flag ? 0 : INF;
+        return val[rmqi(l,r)]; 
+    }
+};
+
+
 int main(void) {
     cin.tie(0); ios::sync_with_stdio(false);
     ll n; cin >> n; ll t; cin >> t;
     vll a(n); rep(i, a.size()) cin >> a[i];
-    vll mintime(n, INF);
-    vll minj(n, INF);
-    vll minindex(n, INF);
-    rep(i, n) {
-        rep(j, n) {
-            ll index = i - j;
-            if (index < 0) 
-                index += n;
-            if (mintime[i] > a[index] + t * j) {
-                mintime[i] = a[index] + t * j;
-                minj[i] = j;
-                minindex[i] = index;
-            }
-        }
+
+    vll aaa; rep(_, 3) rep(i, n) aaa.pb(a[i]);
+    SparseTable st(aaa);
+
+    ll ret = INF;
+    rep(k, n) {
+        vll s(n, INF);
+        rep(i, n) 
+            s[i] = st.rmq(i-k+n, i+1+n);
+        chmin(ret, accumulate(all(s), 0ll) + k * t);
     }
-    cout << mintime << endl;
-    cout << minj << endl;
-    cout << minindex << endl;
-    ll ret = 0;
-    rep(i, n) {
-        ret += a[minindex[i]];
-    }
-    ll ma = 0;
-    rep(i, n) {
-        chmax(ma, minj[i]);
-    }
-    cout << ret + ma * t<< endl;
+    cout << ret << endl;
     return 0;
 }

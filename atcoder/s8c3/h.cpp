@@ -52,9 +52,10 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 const int DEBUG = 1;
+ll h, w; 
 
 // 標準入力からの質問応答
-ll ask(ll x1, ll y1, ll x2, ll y2) {
+ll ask_from_stdin(ll x1, ll y1, ll x2, ll y2) {
     cout << "? " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
     ll ret; cin >> ret; return ret;
 }
@@ -68,6 +69,14 @@ ll ask_from_answer(ll x1, ll y1, ll x2, ll y2) {
     ll ret = 0;
     repi(i, x1, x2+1) repi(j, y1, y2+1) if (b_ans[i][j]) ret++;
     return ret;
+}
+ll ask_num = 0;
+ll ask(ll x1, ll y1, ll x2, ll y2) {
+    ask_num++;
+    if (DEBUG) 
+        return ask_from_answer(x1, y1, x2, y2);
+    else 
+        return ask_from_stdin(x1, y1, x2, y2);
 }
 
 vvll b(50, vll(50, -1));
@@ -87,19 +96,27 @@ void rec(ll x1, ll y1, ll x2, ll y2, ll n) {
     if (x1 == x2) {
         ll m = y1+(y2-y1)/2;
 //        cout << x1 << " " << y1 << " " << x2 << " " << y2 << " " << n << " : " << m << endl;
-        ll l = (DEBUG ? ask_from_answer : ask)(x1, y1, x2, m);
+        ll l = ask(x1, y1, x2, m);
         rec(x1, y1, x2, m, l);
         ll u = n - l;
         rec(x1, m+1, x2, y2, u);
     } else {
         ll m = x1+(x2-x1)/2;
-        ll l = (DEBUG ? ask_from_answer : ask)(x1, y1, m, y2);
+        ll l = ask(x1, y1, m, y2);
         rec(x1, y1, m, y2, l);
         ll u = n - l;
         rec(m+1, y1, x2, y2, u);
     }
 }
-void rec_main(ll h, ll w, ll n) {
+void rec_main(ll h, ll w) {
+    ll n;
+    if (DEBUG) 
+        n = ask(0, 0, h-1, w-1);
+    else 
+        cin >> n;
+
+    ask_num = 0;
+
     b = vvll(50, vll(50, -1));
     rec(0, 0, h-1, w-1, n);
 }
@@ -111,19 +128,145 @@ ll compress(ll h, ll w, ll k) {
     return ret;
 }
 
-int main(void) {
-    ll h, w, n; cin >> h >> w >> n;
-    b_ans[0][0] = 1; b_ans[0][1] = 0;
-    b_ans[1][0] = 0; b_ans[1][1] = 1;
-    rec_main(h, w, n);
+void print_board(vvll& b, ll h, ll w) {
     rep(i, h) rep(j, w) assert(b[i][j] != -1);
     rep(i, h) { 
         rep(j, w) cout << b[i][j] << " ";
         cout << endl;
     }
+}
+
+// state = 最大h*w個のペア(ll 質問mask, ll 返答);
+// 2x2なら状態9^4=6561くらい、nがはじめに与えられるから少しは減る…？
+// 3x2なら状態16^6=1700万くらい <-すでにやばそう
+// 4x2なら状態24^8くらい
+// 3x3なら状態54^9くらい
+// 2x2なら行けそうだけど、3x3でもう結構状態量がやばい
+using state = vector<P>;
+ll countSolution(state s) {
+    ll ret = 0;
+    rep(mask, (1ll << (h*w))) {
+        // maskがすべてのstateに合致しているか
+        rep(i, s.size()) {
+            if (__builtin_popcount(mask & s[i].fi) != s[i].se) 
+                goto SKIP;
+        }
+        ret++;
+        SKIP:;
+    }
+    return ret;
+}
+
+vll histogramSolution(state s, ll next_query_board) {
+    vll ret(h*w+1);
+    rep(mask, (1ll << (h*w))) {
+        rep(i, s.size()) {
+            if (__builtin_popcount(mask & s[i].fi) != s[i].se) 
+                goto SKIP;
+        }
+        // maskがすべてのstateに合致している
+        ret[__builtin_popcount(mask & next_query_board)]++;
+        SKIP:;
+    }
+    return ret;
+}
+
+void test_countSolotion(void) {
+    assert(h == 2), assert(w == 2);
+    {
+        assert(countSolution({P(0b1111, 0)}) == 1);
+        assert(countSolution({P(0b1111, 1)}) == 4);
+        assert(countSolution({P(0b1111, 2)}) == 6);
+        assert(countSolution({P(0b1111, 3)}) == 4);
+        assert(countSolution({P(0b1111, 4)}) == 1);
+
+        assert(countSolution({P(0b1111, 2), P(0b1010, 1)}) == 4);
+    }
+}
+
+void transite(state s) {
+    ll num_of_solution_s = countSolution(s);
+
+    vector<state> v_s_next; // state
+    vector<double> v_p_next; // prob
+    vector<int> v_r_next; // reward
+    rep(h1, h) rep(w1, w) repi(h2, h1, h) repi(w2, w1, w) {
+        ll next_query_board = 0;
+        rep(hh, h) rep(ww, w) if (h1 <= hh && hh <= h2 && w1 <= ww && ww <= w2) 
+            next_query_board |= 1ll << (hh*w + ww);
+
+        cout << h1 << " " << h2 << " " << w1 << " " << w2 << ": " << bitset<4>(next_query_board) <<"#range" << endl;
+
+        vll histogram_of_solution_s_next = histogramSolution(s, next_query_board);
+        ll histogram_of_solution_sum = accumulate(all(histogram_of_solution_s_next), 0ll);
+        cout << s << " " << bitset<4>(next_query_board) << " $ "<< histogram_of_solution_s_next << endl;
+
+        rep(ret_ask, h*w+1) {
+            // 状態sから、行動a=(h1, w1, h2, w2)を行った結果、
+            // ret_askを受け取って状態s_nextに変動する確率と、その時に得られる報酬
+            //
+            state s_next = s;
+            P next_query = P(next_query_board, ret_ask);
+
+            // すでに聞いたことがある
+            ll flag = 0; for (auto q : s) if (q == next_query) flag = 1;
+            if (flag) continue;
+
+            s_next.pb(next_query);
+            sort(all(s_next));
+            ll num_of_solution_s_next = countSolution(s_next);
+            cout << s_next << " " << num_of_solution_s_next << endl;
+            if (num_of_solution_s_next) {
+                v_s_next.pb(s_next);
+                v_r_next.pb(num_of_solution_s - num_of_solution_s_next);
+                v_p_next.pb((double)histogram_of_solution_s_next[ret_ask] / histogram_of_solution_sum); 
+            } else {
+                v_s_next.pb(s_next);
+                v_r_next.pb(-h*w);
+                v_p_next.pb(0); 
+            }
+            // pってsからs_nextに行った時に、爆弾個数取得クエリでret_askを得る確率
+            //            v_p_next.pb(); 
+        }
+    }
+
+    cout << v_s_next << "#v_s_next" << endl;
+    cout << v_p_next << "#v_p_next" << endl;
+    cout << v_r_next << "#v_r_next" << endl;
+}
+
+void test(void) {
+    test_countSolotion();
+}
+
+int main(void) {
+    cin >> h >> w;
+//    test();
+
+    transite({P((1ll<<4)-1, 2)});
+//    transite({P((1ll<<9)-1, 3)});
+//    transite({P((1ll<<16)-1, 4)});
+
+    
 
     /*
-    ll k; cin >> k
+    vll ask_num_histogram(h*w);
+    rep(mask, 1ll << (h*w)) {
+//        cout << "####" << bitset<16>(mask) << "#mask" << endl;
+        rep(hh, h) rep(ww, w) 
+            b_ans[hh][ww] = !!(mask & (1ll << (hh*w+ww)));
+
+//        print_board(b_ans, h, w);
+        rec_main(h, w);
+//        print_board(b, h, w);
+//        cout << "took " << ask_num << endl;
+        ask_num_histogram[ask_num]++;
+    }
+    cout << ask_num_histogram << endl;
+    */
+
+    /*
+    ll k; cin >> k;
     cout << "! " << compress(h, w, k) << endl;
     */
     return 0;
