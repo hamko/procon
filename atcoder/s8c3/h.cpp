@@ -53,6 +53,7 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 const int DEBUG = 1;
 ll h, w; 
+double g_gamma = 0.90;
 
 // 標準入力からの質問応答
 ll ask_from_stdin(ll x1, ll y1, ll x2, ll y2) {
@@ -82,7 +83,6 @@ ll ask(ll x1, ll y1, ll x2, ll y2) {
 vvll b(50, vll(50, -1));
 // [(x1, y1), (x2, y2)]にn個爆弾がある場合に確定する。
 void rec(ll x1, ll y1, ll x2, ll y2, ll n) {
-//    cout << x1 << " " << y1 << " " << x2 << " " << y2 << " #in" << endl;
     assert(x1 <= x2);
     assert(y1 <= y2);
     assert(x1 >= 0 && y1 >= 0);
@@ -95,7 +95,6 @@ void rec(ll x1, ll y1, ll x2, ll y2, ll n) {
  
     if (x1 == x2) {
         ll m = y1+(y2-y1)/2;
-//        cout << x1 << " " << y1 << " " << x2 << " " << y2 << " " << n << " : " << m << endl;
         ll l = ask(x1, y1, x2, m);
         rec(x1, y1, x2, m, l);
         ll u = n - l;
@@ -143,27 +142,28 @@ void print_board(vvll& b, ll h, ll w) {
 // 3x3なら状態54^9くらい
 // 2x2なら行けそうだけど、3x3でもう結構状態量がやばい
 using state = vector<P>;
+map<state, ll> memo_countSolution;
 ll countSolution(state s) {
+    if (memo_countSolution.count(s)) return memo_countSolution[s];
     ll ret = 0;
     rep(mask, (1ll << (h*w))) {
         // maskがすべてのstateに合致しているか
-        rep(i, s.size()) {
+        rep(i, s.size()) 
             if (__builtin_popcount(mask & s[i].fi) != s[i].se) 
                 goto SKIP;
-        }
         ret++;
+//        if (ret > 1) break; // 0, 1, 2しか興味がない
         SKIP:;
     }
-    return ret;
+    return memo_countSolution[s] = ret;
 }
 
 vll histogramSolution(state s, ll next_query_board) {
     vll ret(h*w+1);
     rep(mask, (1ll << (h*w))) {
-        rep(i, s.size()) {
+        rep(i, s.size()) 
             if (__builtin_popcount(mask & s[i].fi) != s[i].se) 
                 goto SKIP;
-        }
         // maskがすべてのstateに合致している
         ret[__builtin_popcount(mask & next_query_board)]++;
         SKIP:;
@@ -184,22 +184,56 @@ void test_countSolotion(void) {
     }
 }
 
-void transite(state s) {
-    ll num_of_solution_s = countSolution(s);
+struct edge_t {
+    state s;
+    double p;
+    ll r;
+};
+ostream &operator<<(ostream &o, const edge_t &e) {  
+    o << "(" << e.s << ", " << e.p << ", " << e.r << ") "; return o; 
+}
 
-    vector<state> v_s_next; // state
-    vector<double> v_p_next; // prob
-    vector<int> v_r_next; // reward
+
+map<state, ll> all_states;
+map<ll, state> all_states_rev;
+map<ll, map<ll, vector<tuple<ll, double, double>>>> pr; // pr[s][a] = [(s'2, p2, r2), (s'1, p1, r1) ...  ]
+void addState(state s) {
+    if (!all_states.count(s)) {
+        ll all_states_size = all_states.size();
+        all_states[s] = all_states_size;
+        all_states_rev[all_states_size] = s;
+    }
+}
+
+map<tuple<ll, ll, ll, ll>, ll> all_actions; // h1, h2, w1, w2
+map<ll, tuple<ll, ll, ll, ll>> all_actions_rev;
+void addAction(ll h1, ll h2, ll w1, ll w2) {
+    auto action = tie(h1, h2, w1, w2);
+    if (!all_actions.count(action)) {
+        ll all_actions_size = all_actions.size();
+        all_actions[action] = all_actions_size;
+        all_actions_rev[all_actions_size] = action;
+    }
+}
+ll getQueryFromHW(ll h1, ll h2, ll w1, ll w2) {
+    ll mask = 0;
+    repi(hh, h1, h2+1) repi(ww, w1, w2+1) mask |= (1ll << (hh*w+ww));
+    return mask;
+}
+void transite(state s, vector<edge_t>& ret) {
+    addState(s);
+    if (countSolution(s) == 1) return;
+    if (s.size() > h * w - 1) return; // 長さh*wで絶対終わるので
+    ret.clear();
+
     rep(h1, h) rep(w1, w) repi(h2, h1, h) repi(w2, w1, w) {
-        ll next_query_board = 0;
-        rep(hh, h) rep(ww, w) if (h1 <= hh && hh <= h2 && w1 <= ww && ww <= w2) 
-            next_query_board |= 1ll << (hh*w + ww);
-
-        cout << h1 << " " << h2 << " " << w1 << " " << w2 << ": " << bitset<4>(next_query_board) <<"#range" << endl;
+        addAction(h1, h2, w1, w2);
+    }
+    rep(h1, h) rep(w1, w) repi(h2, h1, h) repi(w2, w1, w) {
+        ll next_query_board = getQueryFromHW(h1, h2, w1, w2);
 
         vll histogram_of_solution_s_next = histogramSolution(s, next_query_board);
         ll histogram_of_solution_sum = accumulate(all(histogram_of_solution_s_next), 0ll);
-        cout << s << " " << bitset<4>(next_query_board) << " $ "<< histogram_of_solution_s_next << endl;
 
         rep(ret_ask, h*w+1) {
             // 状態sから、行動a=(h1, w1, h2, w2)を行った結果、
@@ -215,60 +249,220 @@ void transite(state s) {
             s_next.pb(next_query);
             sort(all(s_next));
             ll num_of_solution_s_next = countSolution(s_next);
-            cout << s_next << " " << num_of_solution_s_next << endl;
-            if (num_of_solution_s_next) {
-                v_s_next.pb(s_next);
-                v_r_next.pb(num_of_solution_s - num_of_solution_s_next);
-                v_p_next.pb((double)histogram_of_solution_s_next[ret_ask] / histogram_of_solution_sum); 
-            } else {
-                v_s_next.pb(s_next);
-                v_r_next.pb(-h*w);
-                v_p_next.pb(0); 
-            }
-            // pってsからs_nextに行った時に、爆弾個数取得クエリでret_askを得る確率
-            //            v_p_next.pb(); 
+
+            if (!num_of_solution_s_next) continue; // 解が存在しないような状態には遷移しない
+            if (s_next.size() >= h*w && num_of_solution_s_next != 1) continue; // h*w回クエリもらってるのに解が1位に定まらないような状態には遷移しない
+            edge_t tmp;
+            tmp.s = s_next;
+#if 0
+            tmp.r = num_of_solution_s - num_of_solution_s_next;
+#else
+            if (num_of_solution_s_next == 1) 
+                tmp.r = 1;
+            else 
+                tmp.r = -1;
+#endif
+//            tmp.r = 0; // デバッグ用。これがonなのに性能が高かったらおかしい。
+            tmp.p = (double)histogram_of_solution_s_next[ret_ask] / histogram_of_solution_sum; 
+            ret.pb(tmp);
+
+            addState(s_next);
+            pr[all_states[s]][all_actions[tie(h1, h2, w1, w2)]].pb(tie(all_states[s_next], tmp.p, tmp.r));
         }
     }
+}
 
-    cout << v_s_next << "#v_s_next" << endl;
-    cout << v_p_next << "#v_p_next" << endl;
-    cout << v_r_next << "#v_r_next" << endl;
+
+ll transitFromID(ll si, ll ai) {
+    state s = all_states_rev[si];
+
+    ll h1, h2, w1, w2; tie(h1, h2, w1, w2) = all_actions_rev[ai];
+    ll ret_of_ask = ask_from_answer(h1, w1, h2, w2);
+
+    ll mask = getQueryFromHW(h1, h2, w1, w2);
+
+    s.pb(P(mask, ret_of_ask));
+    sort(all(s));
+    assert(all_states.count(s));
+    return all_states[s];
 }
 
 void test(void) {
     test_countSolotion();
 }
 
+ll evaluateBinarySearch(ll mask) {
+    rep(hh, h) rep(ww, w) 
+        b_ans[hh][ww] = !!(mask & (1ll << (hh*w+ww)));
+    rec_main(h, w);
+    return ask_num;
+}
+double expectValOfEvaluateBinarySearch(ll n) {
+    double ret = 0;
+    ll num = 0;
+    rep(mask, 1ll << (h*w)) if (__builtin_popcount(mask) == n) {
+        num++;
+        ret += evaluateBinarySearch(mask);
+    }
+    return ret / num;
+}
+
+ll evaluatePolicy(ll mask, state initial_state, vll& pi) {
+    rep(hh, h) rep(ww, w) 
+        b_ans[hh][ww] = !!(mask & (1ll << (hh*w+ww)));
+
+    assert(all_states.count(initial_state));
+    ll si = all_states[initial_state];
+    ll ret = 0;
+    while (1) {
+        ll a = pi[si];
+        if (a == -1) return ret;
+
+        ll h1, h2, w1, w2; tie(h1, h2, w1, w2) = all_actions_rev[a];
+        state s = all_states_rev[si];
+        state next_s = all_states_rev[si];
+        next_s.pb(P(getQueryFromHW(h1, h2, w1, w2), ask(h1, w1, h2, w2)));
+        sort(all(next_s));
+        assert(all_states.count(next_s));
+        si = all_states[next_s];
+        ret++;
+    }
+
+    assert(0);
+    return -1;
+}
+double expectValOfEvaluatePolicy(ll n, state initial_state, vll& pi) {
+    double ret = 0;
+    ll num = 0;
+    rep(mask, 1ll << (h*w)) if (__builtin_popcount(mask) == n) {
+        num++;
+        ret += evaluatePolicy(mask, initial_state, pi);
+    }
+    return ret / num;
+}
+
+vector<double> calculateV(void) {
+    ll sn = all_states.size();
+    ll an = all_actions.size();
+    vector<double> V(sn, 0); // v(s) : 状態価値
+    double delta = INF;
+    while (delta > 1e-10) {
+        delta = 0;
+        rep(s, sn) {
+            // 終端条件
+            if (!pr[s].size()) {
+                V[s] = 0;
+                continue; 
+            }
+            double prev_v = V[s];
+            double v_max = -INF;
+            double v_max_a = -INF;
+            rep(a, an) if (pr[s].count(a)) {
+                double sum = 0;
+                for (auto&& spr_dash : pr[s][a]) {
+                    int s_dash; double p, r; tie(s_dash, p, r) = spr_dash;
+                    sum += p * (r + g_gamma * V[s_dash]);
+                }
+                if (v_max < sum) {
+                    v_max = sum;
+                    v_max_a = a;
+                }
+            }
+            V[s] = v_max;
+            delta += abs(V[s] - prev_v);
+        }
+    }
+    // assert
+    // 初期値をちょっと変えて、同じ場所に収束する
+
+    return V;
+}
+
+vll calculatePi(vector<double>& V) {
+    ll sn = all_states.size();
+    ll an = all_actions.size();
+    vector<ll> pi(sn); // pi(s) : S -> A
+    {
+        rep(s, sn) {
+            // 終端条件
+            if (!pr[s].size()) {
+                pi[s] = -1;
+                continue; 
+            }
+            double v_max = -INF;
+            double v_max_a = -INF;
+            rep(a, an) if (pr[s].count(a)) {
+                double sum = 0;
+                for (auto&& spr_dash : pr[s][a]) {
+                    int s_dash; double p, r; tie(s_dash, p, r) = spr_dash;
+                    sum += p * (r + g_gamma * V[s_dash]);
+                }
+                if (v_max < sum) {
+                    v_max = sum;
+                    v_max_a = a;
+                }
+            }
+            pi[s] = v_max_a;
+            assert(pi[s] == -INF || pr[s].count(pi[s]));
+        }
+    }
+    rep(s, sn) if (pr[s].size() != 0) assert(pi[s] != -INF);
+
+    return pi;
+}
+
 int main(void) {
     cin >> h >> w;
-//    test();
 
-    transite({P((1ll<<4)-1, 2)});
-//    transite({P((1ll<<9)-1, 3)});
-//    transite({P((1ll<<16)-1, 4)});
+    //    test();
 
-    
+    queue<state> q;
 
-    /*
-    vll ask_num_histogram(h*w);
-    rep(mask, 1ll << (h*w)) {
-//        cout << "####" << bitset<16>(mask) << "#mask" << endl;
-        rep(hh, h) rep(ww, w) 
-            b_ans[hh][ww] = !!(mask & (1ll << (hh*w+ww)));
+    state initial_state = {P((1ll<<(h*w))-1, 2)};
+    q.push(initial_state);
+    addState(initial_state);
 
-//        print_board(b_ans, h, w);
-        rec_main(h, w);
-//        print_board(b, h, w);
-//        cout << "took " << ask_num << endl;
-        ask_num_histogram[ask_num]++;
+    set<state> used;
+    used.insert(initial_state);
+    while(!q.empty()) {
+        state s = q.front(); q.pop();
+
+        vector<edge_t> edges;
+        transite(s, edges);
+        for (auto&& e : edges) {
+            if (used.count(e.s)) continue;
+            used.insert(e.s);
+            q.push(e.s);
+        }
     }
-    cout << ask_num_histogram << endl;
-    */
+    cout << "# state num = " << all_states.size() << endl;
+    cout << "# action num = " << all_actions.size() << endl;
 
+    for(auto x : all_states) {
+        state s = x.fi;
+        ll si = x.se;
+        if (countSolution(s) == 1) 
+            assert(pr[si].size() == 0);
+    }
+
+    //    cout << "# state size = " << all_states.size() << endl;
+    //    cout << "# All States " << endl;
+    //    for (auto x : all_states)  cout << x.se << " " << x.fi << " " << countSolution(x.fi)<< endl; 
+    //    cout << "# All Actions " << endl;
+    //    for (auto x : all_actions) cout << x.se << " " << x.fi << endl;
+    //    cout << "# Prob, Reward " << endl;
+    //    for (auto pr_s : pr) { ll s = pr_s.fi; for (auto pr_sa : pr_s.se) { ll a = pr_sa.fi; cout << s << " " << a << " " << pr_sa.se << endl; } }
+
+
+    vector<double> V = calculateV();
+    vll pi = calculatePi(V);
+
+    cout << expectValOfEvaluateBinarySearch(2) << endl;
+    cout << expectValOfEvaluatePolicy(2, initial_state, pi) << endl;
     /*
-    ll k; cin >> k;
-    cout << "! " << compress(h, w, k) << endl;
-    */
+       ll k; cin >> k;
+       cout << "! " << compress(h, w, k) << endl;
+       */
     return 0;
 }
 
