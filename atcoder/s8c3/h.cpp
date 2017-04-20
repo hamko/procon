@@ -514,7 +514,13 @@ int main(void) {
     vll pi = calculatePi(V);
 
     ll g_h, g_w, n; cin >> g_h >> g_w >> n; 
-       ll k; cin >> k;
+    ll k; cin >> k;
+    vvll ret; ll ret_num;
+//    tie(ret, ret_num) = rec_main(g_h, g_w, n, 0, 0);
+    tie(ret, ret_num) = determineBoardFromPolicy(g_h, g_w, n, pi);
+
+
+    /*
     vvll ret(g_h, vll(g_w));
     ll all_ret_num = 0;
     ll hs = 2, ws = 2; // h size, w size
@@ -531,6 +537,7 @@ int main(void) {
         rep(hh, hs) rep(ww, ws)
             ret[i*hs+hh][j*ws+ww] = ret_b[hh][ww];
     }
+    */
     /*
     rep(i, g_h) { 
         rep(j, g_w) {
