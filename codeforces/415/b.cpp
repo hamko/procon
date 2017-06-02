@@ -52,54 +52,29 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-ll getCost(string a, string b) {
-    rep(i, a.length()) {
-        string tmp; 
-        repi(j, i, a.length()) 
-            tmp += b[j];
-        rep(j, i)
-            tmp += b[j];
-        if (a == tmp) {
-            return i;
-        }
-    }
-    assert(0);
-    return -1;
-}
-
-
 int main(void) {
-    ll n; cin >> n;
-    vector<string> s(n); rep(i, n) cin >> s[i];
-    ll m = s[0].size();
-    
-    set<string> cands; 
-    rep(i, m) {
-        string tmp; 
-        repi(j, i, m) 
-            tmp += s[0][j];
-        rep(j, i)
-            tmp += s[0][j];
-        cands.insert(tmp);
-//        cout << tmp << endl;
-    }
-
+    ll n, f; cin >> n >> f;
+    vll a(n), b(n);
     rep(i, n) {
-        if (cands.count(s[i]) == 0) {
-            cout << -1 << endl;
-            return 0;
-        }
+        cin >> a[i] >> b[i];
     }
-
-    ll ret = INF;
-    for (auto x : cands) {
-        ll cost = 0;
-        rep(i, n) {
-            cost += getCost(x, s[i]);
-        }
-        chmin(ret, cost);
+    vector<P> d(n);
+    rep(i, n) {
+        d[i] = P(min<ll>(2ll*a[i], b[i]) - min<ll>(a[i], b[i]), i);
+    }
+    sort(all(d)); reverse(all(d));
+    ll ret = 0;
+//    cout << d << endl;
+    unordered_set<ll> memo;
+    rep(i, f) {
+        memo.insert(d[i].se);
+        ret += d[i].fi;
+//        cout << d[i].fi << endl;
+    }
+//    cout << memo << endl;
+    rep(i, n) {// if (!memo.count(i)){
+        ret += min<ll>(b[i],a[i]);
     }
     cout << ret << endl;
-
     return 0;
 }

@@ -52,54 +52,18 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-ll getCost(string a, string b) {
-    rep(i, a.length()) {
-        string tmp; 
-        repi(j, i, a.length()) 
-            tmp += b[j];
-        rep(j, i)
-            tmp += b[j];
-        if (a == tmp) {
-            return i;
-        }
-    }
-    assert(0);
-    return -1;
-}
-
-
 int main(void) {
     ll n; cin >> n;
-    vector<string> s(n); rep(i, n) cin >> s[i];
-    ll m = s[0].size();
-    
-    set<string> cands; 
-    rep(i, m) {
-        string tmp; 
-        repi(j, i, m) 
-            tmp += s[0][j];
-        rep(j, i)
-            tmp += s[0][j];
-        cands.insert(tmp);
-//        cout << tmp << endl;
-    }
-
-    rep(i, n) {
-        if (cands.count(s[i]) == 0) {
-            cout << -1 << endl;
-            return 0;
+    ll k; cin >> k;
+    vll a(n); cin >> a;
+    ll ret = 0;
+    ll s = accumulate(all(a), 0ll);
+    rep(_, 100000) {
+        if (round(1.0*s / (a.size() + ret)) != k) {
+            s += k;
+            ret++;
         }
-    }
-
-    ll ret = INF;
-    for (auto x : cands) {
-        ll cost = 0;
-        rep(i, n) {
-            cost += getCost(x, s[i]);
-        }
-        chmin(ret, cost);
     }
     cout << ret << endl;
-
     return 0;
 }

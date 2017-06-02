@@ -2,7 +2,7 @@
 using namespace std;
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
-#define rep(i,n) for(int i = 0; i < n; i++)
+#define rep(i,n) for(long long i = 0; i < n; i++)
 #define pb push_back
 
 // ヤコビ記号はnot yet
@@ -398,52 +398,16 @@ long long eulerPhi(long long n) {
 
 
 int main() {
-    cout << __gcd(12, 18) << endl;
+    ll n; cin >> n;
+    vll a(n); rep(i, n) cin >> a[i];
+    sort(a.begin(), a.end());
 
-    cout << ((Mod)2 + (Mod)10) << endl;
-    cout << ((Mod)2 ^ 10ll) << endl;
-    cout << ((Mod)3 ^ 1000000ll) << endl;
-    Mod r(1000000), c(1000000);
-    cout << r * c + (Mod)1 << endl;
-    cout << modpowsum(3, 4) << endl; // 1 + 3 + 9 + 27
-
-    long long   n = 8e18;
-    printf("long long x 1= %Ld\n", n);
-//    printf("long long x 2 = %Ld\n", n*2); // overflow
-    long double m = n;
-    printf("long double x 1= %Lf\n", m);
-    printf("long double x 2 = %Lf\n", m*2);
-
-    string s = "10000000000000";
-    Mod mod_from_str(s);
-    cout << mod_from_str << "#from string" << endl;
-
-    cout << "Input also works" << endl;
-    Mod input;
-    cin >> input; // input 10000000000
-    cout << input << endl;
-
-    {
-        const int m = 4;
-        matrix a = {
-            {1, 1, 1, 0},
-            {1, 1, 0, 1}, 
-            {1, 0, 1, 1},
-            {0, 1, 1, 1},
-        };
-        arr b = {1, 0, 0, 1};
-
-        arr ret(m);
-        for (int i = 0; i < m; ++i)
-            cout << ret[i] << " ";
-        cout << endl;
-
-        cout << a << endl;
-        cout << b << endl;
-        auto x = solve(a, b);
-        cout << x << "#ret" << endl;
-        cout << mul(a, x) << endl;
-    }
+    Mod ret = 0;
+    rep(i, n) 
+        ret += a[i] * (Mod(2) ^ i);
+    rep(i, n) 
+        ret -= a[i] * (Mod(2) ^ (n-i-1));
+    cout << ret << endl;
 
     return 0;
 }

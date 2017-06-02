@@ -171,7 +171,7 @@ void computeMinimumPolynomialForLinearlyRecurrentSequence(const vector<mint> &a,
 }
 
 // 漸化式
-//      \phi_0 a_{i} + \phi_1 a_{1} + ... + \phi_L a_L = 0
+//      \phi_0 a_0 + \phi_1 a_1 + ... + \phi_L a_L = 0
 // と、initValues = a[0:phi.size()-1]が与えられる。
 // この時、a[k]をinitValues(=a[0:phi.size()-1])の線形結合の係数を返す。
 //     a[k] = coeff[0] * initValues[0] + coeff[1] * initValues[1] + ...  + coeff[d-1] * initValues[d-1] 
@@ -232,6 +232,19 @@ mint linearlyRecurrentSequenceValue(long long k, const vector<mint> &initValues,
 	mint res; rep(i, d) res += coeffs[i] * initValues[i];
 	return res;
 }
+
+// 線形漸化的数列aのk番目は？
+// O(n^2 log k)
+mint reconstruct(long long k, vector<mint> a) {
+    if (a.size() % 2) a.pop_back();
+    vector<mint> a_first_half;
+    rep(i, a.size() / 2)
+        a_first_half.push_back(a[i]);
+    vector<mint> phi;
+    computeMinimumPolynomialForLinearlyRecurrentSequence(a, phi);
+    return linearlyRecurrentSequenceValue(k, a_first_half, phi);
+}
+
 
 // GF(mod)の行列演算
 // thisが表す行列はAとする。
@@ -397,6 +410,18 @@ public:
 };
 
 int main() {
+    {
+        // 線形漸化式復元
+        vector<mint> a = {1, 2, 4, 8}, phi;
+        assert(reconstruct(10, a) == 1024);
+    }
+    {
+        // 線形漸化式復元
+        vector<mint> b = {1, 2, 3, 4}, phi;
+        assert(reconstruct(10, b) == 11);
+    }
+
+
     {
         // Berlekamp Masseyのテスト
         vector<mint> s = {1, 2, 4, 8}, C;

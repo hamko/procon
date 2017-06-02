@@ -52,54 +52,20 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-ll getCost(string a, string b) {
-    rep(i, a.length()) {
-        string tmp; 
-        repi(j, i, a.length()) 
-            tmp += b[j];
-        rep(j, i)
-            tmp += b[j];
-        if (a == tmp) {
-            return i;
-        }
-    }
-    assert(0);
-    return -1;
-}
-
-
+int a[123456];
+int b[123456];
 int main(void) {
-    ll n; cin >> n;
-    vector<string> s(n); rep(i, n) cin >> s[i];
-    ll m = s[0].size();
-    
-    set<string> cands; 
+    int n, m; cin >> n >> m;
+    rep(i, n) cin >> a[i];
     rep(i, m) {
-        string tmp; 
-        repi(j, i, m) 
-            tmp += s[0][j];
-        rep(j, i)
-            tmp += s[0][j];
-        cands.insert(tmp);
-//        cout << tmp << endl;
+        int l, r, x; cin >> l >> r >> x;
+        rep(j, n) 
+            b[j] = a[j];
+        sort(b+l-1,b+r);
+        if (a[x-1]==b[x-1])
+            cout << "Yes" << endl;
+        else 
+            cout << "No" << endl;
     }
-
-    rep(i, n) {
-        if (cands.count(s[i]) == 0) {
-            cout << -1 << endl;
-            return 0;
-        }
-    }
-
-    ll ret = INF;
-    for (auto x : cands) {
-        ll cost = 0;
-        rep(i, n) {
-            cost += getCost(x, s[i]);
-        }
-        chmin(ret, cost);
-    }
-    cout << ret << endl;
-
     return 0;
 }

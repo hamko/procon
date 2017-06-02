@@ -50,7 +50,101 @@ struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); c
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
-#define ldout fixed << setprecision(40) 
+#define ldout fixed << setprecision(40)
+
+
+#define PTHREAD
+ 
+#if defined(_WIN32)
+extern "C" {
+    void* __stdcall LoadLibraryA(const char *name);
+    void* __stdcall GetProcAddress(void *handle, const char *name);
+}
+struct DynamicLibrary {
+    DynamicLibrary(const char *name) { _handle = LoadLibraryA(name); }
+    void *get(const char *name) const { void *p = GetProcAddress(_handle, name); if(!p) cerr << "can't find: " << name << endl, abort(); return p; }
+    void *_handle;
+#ifndef PTHREAD
+} gmp("mpir.dll");
+#else
+} libpthread("Pthread.dll");
+#endif
+#else
+extern "C" {
+    void* __libc_dlopen_mode(const char *x, int y);
+    void* __libc_dlsym(void *x, const char *y);
+}
+struct DynamicLibrary {
+    DynamicLibrary(const char *name) { _handle = __libc_dlopen_mode(name, 2); }
+    void *get(const char *name) const { void *p = __libc_dlsym(_handle, name); if(!p) cerr << "can't find: " << name << endl, abort(); return p; }
+    void *_handle;
+#ifndef PTHREAD
+} gmp("/usr/lib/x86_64-linux-gnu/libgmp.so.10");	// hamko
+#else
+} libpthread("/lib/x86_64-linux-gnu/libpthread.so.0");	// hamko
+//} libpthread("/usr/lib64/libpthread.so.0");	// yukicoder
+#endif
+#endif
+ 
+#define EXPAND_MACRO_TO_STR_2(a) #a
+#define EXPAND_MACRO_TO_STR(a) EXPAND_MACRO_TO_STR_2(a)
+ 
+#ifndef PTHREAD
+#include <gmp.h>
+#define D(name) const auto my_##name = (decltype(::name)*)gmp.get(EXPAND_MACRO_TO_STR(name))
+D(mpz_init_set_str);
+D(mpz_popcount);
+#else
+#define D(name) const auto my_##name = (decltype(::name)*)libpthread.get(EXPAND_MACRO_TO_STR(name))
+D(pthread_create);
+D(pthread_join);
+D(pthread_mutex_lock);
+D(pthread_mutex_unlock);
+#endif
+ 
+#define rer(i,l,u) for(int (i)=(int)(l);(i)<=(int)(u);++(i))
+#define reu(i,l,u) for(int (i)=(int)(l);(i)<(int)(u);++(i))
+ 
+int flag=1;
+int balance=10000;
+int cash=0;
+ 
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+ 
+function<void(ll)> parallel_rep_solve;
+vll parallel_rep_range;
+void* parallel_rep_helper(void* arg) {
+    //    cout << (*(ll*)arg) << endl;
+    ll l = parallel_rep_range[0 + *(ll*)arg];
+    ll r = parallel_rep_range[1 + *(ll*)arg];
+    free(arg);
+    //    cout << l << " " << r << "#thread" << endl;
+    repi(j, l, r)
+        parallel_rep_solve(j);
+    return NULL;
+}
+void parallel_rep(int n, function<void(ll)> f, ll thnum = 50) {
+    if (thnum == 1) { rep(i, n) f(i); return; } // やりたいこと
+ 
+    parallel_rep_solve = f;
+    parallel_rep_range.resize(thnum);
+    rep(i, thnum) parallel_rep_range[i] = i * n / thnum;
+    parallel_rep_range.pb(n);
+    //    cout << parallel_rep_range << endl;
+    vector<pthread_t> t(thnum);
+    rep(i, thnum) {
+        ll* i_pointer = (ll*)malloc(sizeof(ll));
+        *i_pointer = i;
+        my_pthread_create(&t[i], NULL, parallel_rep_helper, i_pointer);
+    }
+    rep(i, thnum) {
+        my_pthread_join(t[i], NULL);
+    }
+}
+ 
+//------------------
+ 
+ 
 
 int main(void) {
     string s; cin >> s; 

@@ -52,54 +52,109 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-ll getCost(string a, string b) {
-    rep(i, a.length()) {
-        string tmp; 
-        repi(j, i, a.length()) 
-            tmp += b[j];
-        rep(j, i)
-            tmp += b[j];
-        if (a == tmp) {
-            return i;
+ll n = 30;
+ll rem = 0;
+ll b[50][50];
+ll pos_to_node(ll i, ll j) {return i*n+j;}
+tuple<ll, ll> node_to_pos(ll pos) {return mt(pos/n, pos%n);}
+vll getLongestPath(void) {
+    vvll g(n*n);
+    vll di = {1, 0, -1, 0};
+    vll dj = {0, 1, 0, -1};
+    rep(i, n) rep(j, n) {
+        rep(dir, di.size()) {
+            ll ni = i + di[i];
+            ll nj = j + dj[i];
+            if (ni < 0 || nj < 0 || ni >= n || nj >= n) continue;
+            if (b[ni][nj] + 1 != b[i][j]) break;
+            g[pos_to_node(i, j)].pb(pos_to_node(ni, nj));
         }
     }
-    assert(0);
-    return -1;
+
+    vll in(n*n);
+    vll out(n*n);
+    rep(i, n) rep(j, n) {
+        for (auto next_node : g[pos_to_node(i, j)]) {
+            out[pos_to_node(i, j)]++;
+            out[next_node]++;
+        }
+    }
+    vll topo(n*n);
+    vll topo_rev(n*n);
+    vll no_in;
+    vll no_in_next;
+    rep(i, n) rep(j, n) if (in[pos_to_node(i, j)] == 0) {
+        no_in_next.pb(pos_to_node(i, j));
+    }
+    ll topo_i = 0;
+    while (no_in_next.size()) {
+        swap(no_in, no_in_next);
+        for (auto node : no_in) {
+            for (auto next_node : g[node]) {
+                in[next_node]--;
+                if (in[next_node] == 0) {
+                    no_in_next.pb(next_node);
+                }
+            }
+            out[node] = 0;
+            topo[node] = topo_i;
+            topo_rev[topo_i] = node;
+            topo_i++;
+        }
+    }
+    assert(topo.size() == n * n);
+
+    ll max_path_len_over_all_dp = -INF;
+    vll max_path_over_all_dp;
+    rep(st_topo, n * n) { // topoの順序で、st_topoから始めて
+        ll st_node = topo[st_topo]; // topo
+        vll dp(n * n + 1, -INF);
+        vll path(n * n + 1, -1);
+        repi(i, st_topo, n * n) {
+            if (dp[st_topo] == -INF) dp[st_topo] = 0;
+            for (auto next_node : g[st_node]) {
+                if (dp[topo_rev[next_node]] < dp[i] + 1) {
+                    dp[topo_rev[next_node]] = dp[i] + 1;
+                    path[topo_rev[next_node]] = i; // topo_rev[*]へはiから行く
+                }
+            }
+        }
+        ll max_path_len = -INF;
+        ll max_path_len_node = -1;
+        repi(i, st_topo, n * n) {
+            if (max_path_len < dp[i]) {
+                max_path_len = dp[i];
+                max_path_len_node = i;
+            }
+        }
+        if (max_path_len_over_all_dp > max_path_len) continue;
+
+        // path reconstruction
+        vll path_tmp;
+        ll to = max_path_len_node;
+        while (to != -1) {
+            path_tmp.pb(to);
+            to = path[to];
+        }
+        max_path_over_all_dp = path_tmp;
+    }
+    reverse(all(max_path_over_all_dp));
+    return max_path_over_all_dp;
 }
-
-
 int main(void) {
-    ll n; cin >> n;
-    vector<string> s(n); rep(i, n) cin >> s[i];
-    ll m = s[0].size();
-    
-    set<string> cands; 
-    rep(i, m) {
-        string tmp; 
-        repi(j, i, m) 
-            tmp += s[0][j];
-        rep(j, i)
-            tmp += s[0][j];
-        cands.insert(tmp);
-//        cout << tmp << endl;
-    }
-
-    rep(i, n) {
-        if (cands.count(s[i]) == 0) {
-            cout << -1 << endl;
-            return 0;
+//    cin >> n;
+    rep(i, n) rep(j, n) cin >> b[i][j];
+    rep(i, n) rep(j, n) rem += b[i][j];
+    ll score = 0;
+    while (rem) {
+        vll path = getLongestPath();
+        for (auto pos : path) {
+            ll i, j; tie(i, j) = node_to_pos(pos);
+            cout << i + 1 << " " << j + 1 << endl;
         }
+        rem -= path.size();
+        score++;
     }
-
-    ll ret = INF;
-    for (auto x : cands) {
-        ll cost = 0;
-        rep(i, n) {
-            cost += getCost(x, s[i]);
-        }
-        chmin(ret, cost);
-    }
-    cout << ret << endl;
 
     return 0;
 }

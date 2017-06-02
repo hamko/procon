@@ -52,54 +52,107 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-ll getCost(string a, string b) {
-    rep(i, a.length()) {
-        string tmp; 
-        repi(j, i, a.length()) 
-            tmp += b[j];
-        rep(j, i)
-            tmp += b[j];
-        if (a == tmp) {
-            return i;
-        }
-    }
-    assert(0);
-    return -1;
-}
-
-
+vector<string> b;
+vvll memo;
 int main(void) {
-    ll n; cin >> n;
-    vector<string> s(n); rep(i, n) cin >> s[i];
-    ll m = s[0].size();
-    
-    set<string> cands; 
-    rep(i, m) {
-        string tmp; 
-        repi(j, i, m) 
-            tmp += s[0][j];
-        rep(j, i)
-            tmp += s[0][j];
-        cands.insert(tmp);
-//        cout << tmp << endl;
+    ll h, w; cin >> h >> w;
+    b.resize(h);
+    rep(i, h) {
+        cin >> b[i];
     }
-
-    rep(i, n) {
-        if (cands.count(s[i]) == 0) {
-            cout << -1 << endl;
-            return 0;
+    memo.resize(h);
+    rep(i, h) {
+        memo[i].resize(w);
+        rep(j, w) {
+            memo[i][j] = -1;
         }
     }
-
-    ll ret = INF;
-    for (auto x : cands) {
-        ll cost = 0;
-        rep(i, n) {
-            cost += getCost(x, s[i]);
+    ll dh[4] = {0, 1, 0, -1};
+    ll dw[4] = {1, 0, -1, 0};
+    queue<tuple<ll, ll, ll>> q;
+    q.push(mt(0, 0, 0));
+    while (q.size()) {
+        ll hh, ww, cost;
+        tie(hh, ww, cost) = q.front();
+        q.pop();
+        if (memo[hh][ww] != -1) continue;
+        memo[hh][ww] = cost;
+        if (b[hh][ww] == 'F') break;
+        rep(i, 4) {
+            ll hhn = hh + dh[i];
+            ll wwn = ww + dw[i];
+            if (hhn < 0 || hhn >= h) continue;
+            if (wwn < 0 || wwn >= w) continue;
+            if (b[hhn][wwn] == '*') continue;
+            q.push(mt(hhn, wwn, cost+1));
         }
-        chmin(ret, cost);
     }
-    cout << ret << endl;
+ //   cout << memo << endl;
 
+    ll fh = -1, fw = -1;
+    rep(i, h) rep(j, w) if (b[i][j] == 'F') {
+        fh = i, fw = j;
+        break;
+    }
+    string ret;
+    string dirname = "LURD";
+    while (!(fh == 0 && fw == 0)) {
+        rep(i, 4) {
+            ll fhn = fh+dh[i];
+            ll fwn = fw+dw[i];
+            if (fhn < 0 || fhn >= h) continue;
+            if (fwn < 0 || fwn >= w) continue;
+            if (memo[fh][fw] == memo[fhn][fwn] + 1) {
+                ret += dirname[i];
+                fh = fhn;
+                fw = fwn;
+                break;
+            }
+        }
+    }
+    reverse(all(ret));
+//    cout << ret << endl;
+    bool lr = 0, ud = 0;
+    bool lrrev = 0, udrev = 0;
+    ll posh = 0, posw = 0;
+    rep(i, ret.size()) {
+        if (lr == 0 && (ret[i] == 'R' || ret[i] == 'L')) {
+            lr = 1;
+            cout << 'L' << endl;
+            ll hh, ww; cin >> hh >> ww; hh--, ww--;
+            if (posh == hh && posw == ww) {
+            } else {
+                lrrev = 1;
+                goto SKIP;
+            }
+        }
+        if (ud == 0 && (ret[i] == 'D' || ret[i] == 'U')) {
+            ud = 1;
+            cout << 'U' << endl;
+            ll hh, ww; cin >> hh >> ww; hh--, ww--;
+            if (posh == hh && posw == ww) {
+            } else {
+                udrev = 1;
+                goto SKIP;
+            }
+        }
+//        cout << lrrev << " " << udrev <<"rev"<< endl;
+        if (ret[i] == 'R' || ret[i] == 'L') {
+            if (lrrev) {
+                cout << (ret[i] == 'R' ? 'L' : 'R') << endl;
+            } else {
+                cout << ret[i] << endl;
+            }
+        } else {
+            if (udrev) {
+                cout << (ret[i] == 'U' ? 'D' : 'U') << endl;
+            } else {
+                cout << ret[i] << endl;
+            }
+        }
+        ll hh, ww; cin >> hh >> ww; hh--, ww--;
+        posh = hh, posw = ww;
+        SKIP:;
+    }
     return 0;
 }
