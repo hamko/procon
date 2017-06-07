@@ -101,6 +101,73 @@ void randomModIntVector(vector<mint> &v) {
 
 ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
 
+// 行列xベクトル
+vector<mint> mul(vector<vector<mint>> A, vector<mint> x) {
+    assert(A.size() >= 0); assert(A[0].size() == x.size());
+    vector<mint> b(A.size());
+    rep(i, A.size()) {
+        rep(j, A[0].size()) {
+            b[i] += A[i][j] * x[j];
+        }
+    }
+    return b;
+}
+// 行列x行列
+vector<vector<mint>> mul(vector<vector<mint>> A, vector<vector<mint>> B) {
+    assert(A[0].size() == B.size());
+    vector<vector<mint>> C(A.size(), vector<mint>(B[0].size()));
+    rep(i, A.size()) rep(j, B[0].size()) {
+        rep(h, A[0].size()) {
+            C[i][j] += A[i][h] * B[h][j];
+        }
+    }
+    return C;
+}
+// ベクトル+ベクトル
+vector<mint> plu(vector<mint> x, vector<mint> y) {
+    assert(x.size() == y.size());
+    rep(i, x.size()) {
+        y[i] += x[i];
+    }
+    return y;
+}
+// 行列+行列
+vector<vector<mint>> plu(vector<vector<mint>> A, vector<vector<mint>> B) {
+    assert(A.size() == B.size());
+    assert(A[0].size() == B[0].size());
+    rep(i, A.size()) rep(j, A[0].size()) {
+        B[i][j] += A[i][j];
+    }
+    return B;
+}
+
+
+vector<vector<mint>> transpose(vector<vector<mint>> A) {
+    rep(i, A.size()) repi(j, i+1, A.size()) swap(A[i][j], A[j][i]);
+    return A;
+}
+mint dot(vector<mint> x, vector<mint> y) {
+    mint ret = 0;
+    rep(i, x.size())
+        ret += x[i] * y[i];
+    return ret;
+}
+vector<mint> pow(vector<vector<mint>> A, vector<mint> x, long long k) {
+    vector<vector<vector<mint>>> Ak; // Ak[i] = A^{2^i}
+
+    Ak.pb(A);
+    rep(i, 70) 
+        Ak.pb(mul(Ak[i], Ak[i]));
+    ll cyc = 0;
+    while (k) {
+        if (k & 1)
+            x = mul(Ak[cyc], x);
+        k /= 2;
+        cyc++;
+    }
+    return x;
+}
+
 // GF(mo)列sから、それを生成する最小線形漸化式Cを復元する
 //
 // 入力: 漸化式が生成したGF(mo)列s
