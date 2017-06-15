@@ -33,7 +33,7 @@ template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, 
 template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
 template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
-string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
+string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); reverse(all(s)); return s; }
 
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
@@ -51,7 +51,6 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
-#define double long double
 
 /*****************/
 // Dictionary
@@ -313,51 +312,32 @@ public:
     // number of elements in [l,r) in [a,b)
     // O(log m)
     int freq(int l, int r, T a, T b) { return freq_dfs(0,l,r,0,a,b); }
-
-    // TODO
-    // [l, r)区間内部で、a以上の最小値（これさえあればselectで自由に飛べる）
-    // int l, int r, T a
-    //
-    // すごくやる気のない実装としては、[a, x]のfreqについて二分探索してO(log^2 n)
 };
 
-
 int main(void) {
-    {
-        cout << "####FID" << endl;
-        ll n = 1050;
-        bool a[n]; rep(i, n) a[i] = i % 5;
-        FID<2000> fid(n, a);
-        rep(i, 12) cout << fid.count(1, i) << " "; cout << endl;
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+    wavelet<ll, 200000/*len*/, 32/*[0, 4*1e9)*/> w(n, a.data());
+    
+    vector<ll> b = a;
+    sort(all(b));
+    reverse(all(b));
+    b.erase(std::unique(b.begin(), b.end()), b.end());
 
-        fid.print();
+
+
+    cout << bs << endl;
+
+    vll ret(n);
+    for (int bi = 1; bi < bs.size(); bi++) {
+        ll i = bs[bi].fi;
+        ll x = bs[bi].se;
+        ret[w.select(x, 0)] = w.freq(0, n, x, 2e9) * (x - bs[bi-1].se);
+//    int select(T val, int k) {
     }
-    {
-        cout << "####Wavelet" << endl;
-        const ll n = 8;
-        ll a[n] = {1, 1, 2, 1, 1, 5, 8, 5};
-        wavelet<ll, 20/*len*/, 5/*[0, 31)*/> w(n, a);
-        w.print();
-        cout << "at" << endl;
-        rep(i, n) cout << w[i] << " "; cout << endl;
-        cout << "count" << endl;
-        rep(i, n) cout << w.count(1ll, i) << " "; cout << endl;
-        cout << "select" << endl;
-        rep(i, n) cout << w.select(1ll, i) << " "; cout << endl;
-        cout << "maximum" << endl;
-        rep(i, n+1) 
-            cout << w.maximum(0, n, i) << endl;
-        cout << "kth" << endl;
-        rep(i, n) cout << w.kth_number(0, n, i) << " "; cout << endl;
-        cout << "freq" << endl;
-        cout << w.freq(0, n, 2, 8) << endl;
-        cout << "freq_list" << endl;
-        cout << w.freq_list(0, n, 2, 8) << endl;
-
-        cout << "get_rect" << endl;
-        // TODO
-        
+    rep(i, n) {
+        cout << ret[i] << endl;
     }
-
+    assert(accumulate(all(ret), 0ll) == accumulate(all(a), 0ll));
     return 0;
 }
