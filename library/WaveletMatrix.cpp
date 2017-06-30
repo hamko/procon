@@ -319,6 +319,10 @@ public:
     // int l, int r, T a
     //
     // すごくやる気のない実装としては、[a, x]のfreqについて二分探索してO(log^2 n)
+    //
+    // 普通に
+    // https://www.slideshare.net/pfi/ss-15916040
+    // rangemaxk, rangemink, prevvalue, nextvalue, intersectを実装するのが良さそう
 };
 
 
