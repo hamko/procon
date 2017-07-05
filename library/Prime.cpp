@@ -48,25 +48,67 @@ static const long long mo = 1e9+7;
 // 素数テーブルの作成
 /**********************************************************/
 // 素数テーブル構築: O(n log n)
-vector<bool> is_prime;
+#define MAX_NUM 20000000
+ll prime_size = -1;
+bool is_prime[MAX_NUM];
 vector<ll> primes;      // 素数リスト
-void constructPrime(ll n) {
-    if (n > 10000000) assert(0);
-    is_prime.resize(n);
-    primes.resize(0);
+void sieve_of_atkin(ll N) {
+    ll sqrtN = sqrt(N);
+    int n;
+    for (int z = 1; z <= 5; z += 4) {
+        for (int y = z; y <= sqrtN; y += 6) {
+            for (int x = 1; x <= sqrtN && (n = 4*x*x+y*y) <= N; ++x)
+                is_prime[n] = !is_prime[n];
+            for (int x = y+1; x <= sqrtN && (n = 3*x*x-y*y) <= N; x += 2)
+                is_prime[n] = !is_prime[n];
+        }
+    }
+    for (int z = 2; z <= 4; z += 2) {
+        for (int y = z; y <= sqrtN; y += 6) {
+            for (int x = 1; x <= sqrtN && (n = 3*x*x+y*y) <= N; x += 2)
+                is_prime[n] = !is_prime[n];
+            for (int x = y+1; x <= sqrtN && (n = 3*x*x-y*y) <= N; x += 2)
+                is_prime[n] = !is_prime[n];
+        }
+    }
+    for (int y = 3; y <= sqrtN; y += 6) {
+        for (int z = 1; z <= 2; ++z) {
+            for (int x = z; x <= sqrtN && (n = 4*x*x+y*y) <= N; x += 3)
+                is_prime[n] = !is_prime[n];
+        }
+    }
+    for (int n = 5; n <= sqrtN; ++n)
+        if (is_prime[n])
+            for (int k = n*n; k <= N; k+=n*n)
+                is_prime[k] = false;
+    is_prime[2] = is_prime[3] = true;
+}
+
+void sieve_of_eratosthenes(ll n) {
     for (ll i = 2; i < n; ++i)
         is_prime[i] = true;
     for (ll i = 2; i*i < n; ++i)
         if (is_prime[i])
             for (ll j = i*i; j < n; j+=i)
                 is_prime[j] = false;
-    for (ll i = 0; i < is_prime.size(); i++) 
+    for (ll i = 0; i < n; i++) 
         if (is_prime[i]) 
             primes.push_back(i);
 }
 
-extern vector<bool> is_prime;
-extern vector<ll> primes;      // 素数リスト
+void constructPrime(ll n) {
+    assert(n < MAX_NUM);
+    prime_size = n;
+#if 1
+    sieve_of_atkin(n);
+#else
+    sieve_of_eratosthenes(n);
+#endif
+    primes.reserve(1.2*n*log(n)); // 素数定理よりn>100でOK
+    rep(i, n) if (is_prime[i]) {
+        primes.pb(i);
+    }
+}
 
 /**********************************************************/
 // 以下はよく行う処理のテンプレート
@@ -260,8 +302,6 @@ vector<ll> iterativeSieve() {
     }
     return vector<ll>(p, p+num);
 }
-
-
 
 ll n = 1000000;
 int main(void) {
