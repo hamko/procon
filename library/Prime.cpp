@@ -181,7 +181,6 @@ ll getDivisorsNum(ll n) {
 // 前処理なしの素数判定
 /**********************************************************/
 // Millar-Rabin Test
-
 using ull = unsigned long long;
 static vll cands_small = {2, 7, 61,};
 static vll cands_large = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};

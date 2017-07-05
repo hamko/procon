@@ -16,7 +16,6 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 #define forall all_of
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
-using ull = unsigned long long;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 using Pos = complex<double>;
@@ -80,20 +79,17 @@ extern vector<bool> is_prime;
 extern vector<ll> primes;      // 素数リスト
 
 const ll NUM = 5e6+10;
-ull c[NUM];
-ull f[NUM];
-ull calc_f(ull i) {
-    ll ret = -1;
-    if (f[i] != -1)
-        ret = f[i];
-    else 
-        ret = c[i];
+ll c[NUM];
+ll f[NUM];
+ll calc_f(ll i) {
+    if (is_prime[i]) {
+        f[i] = c[i];
+    }
 
-    f[i] = ret % mo;
-    for (ull pi = 0; primes[pi] <= i; pi++) {
+    for (ll pi = 0; primes[pi] <= i; pi++) {
         if (primes[pi]*i +1>= NUM) 
             break;
-        f[primes[pi]*i] = f[i] + i * c[primes[pi]];
+        chmin(f[primes[pi]*i], f[i] + i * c[primes[pi]]);
     }
 
     return f[i];
@@ -103,26 +99,24 @@ int main(void) {
     ll t, l, r; cin >> t >> l >> r;
     constructPrime(NUM);
     rep(i, NUM) {
-        (c[i] = i * (i - 1) / 2ll) %= mo;
+        c[i] = i * (i - 1) / 2ll;
     }
     rep(i, NUM) {
-        f[i] = -1;
+        f[i] = INF;
+    }
+    rep(i, NUM) {
+        calc_f(i);
     }
 
-    ull ret = 0;
+    ll ret = 0;
     ll tmp = 1;
     repi(i, l, r+1) {
-        (ret += tmp * calc_f(i)) %= mo;
-        (tmp *= t) %= mo;
+        ret += (tmp % mo) * (calc_f(i) % mo);
+        ret %= mo;
+        tmp *= t;
+        tmp %= mo;
     }
     cout << ret % mo << endl;
-
-    /*
-    rep(i, 8) 
-        cout << i << " " << calc_f(i) << endl;;
-    rep(i, 20)
-        cout << i << " " << f[i] << endl;
-        */
 
     return 0;
 }
