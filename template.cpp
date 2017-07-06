@@ -10,6 +10,7 @@ using namespace std;
 #define se second
 #define mt make_tuple
 #define mp make_pair
+#define ZERO(a) memset(a,0,sizeof(a))
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 #define exists find_if

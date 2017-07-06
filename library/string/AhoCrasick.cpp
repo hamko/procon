@@ -29,6 +29,7 @@ auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ost
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
@@ -52,6 +53,19 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+// 簡単な挙動
+//
+// (a)
+// p = transite(p, c) 
+//      cが成功なら     p = p->next[c]
+//      cが失敗なら     p = p->p[fail]->next[c]
+//
+// (b)
+// 各pで、マッチングしている辞書番号集合が保持されている。
+//
+// (c)
+// 複数マッチング。"aaaa"には"aa"が3回マッチングする。
+// もしcoveringマッチングにしたいなら、マッチングするノードの失敗辺を全てrootに張り替えれば良い
 
 const int fail = 0;
 // パターンマッチングの頂点
@@ -131,6 +145,24 @@ void buildAhoCrasick(pma* root) {
     }
 }
 
+// Aho-Corasickをcoveringマッチングにする
+// 破壊的
+//
+// 内部でやってることは、マッチングするノードの失敗辺を全てrootに張り替えている
+void changeToCoveringMode(pma* root) {
+    unordered_set<pma*> memo;
+    function<void(pma*)> f = [&](pma* p) {
+        if (memo.count(p)) return;
+        memo.insert(p);
+        if (p->matched.size()) 
+            p->next[0] = root;
+        rep(i, 256) if (p->next[i]) {
+            f(p->next[i]);
+        }
+    };
+    f(root);
+}
+
 // 頂点pから遷移cによって、次の頂点へと遷移する。
 // 1回の遷移によるマッチング増加は、transite(p, c)->matchingによって計算できる。
 pma* transite(pma* p, int c) {
@@ -140,6 +172,7 @@ pma* transite(pma* p, int c) {
 }
 
 // AhoCrasick pを構築したパターンが、sに何個入っているかをresに副作用で返す。
+// 注意！！これはデフォルトで複数マッチング。coveringマッチングにしたいなら、changeToCoveringMode(root)を読ぶこと。
 void match(pma* &p, string s, vll& res) {
     rep(i, s.length()) {
         p = transite(p, s[i]);
@@ -149,15 +182,95 @@ void match(pma* &p, string s, vll& res) {
 }
 
 int main(void) {
-    string s = "abbbbbbb";
-    vector<string> dict = {"abb", "b", "bbb"};
+    {
+        vector<string> dict = {"abb", "b", "bbb"};
+        auto root = buildTrie(dict);
+        buildAhoCrasick(root);
 
-    auto p = buildTrie(dict);
-    buildAhoCrasick(p);
+        char c; 
 
-    vll res(dict.size());
-    match(p, s, res);
-    cout << res << endl;
+        // pが表す接尾辞は""
+        auto p = root;
+
+        // pが表す接尾辞は""
+        // 辞書に"c"はマッチしないので、matchした辞書は何もなし
+        c = 'c'; p = transite(p, c); cout << c << " " << p->matched << endl; 
+
+        // pが表す接尾辞は"b"
+        // 辞書のうち#1の"b"がマッチする
+        c = 'b'; p = transite(p, c); cout << c << " " << p->matched << endl; 
+
+        // pが表す接尾辞は"bb"
+        // 辞書のうち#1の"b"がマッチする
+        c = 'b'; p = transite(p, c); cout << c << " " << p->matched << endl; 
+
+        // pが表す接尾辞は"bbb"
+        // 辞書のうち#1の"b"と、#2の"bbb"がマッチする
+        c = 'b'; p = transite(p, c); cout << c << " " << p->matched << endl; 
+    }
+
+    {
+        vector<string> dict = {"ab", "abab"};
+        auto root = buildTrie(dict);
+        buildAhoCrasick(root);
+
+        char c; 
+
+        // pが表す接尾辞は""
+        auto p = root;
+
+        // pが表す接尾辞は"a"
+        // 辞書に"a"はマッチしない
+        c = 'a'; p = transite(p, c); cout << c << " " << p->matched << endl; 
+
+        // pが表す接尾辞は"ab"
+        // 辞書のうち#0の"ab"がマッチする
+        c = 'b'; p = transite(p, c); cout << c << " " << p->matched << endl; 
+
+        // pが表す接尾辞は"aba"
+        // 辞書に"aba"はマッチしない
+        c = 'a'; p = transite(p, c); cout << c << " " << p->matched << endl; 
+
+        // pが表す接尾辞は"abab"
+        // 辞書のうち#0の"ab"と、#1の"abab"がマッチする
+        c = 'b'; p = transite(p, c); cout << c << " " << p->matched << endl; 
+    }
+
+    {
+        vector<string> dict = {"abb", "b", "bbb"};
+        auto root = buildTrie(dict);
+        buildAhoCrasick(root);
+
+        auto p = root;
+
+        string s = "abbbbbbb";
+        vll res(dict.size());
+        match(p, s, res); // 重複マッチングで何個ある？
+        cout << res << endl;
+    }
+
+    {
+        vector<string> dict = {"abab"};
+        auto root = buildTrie(dict);
+        buildAhoCrasick(root);
+
+        auto p = root;
+        string s = "abababab";
+
+        {
+            vll res(dict.size());
+            match(p, s, res); // 重複マッチングで何個ある？
+            cout << res << endl;
+        }
+
+        {
+            changeToCoveringMode(root); // covering matchingに変更
+            vll res(dict.size());
+            match(p, s, res); // covering matchingで何個ある？
+            cout << res << endl;
+        }
+    }
+
 
     return 0;
 }
