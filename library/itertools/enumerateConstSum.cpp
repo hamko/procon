@@ -18,12 +18,8 @@ void dfs(ll s, ll i, vll& a, const vll& amax, const int target_sum, vll& amaxsum
     if (s && i == a.size()) return;
     if (!s) {
 //        assert(accumulate(a.begin(), a.end(), 0ll) == target_sum);
-        /*
-         * ここでaをキャプチャ
-         */
         c++;
-
-//        cout << a << endl;
+        f(x);
         return;
     }
     rep(j, min(s, amax[i])+1) {
