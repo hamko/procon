@@ -10,7 +10,7 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 
 // ちょうどi個を見終えて、残りがsで、現在の配列がaである場合。
 ll c = 0;
-void get(vll& x) {
+void f(vll& x) {
 //    cout << x << endl;
 }
 void dfs(ll s, ll i, vll& a, const vll& amax, const int target_sum, vll& amaxsum) {
