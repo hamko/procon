@@ -51,21 +51,37 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+const ll M = 1005;
+// dp[i][j] = 長さiのpermutationのうち、転倒数がjであるような場合の数
+// 配るDPの遷移
+// dp[i][j] -> dp[i+1][j+[0, i]] += dp[i][j]
+//
+ll dp[M][M];
 class Solution {
     public:
-        int findIntegers(int num) {
-            ll ret = 0;
-            return ret;
+        int kInversePairs(int n, int k) {
+            rep(i, M) rep(j, M) dp[i][j] = 0;
+            dp[1][0] = 1;
+            repi(i, 1, n+1) {
+                rep(j, M) {
+                    if (!dp[i][j]) continue;
+                    (dp[i+1][j] += dp[i][j]) %= mo;
+                    (dp[i+1][min(M-2ll, j+i+1)] -= dp[i][j]) %= mo;
+                }
+                rep(j, M-1) {
+                    (dp[i+1][j+1] += dp[i+1][j]) %= mo;
+                }
+            }
+
+            return (dp[n][k] + mo) % mo;
         }
 };
 
 int main(void) {
     while (1) {
-        ll n; cin >> n;
-        vll a(n); cin >> a;
-
         Solution s;
-        s.findIntegers(n);
+        ll n, k; cin >> n >> k;
+        cout << s.kInversePairs(n, k) << endl;
     }
     return 0;
 }

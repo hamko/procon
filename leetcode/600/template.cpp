@@ -51,10 +51,49 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+// 配る桁DP
+// dp[i][j][h] = ちょうど上からi桁見て、
+//               num未満であることが確定しており(j)、
+//               今までに1がh個連続している場合の数
+// 遷移
+// 確定していなくて(j=0)、i bitが0ならば、次は0
+// 今までに1が1個連続している(h=1)ならば、次は0
+// その他ならば、心置きなく0も1も選べる
+ll dp[64][2][2];
 class Solution {
     public:
         int findIntegers(int num) {
+            rep(i, 64) rep(j, 2) rep(h, 2) dp[i][j][h] = 0;
+            dp[0][0][0] = 1;
+
+            const int maxb = 60;
+            rep(i, maxb) {
+                ll b = !!(num & (1ll << (maxb - 1 - i)));
+                rep(j, 2) rep(h, 2) {
+                    if (!dp[i][j][h]) continue;
+//                    cout << i << " " << j << " " << h << " : " << dp[i][j][h] << " #state" << endl;
+                    if (!j&&!b) { // 0のみ　
+                        dp[i+1][j||(0<b)][0] += dp[i][j][h];
+                    } else if (h) { // 0のみ
+                        dp[i+1][j||(0<b)][0] += dp[i][j][h];
+                    } else {
+//                        cout << j << " " << b << " : " << (j||(0<b)) << " " << (j||(1<b)) << endl;
+                        dp[i+1][j||(0<b)][0] += dp[i][j][h];
+                        dp[i+1][j||(1<b)][1] += dp[i][j][h];
+                    }
+                }
+                /*
+                rep(j, 2) rep(h, 2) if (dp[i+1][j][h]) {
+                    cout << i+1 << " "<<j<<" "<<h<<" : "<<dp[i+1][j][h] << endl;
+                }
+                */
+            }
+
             ll ret = 0;
+            rep(j, 2) rep(h, 2) {
+                ret += dp[maxb][j][h];
+            }
+
             return ret;
         }
 };
@@ -62,10 +101,9 @@ class Solution {
 int main(void) {
     while (1) {
         ll n; cin >> n;
-        vll a(n); cin >> a;
 
         Solution s;
-        s.findIntegers(n);
+        cout << s.findIntegers(n) << endl;
     }
     return 0;
 }
