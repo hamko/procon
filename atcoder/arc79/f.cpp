@@ -30,6 +30,7 @@ auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ost
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
@@ -53,66 +54,134 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-const int nmax = 300;
+vvll g, gr;
 
-int ret = 1e8;
-int n, m; 
-vector<vector<int>> a;
-void print(void) {
-    cout << "#############" << endl;
-    rep(i, a.size()) {
-        rep(j, a[i].size()) {
-            cout << a[i][j] + 1 << " ";
-        }
-        cout << endl;
-    }
+vll order;
+ll order_counter = 0;
+void scc_for(ll v) {
+    if (order[v] >= 0) return;
+    order[v] = INF;
+    for (auto u : g[v]) 
+        scc_for(u);
+    order[v] = order_counter++;
 }
-void dfs(void) {
-    if (!a[0].size()) return;
-//    print();
-//    cout << a[0].size() << endl;
+vvll scc_set;
+vector<bool> flag;
+void scc_rev(ll i, ll v) {
+    if (flag[v]) return;
+    flag[v] = 1;
+    scc_set[i].pb(v);
+    for (auto u : gr[v]) 
+        scc_rev(i, u);
+}
+vvll getSCC(void) {
+    ll n = g.size();
 
-    int counter[nmax] = {};
+    order.resize(n, -1);
+    order_counter = 0;
+    scc_set.clear();
+    flag.resize(n);
+
+    rep(v, g.size()) 
+        scc_for(v);
+    vll order_rev(n);
     rep(i, n) 
-        counter[a[i][0]]++;
-
-    int M = -1;
-    rep(i, nmax) 
-        chmax(M, counter[i]);
-    chmin(ret, M);
-
-    set<ll> memo; 
-    rep(i, nmax) if (counter[i] == M) {
-        memo.insert(i);
-    }
-
-    vector<vector<int>> a_org = a;
-
-    vector<vector<int>> a_next(n);
-    rep(i, n) {
-        rep(j, a[i].size()) if (!memo.count(a_org[i][j])) {
-            a_next[i].pb(a_org[i][j]);
+        order_rev[n-1-order[i]] = i;
+    rep(i, g.size()) {
+        ll v = order_rev[i];
+        if (!flag[v]) {
+            scc_set.pb({});
+            scc_rev(scc_set.size()-1, v);
         }
     }
-    a = a_next;
-    dfs();
-    a = a_org;
-
+    return scc_set;
 }
-int main(void) {
-    cin >> n >> m;
-    rep(i, n) {
-        vector<int> tmp;
-        rep(i, m) {
-            int x; cin >> x; x--;
-            tmp.pb(x);
-        }
-        a.pb(tmp);
+
+unordered_set<ll> cycle;
+vll grundy;
+ll grundy_dfs(ll v) {
+    if (cycle.count(v)) 
+        return -1;
+    if (grundy[v] >= 0) {
+        return grundy[v];
+    }
+    if (g[v].size() == 0) {
+        return grundy[v] = 0;
     }
 
-    dfs();
-    cout << ret << endl;
+    unordered_set<ll> memo;
+    for (auto&& u : g[v]) {
+        memo.insert(grundy_dfs(u));
+    }
+    rep(i, INF) {
+        if (!memo.count(i)) {
+            return grundy[v] = i;
+        }
+    }
+    assert(0);
+    return -1;
+}
 
+
+int main(void) {
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+    g.resize(n), gr.resize(n);
+    rep(i, n) {
+        g [a[i]-1].pb(i);
+        gr[i].pb(a[i]-1);
+    }
+
+    vvll scc = getSCC();
+
+    for (auto&& vv : scc) if (vv.size() > 1) 
+        for (auto&& v : vv) 
+            cycle.insert(v);
+    if (cycle.empty()) 
+        return 0;
+
+    grundy = vll(n, -1);
+    rep(i, n) if (!cycle.count(i)) 
+        grundy_dfs(i);
+
+    ll v = *cycle.begin();
+    unordered_set<ll> memo;
+    for (auto u : g[v]) 
+        memo.insert(grundy[u]);
+
+    cycle = {};
+    ll counter = 2;
+    rep(i, INF) {
+        if (!counter) break;
+        if (!memo.count(i)) {
+            auto backup = grundy;
+            grundy[v] = i;
+            rep(i, n) 
+                grundy_dfs(i);
+            
+            rep(i, n) {
+                assert(grundy[i] != -1);
+                unordered_set<ll> memo;
+                for (auto&& u : g[i]) 
+                    memo.insert(grundy[u]);
+                ll grundy_i = -1;
+                rep(i, INF) {
+                    if (!memo.count(i)) {
+                        grundy_i = i;
+                        break;
+                    }
+                }
+                if (grundy[i] != grundy_i) 
+                    goto SKIP;
+            }
+            cout << "POSSIBLE" << endl;
+            return 0;
+            SKIP:;
+            grundy = backup;
+            counter--;
+        }
+    }
+    cout << "IMPOSSIBLE" << endl;
 
     return 0;
 }

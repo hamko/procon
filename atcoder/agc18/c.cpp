@@ -53,65 +53,61 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-const int nmax = 300;
-
-int ret = 1e8;
-int n, m; 
-vector<vector<int>> a;
-void print(void) {
-    cout << "#############" << endl;
-    rep(i, a.size()) {
-        rep(j, a[i].size()) {
-            cout << a[i][j] + 1 << " ";
-        }
-        cout << endl;
-    }
-}
-void dfs(void) {
-    if (!a[0].size()) return;
-//    print();
-//    cout << a[0].size() << endl;
-
-    int counter[nmax] = {};
-    rep(i, n) 
-        counter[a[i][0]]++;
-
-    int M = -1;
-    rep(i, nmax) 
-        chmax(M, counter[i]);
-    chmin(ret, M);
-
-    set<ll> memo; 
-    rep(i, nmax) if (counter[i] == M) {
-        memo.insert(i);
-    }
-
-    vector<vector<int>> a_org = a;
-
-    vector<vector<int>> a_next(n);
-    rep(i, n) {
-        rep(j, a[i].size()) if (!memo.count(a_org[i][j])) {
-            a_next[i].pb(a_org[i][j]);
-        }
-    }
-    a = a_next;
-    dfs();
-    a = a_org;
-
-}
 int main(void) {
-    cin >> n >> m;
+    ll x, y, z; cin >> x >> y >> z; 
+    ll n = x + y + z;
+
+    vector<P> ab(n);
+    ll ret = 0;
     rep(i, n) {
-        vector<int> tmp;
-        rep(i, m) {
-            int x; cin >> x; x--;
-            tmp.pb(x);
-        }
-        a.pb(tmp);
+        cin >> ab[i].fi >> ab[i].se;
+        ll c; cin >> c;
+        ab[i].fi -= c;
+        ab[i].se -= c;
+        ret += c;
+    }
+    auto f =  [&](P x, P y){return x.fi-x.se<y.fi-y.se;};
+    sort(all(ab), f); reverse(all(ab));
+
+    ll tmp;
+
+    vll reta(n);
+    priority_queue<ll, vector<ll>, greater<ll>> qa;
+    tmp = 0;
+    rep(i, x) {
+        tmp += ab[i].fi;
+        qa.push(ab[i].fi);
+        reta[i] = tmp;
+    }
+    repi(i, x, n) {
+        tmp += ab[i].fi;
+        qa.push(ab[i].fi);
+        auto x = qa.top(); qa.pop();
+        tmp -= x;
+        reta[i] = tmp;
     }
 
-    dfs();
-    cout << ret << endl;
+    vll retb(n);
+    priority_queue<ll, vector<ll>, greater<ll>> qb;
+    tmp = 0;
+    rep(i, y) {
+        tmp += ab[n-i-1].se;
+        qb.push(ab[n-i-1].se);
+        retb[n-i-1] = tmp;
+    }
+    repi(i, y, n) {
+        tmp += ab[n-i-1].se;
+        qb.push(ab[n-i-1].se);
+        auto x = qb.top(); qb.pop();
+        tmp -= x;
+        retb[n-i-1] = tmp;
+    }
+
+    ll M = -INF;
+    repi(i, x-1, x+z) 
+        chmax(M, reta[i] + retb[i+1]);
+
+    cout << ret + M << endl;
 
 
     return 0;

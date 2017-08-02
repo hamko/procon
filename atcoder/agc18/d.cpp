@@ -53,66 +53,64 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-const int nmax = 300;
+ll n;
+vector<vector<P>> g;
 
-int ret = 1e8;
-int n, m; 
-vector<vector<int>> a;
-void print(void) {
-    cout << "#############" << endl;
-    rep(i, a.size()) {
-        rep(j, a[i].size()) {
-            cout << a[i][j] + 1 << " ";
-        }
-        cout << endl;
-    }
+vll c;
+ll dfsSizeOfSubtree(ll v, ll p) {
+    c[v] = 1;
+    for (auto next_v : g[v]) if (next_v.fi != p) 
+        c[v] += dfsSizeOfSubtree(next_v.fi, v);
+    return c[v];
 }
-void dfs(void) {
-    if (!a[0].size()) return;
-//    print();
-//    cout << a[0].size() << endl;
 
-    int counter[nmax] = {};
-    rep(i, n) 
-        counter[a[i][0]]++;
-
-    int M = -1;
-    rep(i, nmax) 
-        chmax(M, counter[i]);
-    chmin(ret, M);
-
-    set<ll> memo; 
-    rep(i, nmax) if (counter[i] == M) {
-        memo.insert(i);
-    }
-
-    vector<vector<int>> a_org = a;
-
-    vector<vector<int>> a_next(n);
-    rep(i, n) {
-        rep(j, a[i].size()) if (!memo.count(a_org[i][j])) {
-            a_next[i].pb(a_org[i][j]);
-        }
-    }
-    a = a_next;
-    dfs();
-    a = a_org;
-
+ll dfsSumDepth(ll v, ll p, ll d) {
+    ll ret = d;
+    for (auto next_v : g[v]) if (next_v.fi != p) 
+        ret += dfsSumDepth(next_v.fi, v, d + next_v.se);
+    return ret;
 }
+
 int main(void) {
-    cin >> n >> m;
-    rep(i, n) {
-        vector<int> tmp;
-        rep(i, m) {
-            int x; cin >> x; x--;
-            tmp.pb(x);
-        }
-        a.pb(tmp);
+    cin >> n;
+    g.resize(n);
+    c.resize(n);
+
+    rep(i, n-1) {
+        ll a, b, c; cin >> a >> b >> c;
+        a--, b--;
+        g[a].pb(P(b, c)), g[b].pb(P(a, c));
     }
+    dfsSizeOfSubtree(0, -1);
 
-    dfs();
-    cout << ret << endl;
+    vll mc(n, 0);
+    rep(i, n) 
+        for (auto e : g[i]) 
+            chmax(mc[i], (c[e.fi] > c[i] ? n - c[i] : c[e.fi]));
 
+    ll M = *min_element(all(mc));
+    vll cands;
+    rep(i, n) if (mc[i] == M) cands.pb(i);
+
+    if (cands.size() == 1) {
+        ll centroid = cands[0];
+        ll sumdepth = dfsSumDepth(centroid, -1, 0);
+        ll an = INF;
+        for (auto neighbor : g[centroid]) 
+            chmin(an, neighbor.se);
+
+        cout << sumdepth * 2ll - an << endl;
+    } else {
+        ll m = -INF;
+        rep(i, 2) 
+            chmax(m, dfsSumDepth(cands[i], -1, 0));
+        ll c = -1;
+        for (auto e : g[cands[0]]) 
+            if (e.fi == cands[1]) 
+                c = e.se;
+
+        cout << m * 2ll - c << endl;
+    }
 
     return 0;
 }

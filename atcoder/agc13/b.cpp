@@ -53,66 +53,52 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-const int nmax = 300;
-
-int ret = 1e8;
-int n, m; 
-vector<vector<int>> a;
-void print(void) {
-    cout << "#############" << endl;
-    rep(i, a.size()) {
-        rep(j, a[i].size()) {
-            cout << a[i][j] + 1 << " ";
-        }
-        cout << endl;
-    }
-}
-void dfs(void) {
-    if (!a[0].size()) return;
-//    print();
-//    cout << a[0].size() << endl;
-
-    int counter[nmax] = {};
-    rep(i, n) 
-        counter[a[i][0]]++;
-
-    int M = -1;
-    rep(i, nmax) 
-        chmax(M, counter[i]);
-    chmin(ret, M);
-
-    set<ll> memo; 
-    rep(i, nmax) if (counter[i] == M) {
-        memo.insert(i);
-    }
-
-    vector<vector<int>> a_org = a;
-
-    vector<vector<int>> a_next(n);
-    rep(i, n) {
-        rep(j, a[i].size()) if (!memo.count(a_org[i][j])) {
-            a_next[i].pb(a_org[i][j]);
+ll n, m;
+vvll g;
+unordered_set<ll> path_v;
+int check(deque<ll>& path, bool last) {
+    auto&& x = g[path[last?path.size()-1:0]];
+    for (auto v : x) {
+        if (!path_v.count(v)) {
+            return v;
         }
     }
-    a = a_next;
-    dfs();
-    a = a_org;
-
+    return -1;
 }
 int main(void) {
     cin >> n >> m;
-    rep(i, n) {
-        vector<int> tmp;
-        rep(i, m) {
-            int x; cin >> x; x--;
-            tmp.pb(x);
-        }
-        a.pb(tmp);
+    g.resize(n);
+    rep(i, m) {
+        ll u, v; cin >> u >> v; u--, v--;
+        g[u].pb(v);
+        g[v].pb(u);
     }
 
-    dfs();
-    cout << ret << endl;
+    deque<ll> path = {0, g[0][0]};
+    rep(i, path.size()) {
+        path_v.insert(path[i]);
+    }
+    rep(_, 1e7) {
+        bool f = 0;
+        ll v;
+        if ((v = check(path, 0)) != -1) {
+            path.push_front(v);
+            path_v.insert(v);
+            f = 1;
+        }
+        if ((v = check(path, 1)) != -1) {
+            path.push_back(v);
+            path_v.insert(v);
+            f = 1;
+        }
+        if (!f) break;
+    }
 
+    cout << path.size() << endl;
+    rep(i, path.size()) {
+        cout << path[i] + 1 << " ";
+    }
+    cout << endl;
 
     return 0;
 }
