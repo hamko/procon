@@ -73,6 +73,25 @@ void numerateParentheses(int n, vector<ll>& q_next) {
     }
 }
 
+P getNeededParentheseNum(string& t) {
+    ll balance = 0;
+    ll open = 0, close = 0;
+    rep(i, t.size()) {
+        if (t[i] == '(') {
+            if (balance + i >= t.size() - 1)  // (では降りきれない
+                close++, balance--;
+            else 
+                balance++;
+        } else {
+            if (balance <= 0)  // )ではもう降りれない
+                open++, balance++;
+            else 
+                balance--;
+        }
+    }
+    return P(open, close);
+}
+
 int main(void) {
     string s = "))()())(()";
     vector<ll> ret = correspondingParentheses(s); 
