@@ -87,7 +87,6 @@ class ScoresSequence {
             ll n = a.size();
             rep(i, MAX) G[i].clear(), used[i] = 0;
 
-            sort(all(a)); reverse(all(a));
             ll src = 2*n, dst = 2*n+1;
             rep(i, n) rep(j, n) if (i != j) {
                 add_edge(i, n+j, 1);
