@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <sys/time.h>
 using namespace std;
 
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
@@ -9,6 +10,7 @@ using namespace std;
 #define se second
 #define mt make_tuple
 #define mp make_pair
+#define ZERO(a) memset(a,0,sizeof(a))
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 #define exists find_if
@@ -28,14 +30,24 @@ auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ost
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
 template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
-string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
+string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); reverse(all(s)); return s; }
+
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
+
+size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
+namespace myhash{ const int Bsizes[]={3,9,13,17,21,25,29,33,37,41,45,49,53,57,61,65,69,73,77,81}; const int xor_nums[]={0x100007d1,0x5ff049c9,0x14560859,0x07087fef,0x3e277d49,0x4dba1f17,0x709c5988,0x05904258,0x1aa71872,0x238819b3,0x7b002bb7,0x1cf91302,0x0012290a,0x1083576b,0x76473e49,0x3d86295b,0x20536814,0x08634f4d,0x115405e8,0x0e6359f2}; const int hash_key=xor_nums[rand()%20]; const int mod_key=xor_nums[rand()%20]; template <typename T> struct myhash{ std::size_t operator()(const T& val) const { return (hash<T>{}(val)%mod_key)^hash_key; } }; };
+template <typename T> class uset:public std::unordered_set<T,myhash::myhash<T>> { using SET=std::unordered_set<T,myhash::myhash<T>>; public: uset():SET(){SET::rehash(myhash::Bsizes[rand()%20]);} };
+template <typename T,typename U> class umap:public std::unordered_map<T,U,myhash::myhash<T>> { public: using MAP=std::unordered_map<T,U,myhash::myhash<T>>; umap():MAP(){MAP::rehash(myhash::Bsizes[rand()%20]);} };    
+
+struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
+struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); cin.tie(0); srand((unsigned int)time(NULL)); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
@@ -43,6 +55,8 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 // 素数の個数はO(n / log n)
+// 整数nの素因数個数は1.4 * log n / log log n以下。 https://eudml.org/doc/205883 [Robin, 1983]
+// 1e9までで約数の個数の最大値は1344 (K=735134400)
 
 /**********************************************************/
 // 素数テーブルの作成
@@ -187,11 +201,15 @@ unordered_map<ll, ll> lcmLarge(set<ll>& a) {
     return ret;
 }
 
+const ll MAXN = 1000010;
+ll c[MAXN];
+ll dp[MAXN];
+ll p2[MAXN];
 
 // 約数を全列挙する。
 //
-// 約数を試し割りするより、n=1000000で4倍くらい早い。
-vector<ll> divisors(ll n) {
+// 約数を試し割りするよりn=1000000で4倍くらい早い。
+void divisors(ll n) {
     vector<ll> divisors_list;
 
     auto counter = factorize(n);
@@ -201,145 +219,42 @@ vector<ll> divisors(ll n) {
         ll p = 1;
         for (ll i = 0; i < x.second; i++) {
             p *= x.first;
-            for (ll j = 0; j < tmp_size; j++) 
+            for (ll j = 0; j < tmp_size; j++) {
                 divisors_list.push_back(divisors_list[j] * p);
+                c[divisors_list.back()]++;
+            }
         }
     }
-    return divisors_list;
 }
 
-ll getDivisorsNum(ll n) {
-    unordered_map<ll, ll> divisors_list = factorize(n);
-    map<ll, ll> num;
-    rep(i, divisors_list.size()) 
-        num[divisors_list[i]]++;
-    ll p = 1;
-    for (auto x : num) 
-        p *= x.second + 1;
-    return p;
-}
-
-
-/**********************************************************/
-// 前処理なしの素数判定
-/**********************************************************/
-// Millar-Rabin Test
-using ull = unsigned long long;
-static vll cands_small = {2, 7, 61,};
-static vll cands_large = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
-bool isPrime(const ll &n){
-    vll& cands = cands_small;
-    if (n >= (1ll << 32)) 
-        cands = cands_large;
-
-    if (n == 2) 
-        return true;
-    else if (n < 2)
-        return false;
-    else if (!(n & 1))
-        return false;
-
-    ll needed = cands.size();
-
-    const ll m = n - 1, d = m / (m & -m);
-    auto modpow = [&](ll a, ll b){
-        ll res = 1;
-        while (b) {
-            if (b & 1) res = res * a % n;
-            a = a * a % n;
-            b >>= 1;
-        }
-        return res;
-    };
-    auto suspect = [&](ll a, ll t){
-        a = modpow(a,t);
-        while (t != n - 1 && a != 1 && a != n - 1){
-            a = a * a % n;
-            t <<= 1;
-        }
-        return a == n - 1 || (t & 1);
-    };
-
-    rep(i, needed) 
-        if(cands[i] % n && !suspect(cands[i], d))
-            return false;
-
-    return true;
-}
-
-// ガウス素数＝複素数の素数判定
-bool isGaussianPrime(ll a, ll b) {
-    if (a < 0) a = -a;
-    if (b < 0) b = -b;
-    if (a == 0) return b % 4 == 3 && is_prime[b];
-    if (b == 0) return a % 4 == 3 && is_prime[a];
-    return is_prime[a*a+b*b];
-}
-
-// 区間篩
-// O( n log n )．
-const ll N = 100000000; // MAXPRIME 
-const ll M = 10000;     // SQRT(N)
-const ll K = 6000000;   // NUMBER OF PRIMES, CHOOSE 9/8 * N / LOG(N)
-vector<ll> iterativeSieve() {
-    static ll p[K], table[M];
-    for (ll i = 2; i < M; ++i) p[i] = i;
-    for (ll i = 2; i*i < M; ++i)
-        if (p[i])
-            for (ll j = i*i; j < M; j += i)
-                p[j] = 0;
-    p[0] = p[1] = 0;
-    ll num = remove(p, p+M, 0) - p;
-    for (ll m = M; m < N; m += M) {
-        for (ll x = m; x < m+M; ++x)
-            table[x-m] = x;
-        for (ll i = 0, j; p[i]*p[i] < m+M; ++i) {
-            if (p[i] >= m)          j = p[i] * p[i];
-            else if (m % p[i] == 0) j = m;
-            else                    j = m - (m % p[i]) + p[i];
-            for (; j < m+M; j += p[i]) table[j-m] = 0;
-        }
-        num = remove_copy(table, table+M, p+num, 0) - p;
-    }
-    return vector<ll>(p, p+num);
-}
-
-ll n = 1000000;
 int main(void) {
-    // 構築O(n log n), 参照O(log n)
-    constructPrime(n);
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+    constructPrime(MAXN);
 
-    // Millar Rubin Testのチェック
-    rep(i, n) 
-        assert(is_prime[i] == isPrime(i));
+    rep(i, n)
+        divisors(a[i]);
 
-    // [0, 30)の素数
-    rep(i, 30) 
-        if (is_prime[i]) 
-            cout << i << " ";
-    cout << endl;
+    p2[0] = 1;
+    rep(i, MAXN-1) {
+        (p2[i+1] = p2[i] * 2) %= mo;
+    }
 
-    // 素因数分解
-    vll cands = {1, 2, 4, 8, 3, 120, 1000000007};
-    for (auto x : cands) 
-        cout << factorize(x) << endl;
+    rep(irev, MAXN) {
+        ll i = MAXN - 1 - irev;
+        if (!c[i]) continue;
+        dp[i] = c[i] * p2[c[i]-1] % mo;
+        for (ll j = i * 2; j < MAXN; j += i) {
+            (dp[i] -= dp[j]) %= mo;
+        }
+    }
 
-    // 約数
-    auto d = divisors(120);
-    rep(i, d.size()) 
-        cout << d[i] << " ";
-    cout << "# num = " << getDivisorsNum(120) << " ";
-    cout << endl;
+    ll ret = 0;
+    repi(i, 2, MAXN) {
+        (ret += i * dp[i]) %= mo;
+    }
+    cout << (ret + mo) % mo << endl;
 
-    // 範囲素因数分解
-    auto fact = factorizeRange(10);
-    rep(i, fact.size()) 
-        cout << fact[i] << endl;
 
-    // 範囲LCM
-    set<ll> a = {2, 3, 4, 6, 8, 10};
-    cout << lcmSmall(a) << endl;
     return 0;
-
 }
-
