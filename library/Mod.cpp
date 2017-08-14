@@ -497,7 +497,6 @@ int main() {
             cout << a << " " << x << " + " << b << " " << y << " = " << __gcd(a, b) << endl;
             x += b / __gcd(a, b), y -= a / __gcd(a, b);
         }
-
     }
 
 
@@ -509,6 +508,9 @@ int main() {
         cout << ret << endl;
 
         ret = solveLinearEquation(4, 0, 10);
+        cout << ret << endl;
+
+        ret = solveLinearEquation(4, 5, 10);
         cout << ret << endl;
     }
 
