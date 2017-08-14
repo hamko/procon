@@ -61,6 +61,7 @@ int main(void) {
         cout << 0 << endl;
         return 0;
     }
+<<<<<<< HEAD
     rep(i, n) {
         if (a[i] == b[i] && a[i] != M) {
             cout << 0 << endl;
@@ -97,5 +98,53 @@ int main(void) {
         cout << ret << endl;
 
 
+=======
+    ll tef = 0;
+    rep(i, n) {
+        tef |= a[i] == M && b[i] == M;
+    }
+    if (!tef) {
+        cout << 0 << endl;
+        return 0;
+    }
+
+    ll prev;
+    vll tmp;
+
+    prev = -INF;
+    tmp = a;
+    rep(i, n) {
+        if (prev != a[i]) {
+            tmp[i] = -1;
+        } else {
+            tmp[i] = a[i];
+        }
+        prev = a[i];
+    }
+    a = tmp;
+
+    reverse(all(b));
+    prev = -INF;
+    tmp = b;
+    rep(i, n) {
+        if (prev != b[i]) {
+            tmp[i] = -1;
+        } else {
+            tmp[i] = b[i];
+        }
+        prev = b[i];
+    }
+    b = tmp;
+    reverse(all(b));
+
+    ll ret = 1;
+    rep(i, n) {
+        if (a[i] == -1 || b[i] == -1) continue;
+        (ret *= min(a[i], b[i])) %= mo;
+    }
+    cout << ret << endl;
+
+ 
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     return 0;
 }

@@ -53,6 +53,7 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+<<<<<<< HEAD
 ll solve(ll x, ll y, ll z, vector<tuple<ll, ll, ll>> a) {
     ll i;
     ll n = x+y+z;
@@ -189,5 +190,64 @@ int main(void) {
         }
     }
 #endif
+=======
+int main(void) {
+    ll x, y, z; cin >> x >> y >> z; 
+    ll n = x + y + z;
+
+    vector<P> ab(n);
+    ll ret = 0;
+    rep(i, n) {
+        cin >> ab[i].fi >> ab[i].se;
+        ll c; cin >> c;
+        ab[i].fi -= c;
+        ab[i].se -= c;
+        ret += c;
+    }
+    auto f =  [&](P x, P y){return x.fi-x.se<y.fi-y.se;};
+    sort(all(ab), f); reverse(all(ab));
+
+    ll tmp;
+
+    vll reta(n);
+    priority_queue<ll, vector<ll>, greater<ll>> qa;
+    tmp = 0;
+    rep(i, x) {
+        tmp += ab[i].fi;
+        qa.push(ab[i].fi);
+        reta[i] = tmp;
+    }
+    repi(i, x, n) {
+        tmp += ab[i].fi;
+        qa.push(ab[i].fi);
+        auto x = qa.top(); qa.pop();
+        tmp -= x;
+        reta[i] = tmp;
+    }
+
+    vll retb(n);
+    priority_queue<ll, vector<ll>, greater<ll>> qb;
+    tmp = 0;
+    rep(i, y) {
+        tmp += ab[n-i-1].se;
+        qb.push(ab[n-i-1].se);
+        retb[n-i-1] = tmp;
+    }
+    repi(i, y, n) {
+        tmp += ab[n-i-1].se;
+        qb.push(ab[n-i-1].se);
+        auto x = qb.top(); qb.pop();
+        tmp -= x;
+        retb[n-i-1] = tmp;
+    }
+
+    ll M = -INF;
+    repi(i, x-1, x+z) 
+        chmax(M, reta[i] + retb[i+1]);
+
+    cout << ret + M << endl;
+
+
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     return 0;
 }

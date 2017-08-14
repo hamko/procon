@@ -19,7 +19,6 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
-using Pos = complex<double>;
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
@@ -30,10 +29,6 @@ auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ost
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-<<<<<<< HEAD
-=======
-template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
->>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
@@ -49,148 +44,32 @@ namespace myhash{ const int Bsizes[]={3,9,13,17,21,25,29,33,37,41,45,49,53,57,61
 template <typename T> class uset:public std::unordered_set<T,myhash::myhash<T>> { using SET=std::unordered_set<T,myhash::myhash<T>>; public: uset():SET(){SET::rehash(myhash::Bsizes[rand()%20]);} };
 template <typename T,typename U> class umap:public std::unordered_map<T,U,myhash::myhash<T>> { public: using MAP=std::unordered_map<T,U,myhash::myhash<T>>; umap():MAP(){MAP::rehash(myhash::Bsizes[rand()%20]);} };    
 
-struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
-struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); cin.tie(0); srand((unsigned int)time(NULL)); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
+struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); srand((unsigned int)time(NULL)); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-<<<<<<< HEAD
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-=======
-vvll g, gr;
-
-vll order;
-ll order_counter = 0;
-void scc_for(ll v) {
-    if (order[v] >= 0) return;
-    order[v] = INF;
-    for (auto u : g[v]) 
-        scc_for(u);
-    order[v] = order_counter++;
-}
-vvll scc_set;
-vector<bool> flag;
-void scc_rev(ll i, ll v) {
-    if (flag[v]) return;
-    flag[v] = 1;
-    scc_set[i].pb(v);
-    for (auto u : gr[v]) 
-        scc_rev(i, u);
-}
-vvll getSCC(void) {
-    ll n = g.size();
-
-    order.resize(n, -1);
-    order_counter = 0;
-    scc_set.clear();
-    flag.resize(n);
-
-    rep(v, g.size()) 
-        scc_for(v);
-    vll order_rev(n);
-    rep(i, n) 
-        order_rev[n-1-order[i]] = i;
-    rep(i, g.size()) {
-        ll v = order_rev[i];
-        if (!flag[v]) {
-            scc_set.pb({});
-            scc_rev(scc_set.size()-1, v);
-        }
-    }
-    return scc_set;
-}
-
-unordered_set<ll> cycle;
-vll grundy;
-ll grundy_dfs(ll v) {
-    if (cycle.count(v)) 
-        return -1;
-    if (grundy[v] >= 0) {
-        return grundy[v];
-    }
-    if (g[v].size() == 0) {
-        return grundy[v] = 0;
-    }
-
-    unordered_set<ll> memo;
-    for (auto&& u : g[v]) {
-        memo.insert(grundy_dfs(u));
-    }
-    rep(i, INF) {
-        if (!memo.count(i)) {
-            return grundy[v] = i;
-        }
-    }
-    assert(0);
-    return -1;
-}
-
-
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-    g.resize(n), gr.resize(n);
-    rep(i, n) {
-        g [a[i]-1].pb(i);
-        gr[i].pb(a[i]-1);
-    }
-
-    vvll scc = getSCC();
-
-    for (auto&& vv : scc) if (vv.size() > 1) 
-        for (auto&& v : vv) 
-            cycle.insert(v);
-    if (cycle.empty()) 
-        return 0;
-
-    grundy = vll(n, -1);
-    rep(i, n) if (!cycle.count(i)) 
-        grundy_dfs(i);
-
-    ll v = *cycle.begin();
-    unordered_set<ll> memo;
-    for (auto u : g[v]) 
-        memo.insert(grundy[u]);
-
-    cycle = {};
-    ll counter = 2;
-    rep(i, INF) {
-        if (!counter) break;
-        if (!memo.count(i)) {
-            auto backup = grundy;
-            grundy[v] = i;
-            rep(i, n) 
-                grundy_dfs(i);
-            
-            rep(i, n) {
-                assert(grundy[i] != -1);
-                unordered_set<ll> memo;
-                for (auto&& u : g[i]) 
-                    memo.insert(grundy[u]);
-                ll grundy_i = -1;
-                rep(i, INF) {
-                    if (!memo.count(i)) {
-                        grundy_i = i;
-                        break;
-                    }
-                }
-                if (grundy[i] != grundy_i) 
-                    goto SKIP;
+class Solution {
+    public:
+        string nearestPalindromic(string n) {
+            vector<string> ss;
+            ss.pb(n);
+            rep(i, n.size()/2) {
+                string s = n;
+                s[i]++;
+                ss.pb(s);
             }
-            cout << "POSSIBLE" << endl;
-            return 0;
-            SKIP:;
-            grundy = backup;
-            counter--;
         }
-    }
-    cout << "IMPOSSIBLE" << endl;
+};
+int main(void) {
+    while (1) {
+        ll n; cin >> n;
+        vll a(n); cin >> a;
 
->>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
+        Solution s;
+        s.findIntegers(n);
+    }
     return 0;
 }

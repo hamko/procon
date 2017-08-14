@@ -53,8 +53,72 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+<<<<<<< HEAD
 int main(void) {
     ll n; cin >> n;
     vll a(n); cin >> a;
+=======
+const int nmax = 300;
+
+int ret = 1e8;
+int n, m; 
+vector<vector<int>> a;
+void print(void) {
+    cout << "#############" << endl;
+    rep(i, a.size()) {
+        rep(j, a[i].size()) {
+            cout << a[i][j] + 1 << " ";
+        }
+        cout << endl;
+    }
+}
+void dfs(void) {
+    if (!a[0].size()) return;
+//    print();
+//    cout << a[0].size() << endl;
+
+    int counter[nmax] = {};
+    rep(i, n) 
+        counter[a[i][0]]++;
+
+    int M = -1;
+    rep(i, nmax) 
+        chmax(M, counter[i]);
+    chmin(ret, M);
+
+    set<ll> memo; 
+    rep(i, nmax) if (counter[i] == M) {
+        memo.insert(i);
+    }
+
+    vector<vector<int>> a_org = a;
+
+    vector<vector<int>> a_next(n);
+    rep(i, n) {
+        rep(j, a[i].size()) if (!memo.count(a_org[i][j])) {
+            a_next[i].pb(a_org[i][j]);
+        }
+    }
+    a = a_next;
+    dfs();
+    a = a_org;
+
+}
+int main(void) {
+    cin >> n >> m;
+    rep(i, n) {
+        vector<int> tmp;
+        rep(i, m) {
+            int x; cin >> x; x--;
+            tmp.pb(x);
+        }
+        a.pb(tmp);
+    }
+
+    dfs();
+    cout << ret << endl;
+
+
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     return 0;
 }

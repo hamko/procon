@@ -189,6 +189,8 @@ unordered_map<ll, ll> lcmLarge(set<ll>& a) {
 
 
 // 約数を全列挙する。
+//
+// 約数を試し割りするより、n=1000000で4倍くらい早い。
 vector<ll> divisors(ll n) {
     vector<ll> divisors_list;
 
@@ -203,7 +205,6 @@ vector<ll> divisors(ll n) {
                 divisors_list.push_back(divisors_list[j] * p);
         }
     }
-    sort(divisors_list.begin(), divisors_list.end());
     return divisors_list;
 }
 

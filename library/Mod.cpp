@@ -2,8 +2,11 @@
 using namespace std;
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+#define fi first
+#define se second
 #define rep(i,n) for(int i = 0; i < n; i++)
 #define pb push_back
+template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 
 // ヤコビ記号はnot yet
 // メビウスのμ関数not ye
@@ -344,18 +347,48 @@ arr solve(matrix a, arr b) {
     return ret;
 }
 
-/*************************************/
-// 謎演算
-/*************************************/
-
-// gcdは関数__gcdを使いましょう。long long対応している。
-
-// a x + b y = gcd(a, b)
+// a x + b y = gcd(a, b)なるx, yを一つ探す。
+//
+// g = gcd(a, b)として、
+// 任意の整数kについて(x+k*b/g, y+k*a/g)が必要十分な解空間となる。
 long long extgcd(long long a, long long b, long long &x, long long &y) {
     long long g = a; x = 1; y = 0;
     if (b != 0) g = extgcd(b, a % b, y, x), y -= (a / b) * x;
     return g;
 }
+
+// a x = b (mod m)を解く
+// これはa x + m k = bなるxの全列挙に他ならない。
+//
+// bがgcd(a, m)で割り切れないならば、
+// 解なしである。
+// 
+// 割り切れるならば
+// すなわち、extgcd(a, m, x, k), x *= b / gcd(a, m), k *= b / gcd(a, m)で解ける。
+// 任意の整数nについて、x+n*m/gcd(a, m)が解である。
+//
+// ret.fi, ret.seに対して、
+// (1) ret.fi+k*ret.seが任意の解で、ret.fiは最小非負解
+// (2) ret.fiが-1だと解なし
+P solveLinearEquation(ll a, ll b, ll m) {
+    if (b % __gcd(a, m) != 0) {
+        return P(-1, -1);
+    } else {
+        ll x, k;
+        extgcd(a, m, x, k), x *= b / __gcd(a, m), k *= b / __gcd(a, m);
+        P ret = P(x, m / __gcd(a, m));
+        ret.fi %= ret.se;
+        ret.fi += ret.se;
+        ret.fi %= ret.se;
+        return ret;
+    }
+}
+
+/*************************************/
+// 謎演算
+/*************************************/
+
+
 
 // 線型連立合同式 a[i] x == b[i] (mod m[i]) (i = 0, ..., n-1) を解く．
 bool linearCongruences(const vector<long long> &a,
@@ -409,7 +442,7 @@ int main() {
 
     long long   n = 8e18;
     printf("long long x 1= %Ld\n", n);
-//    printf("long long x 2 = %Ld\n", n*2); // overflow
+    //    printf("long long x 2 = %Ld\n", n*2); // overflow
     long double m = n;
     printf("long double x 1= %Lf\n", m);
     printf("long double x 2 = %Lf\n", m*2);
@@ -443,6 +476,42 @@ int main() {
         auto x = solve(a, b);
         cout << x << "#ret" << endl;
         cout << mul(a, x) << endl;
+    }
+
+    
+    {
+        // a x + b y = gcd(a, b)
+        // g = gcd(a, b)として、任意の整数kについて(x+k*b/g, y+k*a/g)が必要十分な解空間となる。
+        ll a, b;
+        ll x, y;
+        
+        // 2 x + 5 y = 1
+        a = 2, b = 5;
+        extgcd(a, b, x, y);
+        cout << a << " " << x << " + " << b << " " << y << " = " << __gcd(a, b) << endl;
+
+        // 4 x + 10 y = 2
+        a = 4, b = 10;
+        extgcd(a, b, x, y);
+        rep(i, 10) { // 解空間の列挙
+            cout << a << " " << x << " + " << b << " " << y << " = " << __gcd(a, b) << endl;
+            x += b / __gcd(a, b), y -= a / __gcd(a, b);
+        }
+    }
+
+
+    {
+        // a x = b (mod m)を解く
+        P ret; // ret.fi+k*ret.seが全てxの解である。
+
+        ret = solveLinearEquation(4, 6, 10);
+        cout << ret << endl;
+
+        ret = solveLinearEquation(4, 0, 10);
+        cout << ret << endl;
+
+        ret = solveLinearEquation(4, 5, 10);
+        cout << ret << endl;
     }
 
     return 0;
