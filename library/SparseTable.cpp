@@ -1,6 +1,7 @@
 #include<bits/stdc++.h>
 using namespace std;
 typedef long long ll;
+#define INF 2e18
 #define rep(i,n) for(ll i=0;i<(ll)(n);i++)
 
 // スパーステーブル
@@ -67,6 +68,19 @@ int main(void)
             cout << endl;
         }
     }
+
+    {
+        cout << "RMQ_I" << endl;
+        vector<ll> a = {2, 1, 8, 3};
+        SparseTable st(a);
+
+        cout << st.rmqi(0, 1) << endl;
+        cout << st.rmqi(0, 2) << endl;
+        cout << st.rmqi(0, 3) << endl;
+        cout << st.rmqi(2, 3) << endl;
+        cout << st.rmqi(2, 4) << endl;
+    }
+
 
     {
         vector<ll> a = {2, 1, 8, 3};

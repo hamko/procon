@@ -53,6 +53,144 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+<<<<<<< HEAD
+ll solve(ll x, ll y, ll z, vector<tuple<ll, ll, ll>> a) {
+    ll i;
+    ll n = x+y+z;
+
+    sort(all(a), [&](tuple<ll, ll, ll>& x, tuple<ll, ll, ll>& y) { return get<0>(x) - get<1>(x) > get<0>(y) - get<1>(y);});
+    for (auto x : a) {
+        cout << x << endl;
+    }
+
+    // xy同立だがzが違うやつをきちんと扱えていなく無いですか
+    vector<ll> id(n, -INF);
+    rep(i, x+z) {
+        chmax(id[i], get<2>(a[i]) - get<0>(a[i]));
+    }
+    /*
+    i = x+z;
+    while (i < n && get<2>(a[i]) - get<0>(a[i]) == get<2>(a[i-1]) - get<0>(a[i-1])) {
+        chmax(id[i], get<2>(a[i]) - get<0>(a[i]));
+        i++;
+    }
+    */
+    rep(irev, y+z) {
+        ll i = n - irev - 1;
+        chmax(id[i], get<2>(a[i]) - get<1>(a[i]));
+    }
+    /*
+    i = n-y-z-1;
+    while (i >= 0 && get<2>(a[i]) - get<0>(a[i]) == get<2>(a[i+1]) - get<0>(a[i+1])) {
+        chmax(id[i], get<2>(a[i]) - get<0>(a[i]));
+        i--;
+    }
+    */
+//    cout << id << endl;
+
+    vector<P> d(n);
+    rep(i, n) {
+        d[i] = P(id[i], i);
+    }
+    cout << d << endl;
+    sort(all(d));
+    reverse(all(d));
+//    cout << d << endl;
+
+    string s(n, '?');
+    rep(i, z) {
+        s[d[i].se] = 'z';
+    }
+    ll xrem = x;
+    i = 0;
+    while (xrem) { 
+        while (s[i] != '?') i++; 
+        s[i] = 'x'; 
+        xrem--;
+    }
+    rep(i, n) {
+        if (s[i] == '?') s[i] = 'y';
+    }
+//    cout << s << endl;
+    ll ret = 0;
+    rep(i, n) {
+        if (s[i] == 'x') {
+            ret += get<0>(a[i]);
+        } else if (s[i] == 'y') {
+            ret += get<1>(a[i]);
+        } else {
+            ret += get<2>(a[i]);
+        }
+    }
+    return ret;
+}
+
+ll solveBrutal(ll x, ll y, ll z, vector<tuple<ll, ll, ll>> a) {
+    ll n = x + y + z;
+    ll r = -INF;
+    rep(mask, pow(3, n)) {
+        string s(n, '?');
+        ll tmp = mask;
+        ll xyz[3] = {x, y, z};
+        rep(i, n) {
+            s[i] = 'x' + tmp % 3;
+            xyz[tmp%3]--;
+            tmp /= 3;
+        }
+        if (xyz[0]) continue;
+        if (xyz[1]) continue;
+        if (xyz[2]) continue;
+        ll ret = 0;
+        rep(i, n) {
+            if (s[i] == 'x') {
+                ret += get<0>(a[i]);
+            } else if (s[i] == 'y') {
+                ret += get<1>(a[i]);
+            } else {
+                ret += get<2>(a[i]);
+            }
+        }
+        chmax(r, ret);
+//        cout << s << endl;
+    }
+    return r;
+
+}
+
+int main(void) {
+#if 1
+    ll x, y, z; cin >> x >> y >> z;
+    ll n = x+y+z;
+    vector<tuple<ll, ll, ll>> a;
+    rep(i, n) {
+        ll s, t, u; cin >> s >> t >> u;
+        a.pb(mt(s, t, u));
+    }
+    cout << solve(x, y, z, a) << endl;
+//    cout << solveBrutal(x, y, z, a) << endl;
+#else
+    while (1) {
+        ll x = rand() % 2;
+        ll y = rand() % 2;
+        ll z = rand() % 2;
+        if (!x && !y && !z) continue;
+        vector<tuple<ll, ll, ll>> a;
+        rep(i, x+y+z) {
+            a.pb(mt(1+rand()%10, 1+rand()%5, 1+rand()%5));
+        }
+        if (solve(x, y, z, a) != solveBrutal(x, y, z, a)) {
+            cout << x << " " << y << " " << z << endl;
+            for (auto x : a) {
+                cout << x << endl;
+            }
+            cout << "not match" << endl;
+            cout << solve(x, y, z, a)  << "#user" << endl;
+            cout << solveBrutal(x, y, z, a) << "#expected" <<endl;
+            return 1;
+        }
+    }
+#endif
+=======
 int main(void) {
     ll x, y, z; cin >> x >> y >> z; 
     ll n = x + y + z;
@@ -110,5 +248,6 @@ int main(void) {
     cout << ret + M << endl;
 
 
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     return 0;
 }

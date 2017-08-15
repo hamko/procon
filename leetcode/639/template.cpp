@@ -30,10 +30,6 @@ auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ost
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-<<<<<<< HEAD
-=======
-template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
->>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
@@ -57,140 +53,65 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-<<<<<<< HEAD
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-=======
-vvll g, gr;
+class Solution {
+    public:
+        int numDecodings(string s) {
+            // node 0が初期値、ノードは27種類ある。
+            // 文字10が'*'、文字種類は11種類。
+            ll n = s.length();
+            const int node_num = 27;
+            ll dp[2][node_num];
+            rep(i, 2) rep(j, node_num) dp[i][j] = 0;
+            dp[0][0] = 1;
 
-vll order;
-ll order_counter = 0;
-void scc_for(ll v) {
-    if (order[v] >= 0) return;
-    order[v] = INF;
-    for (auto u : g[v]) 
-        scc_for(u);
-    order[v] = order_counter++;
-}
-vvll scc_set;
-vector<bool> flag;
-void scc_rev(ll i, ll v) {
-    if (flag[v]) return;
-    flag[v] = 1;
-    scc_set[i].pb(v);
-    for (auto u : gr[v]) 
-        scc_rev(i, u);
-}
-vvll getSCC(void) {
-    ll n = g.size();
-
-    order.resize(n, -1);
-    order_counter = 0;
-    scc_set.clear();
-    flag.resize(n);
-
-    rep(v, g.size()) 
-        scc_for(v);
-    vll order_rev(n);
-    rep(i, n) 
-        order_rev[n-1-order[i]] = i;
-    rep(i, g.size()) {
-        ll v = order_rev[i];
-        if (!flag[v]) {
-            scc_set.pb({});
-            scc_rev(scc_set.size()-1, v);
-        }
-    }
-    return scc_set;
-}
-
-unordered_set<ll> cycle;
-vll grundy;
-ll grundy_dfs(ll v) {
-    if (cycle.count(v)) 
-        return -1;
-    if (grundy[v] >= 0) {
-        return grundy[v];
-    }
-    if (g[v].size() == 0) {
-        return grundy[v] = 0;
-    }
-
-    unordered_set<ll> memo;
-    for (auto&& u : g[v]) {
-        memo.insert(grundy_dfs(u));
-    }
-    rep(i, INF) {
-        if (!memo.count(i)) {
-            return grundy[v] = i;
-        }
-    }
-    assert(0);
-    return -1;
-}
-
-
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-    g.resize(n), gr.resize(n);
-    rep(i, n) {
-        g [a[i]-1].pb(i);
-        gr[i].pb(a[i]-1);
-    }
-
-    vvll scc = getSCC();
-
-    for (auto&& vv : scc) if (vv.size() > 1) 
-        for (auto&& v : vv) 
-            cycle.insert(v);
-    if (cycle.empty()) 
-        return 0;
-
-    grundy = vll(n, -1);
-    rep(i, n) if (!cycle.count(i)) 
-        grundy_dfs(i);
-
-    ll v = *cycle.begin();
-    unordered_set<ll> memo;
-    for (auto u : g[v]) 
-        memo.insert(grundy[u]);
-
-    cycle = {};
-    ll counter = 2;
-    rep(i, INF) {
-        if (!counter) break;
-        if (!memo.count(i)) {
-            auto backup = grundy;
-            grundy[v] = i;
-            rep(i, n) 
-                grundy_dfs(i);
-            
             rep(i, n) {
-                assert(grundy[i] != -1);
-                unordered_set<ll> memo;
-                for (auto&& u : g[i]) 
-                    memo.insert(grundy[u]);
-                ll grundy_i = -1;
-                rep(i, INF) {
-                    if (!memo.count(i)) {
-                        grundy_i = i;
-                        break;
-                    }
-                }
-                if (grundy[i] != grundy_i) 
-                    goto SKIP;
-            }
-            cout << "POSSIBLE" << endl;
-            return 0;
-            SKIP:;
-            grundy = backup;
-            counter--;
-        }
-    }
-    cout << "IMPOSSIBLE" << endl;
+                ll curr = i % 2; 
+                ll next = (i + 1) % 2; 
 
->>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
+                rep(j, node_num) 
+                    dp[next][j] = 0;
+
+                if (s[i] == '*') {
+                    rep(j, node_num) 
+                        repi(h, 1, 10) 
+                            dp[next][h] += dp[curr][j];
+                    repi(j, 11, 20) 
+                        dp[next][j] += dp[curr][1];
+                    repi(j, 21, 27) 
+                        dp[next][j] += dp[curr][2];
+                } else if (s[i] == '0') {
+                    dp[next][10] += dp[curr][1];
+                    dp[next][20] += dp[curr][2];
+                } else if ('1' <= s[i]  && s[i] <= '6') {
+                    rep(j, node_num) 
+                        dp[next][s[i]-'0'] += dp[curr][j];
+                    dp[next][s[i]-'0' + 10] += dp[curr][1];
+                    dp[next][s[i]-'0' + 20] += dp[curr][2];
+                } else if ('7' <= s[i]  && s[i] <= '9') {
+                    rep(j, node_num) 
+                        dp[next][s[i]-'0'] += dp[curr][j];
+                    dp[next][s[i]-'0' + 10] += dp[curr][1];
+                } else {
+                    assert(0);
+                }
+                rep(j, node_num) {
+                    dp[next][j] %= mo;
+                }
+            }
+
+            ll ret = 0;
+            rep(i, node_num) {
+                ret += dp[n%2][i];
+            }
+            return ret % mo;
+        }
+};
+
+int main(void) {
+    while (1) {
+        string s; cin >> s;
+        Solution S;
+        cout << S.numDecodings(s) << endl;
+    }
     return 0;
 }

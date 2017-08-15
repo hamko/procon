@@ -30,10 +30,6 @@ auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ost
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-<<<<<<< HEAD
-=======
-template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
->>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
@@ -57,140 +53,171 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-<<<<<<< HEAD
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-=======
-vvll g, gr;
+// スパーステーブル
+// 構築O(n log n)
+// クエリO(log (log n))
+//
+// rmq(i, j)    [i, j)の最小値・最大値を求める
+struct SparseTable {
+    // 構築時データ
+    vector<ll> val;
+    
+    // max_flag==trueならRange Maximum Query
+    // デフォルトMinimum
+    bool max_flag;
 
-vll order;
-ll order_counter = 0;
-void scc_for(ll v) {
-    if (order[v] >= 0) return;
-    order[v] = INF;
-    for (auto u : g[v]) 
-        scc_for(u);
-    order[v] = order_counter++;
-}
-vvll scc_set;
-vector<bool> flag;
-void scc_rev(ll i, ll v) {
-    if (flag[v]) return;
-    flag[v] = 1;
-    scc_set[i].pb(v);
-    for (auto u : gr[v]) 
-        scc_rev(i, u);
-}
-vvll getSCC(void) {
-    ll n = g.size();
+    // table[i][j]: [i, i+2^j)の最小値を取る添字
+    vector<vector<ll>> table;
 
-    order.resize(n, -1);
-    order_counter = 0;
-    scc_set.clear();
-    flag.resize(n);
+    inline ll MSB(ll x) { return x>0?31-__builtin_clz(x):-1; }
+    SparseTable(void){}
+    SparseTable(const vector<ll> a, bool max_flag_ = false) : val(a), max_flag(max_flag_) {
+        ll n = a.size(), ln = MSB(n);
+        table = vector<vector<ll>>(n, vector<ll>(ln + 1,0));
+        rep(i,n)
+            table[i][0] = i;
 
-    rep(v, g.size()) 
-        scc_for(v);
-    vll order_rev(n);
-    rep(i, n) 
-        order_rev[n-1-order[i]] = i;
-    rep(i, g.size()) {
-        ll v = order_rev[i];
-        if (!flag[v]) {
-            scc_set.pb({});
-            scc_rev(scc_set.size()-1, v);
-        }
-    }
-    return scc_set;
-}
-
-unordered_set<ll> cycle;
-vll grundy;
-ll grundy_dfs(ll v) {
-    if (cycle.count(v)) 
-        return -1;
-    if (grundy[v] >= 0) {
-        return grundy[v];
-    }
-    if (g[v].size() == 0) {
-        return grundy[v] = 0;
-    }
-
-    unordered_set<ll> memo;
-    for (auto&& u : g[v]) {
-        memo.insert(grundy_dfs(u));
-    }
-    rep(i, INF) {
-        if (!memo.count(i)) {
-            return grundy[v] = i;
-        }
-    }
-    assert(0);
-    return -1;
-}
-
-
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-    g.resize(n), gr.resize(n);
-    rep(i, n) {
-        g [a[i]-1].pb(i);
-        gr[i].pb(a[i]-1);
-    }
-
-    vvll scc = getSCC();
-
-    for (auto&& vv : scc) if (vv.size() > 1) 
-        for (auto&& v : vv) 
-            cycle.insert(v);
-    if (cycle.empty()) 
-        return 0;
-
-    grundy = vll(n, -1);
-    rep(i, n) if (!cycle.count(i)) 
-        grundy_dfs(i);
-
-    ll v = *cycle.begin();
-    unordered_set<ll> memo;
-    for (auto u : g[v]) 
-        memo.insert(grundy[u]);
-
-    cycle = {};
-    ll counter = 2;
-    rep(i, INF) {
-        if (!counter) break;
-        if (!memo.count(i)) {
-            auto backup = grundy;
-            grundy[v] = i;
-            rep(i, n) 
-                grundy_dfs(i);
-            
-            rep(i, n) {
-                assert(grundy[i] != -1);
-                unordered_set<ll> memo;
-                for (auto&& u : g[i]) 
-                    memo.insert(grundy[u]);
-                ll grundy_i = -1;
-                rep(i, INF) {
-                    if (!memo.count(i)) {
-                        grundy_i = i;
-                        break;
-                    }
-                }
-                if (grundy[i] != grundy_i) 
-                    goto SKIP;
+        ll k = 1;
+        rep(j, ln) {
+            rep(i, n){
+                ll id1 = table[i][j], id2 = (i+k<n)?table[i+k][j]:id1;
+                table[i][j+1] = (max_flag ? (val[id1]>=val[id2]) : (val[id1]<=val[id2]))?id1:id2;
             }
-            cout << "POSSIBLE" << endl;
-            return 0;
-            SKIP:;
-            grundy = backup;
-            counter--;
+            k <<= 1;
         }
     }
-    cout << "IMPOSSIBLE" << endl;
 
->>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
+    inline ll rmqi(ll l, ll r){
+        if (l >= r) return INF;
+        ll ln = MSB(r-l);
+        ll id1 = table[l][ln], id2 = table[r-(1<<ln)][ln];
+        return (max_flag ? (val[id1]>=val[id2]) : (val[id1]<=val[id2]))?id1:id2;
+    }
+
+    inline ll rmq(ll l, ll r){ 
+        if (l >= r) return max_flag ? 0 : INF;
+        return val[rmqi(l,r)]; 
+    }
+};
+
+
+SparseTable st_o;
+SparseTable st_e;
+ll n;
+vll a;
+struct eo_ {
+    ll ei = 0;
+    ll e = 0;
+    ll oi = 0;
+    ll o = 0;
+    ll l = 0;
+    ll r = 0;
+    eo_(ll x, ll y, ll z, ll w, ll l_, ll r_) {ei=x;e=y;oi=z;o=w;l=l_;r=r_;};
+    bool operator<( const eo_& right ) const {
+        return e > right.e;
+    }
+};
+using eo = struct eo_;
+void print(eo x) {
+    cout << x.ei << " " << x.e << " " << x.oi << " " << x.o << endl;
+}
+
+#if 0
+eo get(ll i, ll j) {
+//    cout << i << " " << j << endl;
+//    assert(abs(i - j) % 2 == 0);
+    ll m = INF;
+    ll mh = -1;
+    for (ll h = i; h < j; h += 2) {
+        if (m > a[h]) {
+            m = a[h];
+            mh = h;
+        }
+    }
+    ll m2 = INF;
+    ll mh2 = -1;
+    for (ll h = mh+1; h < j; h += 2) {
+        if (m2 > a[h]) {
+            m2 = a[h];
+            mh2 = h;
+        }
+    }
+    return eo(mh,m,mh2,m2,i,j);
+}
+
+#else
+eo get(ll i, ll j) {
+//    cout << "GET" << endl;
+//    cout << i << " " << j << endl;
+//    assert(abs(i - j) % 2 == 0);
+//    cout << st_o.val << endl;
+//    cout << st_e.val << endl;
+    ll m, mh, m2, mh2;
+    if (i % 2 == 0) {
+        m = st_e.rmq(i/2, (j+1)/2);
+        mh = st_e.rmqi(i/2, (j+1)/2) * 2;
+    } else {
+        m = st_o.rmq(i/2, j/2);
+        mh = st_o.rmqi(i/2, j/2) * 2 + 1;
+    }
+
+    ll tmp = mh+1;
+    if (tmp % 2 == 0) {
+        m2 = st_e.rmq(tmp/2, (j+1)/2);
+        mh2 = st_e.rmqi(tmp/2, (j+1)/2) * 2;
+    } else {
+        m2 = st_o.rmq(tmp/2, j/2);
+        mh2 = st_o.rmqi(tmp/2, j/2) * 2 + 1;
+    }
+
+//    cout << mh << " " << m << " " << mh2 << " " << m2 << endl;
+//    cout << "END GET" << endl;
+    return eo(mh,m,mh2,m2,i,j);
+}
+#endif
+
+
+vll ret;
+
+int main(void) {
+    cin >> n;
+    a.resize(n);
+    cin >> a;
+
+    vll ao, ae;
+    rep(i, n) {
+        (i % 2 == 0 ? ae : ao).pb(a[i]); 
+    }
+    st_o = SparseTable(ao);
+    st_e = SparseTable(ae);
+
+//    dfs(0, n);
+//    priority_queue<eo, vector<eo>, greater<eo>> q;
+    priority_queue<eo> q;
+    q.push(get(0, n));
+    while (q.size()) {
+        auto tmp = q.top(); q.pop();
+        ll i = tmp.l, j = tmp.r;
+        ll ei = tmp.ei;
+        ll e = tmp.e;
+        ll oi = tmp.oi;
+        ll o = tmp.o;
+
+//        cout << i << " " << j << "#ij" << endl;
+//        cout << ei << " " << oi << "#eioi" << endl;
+        ret.pb(e);
+        ret.pb(o);
+
+        vector<eo> cands;
+        if (ei != i) q.push(get(i, ei));
+        if (ei + 1 != oi) q.push(get(ei+1, oi));
+        if (oi + 1 != j) q.push(get(oi+1, j));
+//        cout << cands << endl;
+    }
+
+    rep(i, n) {
+        cout << ret[i] << " ";
+    }
+    cout << endl;
     return 0;
 }

@@ -30,7 +30,10 @@ auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ost
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+<<<<<<< HEAD
+=======
 template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
@@ -55,8 +58,11 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 // 素数の個数はO(n / log n)
+<<<<<<< HEAD
+=======
 // 整数nの素因数個数は1.4 * log n / log log n以下。 https://eudml.org/doc/205883 [Robin, 1983]
 // 1e9までで約数の個数の最大値は1344 (K=735134400)
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
 
 /**********************************************************/
 // 素数テーブルの作成
@@ -201,6 +207,11 @@ unordered_map<ll, ll> lcmLarge(set<ll>& a) {
     return ret;
 }
 
+<<<<<<< HEAD
+
+// 約数を全列挙する。
+vector<ll> divisors(ll n) {
+=======
 const ll MAXN = 1000010;
 ll c[MAXN];
 ll dp[MAXN];
@@ -210,6 +221,7 @@ ll p2[MAXN];
 //
 // 約数を試し割りするよりn=1000000で4倍くらい早い。
 void divisors(ll n) {
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     vector<ll> divisors_list;
 
     auto counter = factorize(n);
@@ -219,6 +231,145 @@ void divisors(ll n) {
         ll p = 1;
         for (ll i = 0; i < x.second; i++) {
             p *= x.first;
+<<<<<<< HEAD
+            for (ll j = 0; j < tmp_size; j++) 
+                divisors_list.push_back(divisors_list[j] * p);
+        }
+    }
+    sort(divisors_list.begin(), divisors_list.end());
+    return divisors_list;
+}
+
+ll getDivisorsNum(ll n) {
+    unordered_map<ll, ll> divisors_list = factorize(n);
+    map<ll, ll> num;
+    rep(i, divisors_list.size()) 
+        num[divisors_list[i]]++;
+    ll p = 1;
+    for (auto x : num) 
+        p *= x.second + 1;
+    return p;
+}
+
+
+/**********************************************************/
+// 前処理なしの素数判定
+/**********************************************************/
+// Millar-Rabin Test
+using ull = unsigned long long;
+static vll cands_small = {2, 7, 61,};
+static vll cands_large = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
+bool isPrime(const ll &n){
+    vll& cands = cands_small;
+    if (n >= (1ll << 32)) 
+        cands = cands_large;
+
+    if (n == 2) 
+        return true;
+    else if (n < 2)
+        return false;
+    else if (!(n & 1))
+        return false;
+
+    ll needed = cands.size();
+
+    const ll m = n - 1, d = m / (m & -m);
+    auto modpow = [&](ll a, ll b){
+        ll res = 1;
+        while (b) {
+            if (b & 1) res = res * a % n;
+            a = a * a % n;
+            b >>= 1;
+        }
+        return res;
+    };
+    auto suspect = [&](ll a, ll t){
+        a = modpow(a,t);
+        while (t != n - 1 && a != 1 && a != n - 1){
+            a = a * a % n;
+            t <<= 1;
+        }
+        return a == n - 1 || (t & 1);
+    };
+
+    rep(i, needed) 
+        if(cands[i] % n && !suspect(cands[i], d))
+            return false;
+
+    return true;
+}
+
+// ガウス素数＝複素数の素数判定
+bool isGaussianPrime(ll a, ll b) {
+    if (a < 0) a = -a;
+    if (b < 0) b = -b;
+    if (a == 0) return b % 4 == 3 && is_prime[b];
+    if (b == 0) return a % 4 == 3 && is_prime[a];
+    return is_prime[a*a+b*b];
+}
+
+// 区間篩
+// O( n log n )．
+const ll N = 100000000; // MAXPRIME 
+const ll M = 10000;     // SQRT(N)
+const ll K = 6000000;   // NUMBER OF PRIMES, CHOOSE 9/8 * N / LOG(N)
+vector<ll> iterativeSieve() {
+    static ll p[K], table[M];
+    for (ll i = 2; i < M; ++i) p[i] = i;
+    for (ll i = 2; i*i < M; ++i)
+        if (p[i])
+            for (ll j = i*i; j < M; j += i)
+                p[j] = 0;
+    p[0] = p[1] = 0;
+    ll num = remove(p, p+M, 0) - p;
+    for (ll m = M; m < N; m += M) {
+        for (ll x = m; x < m+M; ++x)
+            table[x-m] = x;
+        for (ll i = 0, j; p[i]*p[i] < m+M; ++i) {
+            if (p[i] >= m)          j = p[i] * p[i];
+            else if (m % p[i] == 0) j = m;
+            else                    j = m - (m % p[i]) + p[i];
+            for (; j < m+M; j += p[i]) table[j-m] = 0;
+        }
+        num = remove_copy(table, table+M, p+num, 0) - p;
+    }
+    return vector<ll>(p, p+num);
+}
+
+ll k;
+vll a;
+
+map<ll, vll> memo;
+const ll MAXN = 1000010;
+vll n(MAXN), m(MAXN);
+int main(void) {
+    constructPrime(MAXN);
+    cin >> k;
+    a=vll(k); cin >> a;
+    sort(all(a));
+
+    rep(_, k) {
+        ll x = a[_];
+        if (x == 1) continue;
+        for (auto i : divisors(x)) if (i != 1) {
+            for (ll j = i; j <= x; j+=i) {
+                (m[i] += n[j] + m[j]) %= mo;
+                (n[i] += n[j]) %= mo;
+            }
+        }
+        n[x]++, m[x]++;
+        /*
+        cout << a[_] << endl;
+        cout << n << endl;
+        cout << m << endl;
+        */
+    }
+    ll ret = 0;
+    rep(i, n.size()) {
+        (ret += i * m[i]) %= mo;
+    }
+    cout << ret << endl;;
+=======
             for (ll j = 0; j < tmp_size; j++) {
                 divisors_list.push_back(divisors_list[j] * p);
                 c[divisors_list.back()]++;
@@ -256,5 +407,6 @@ int main(void) {
     cout << (ret + mo) % mo << endl;
 
 
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     return 0;
 }

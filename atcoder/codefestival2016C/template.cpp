@@ -61,6 +61,44 @@ int main(void) {
         cout << 0 << endl;
         return 0;
     }
+<<<<<<< HEAD
+    rep(i, n) {
+        if (a[i] == b[i] && a[i] != M) {
+            cout << 0 << endl;
+            return 0;
+        }
+    }
+
+    ll ret = 1;
+    ll prev;
+
+    prev = -1;
+    rep(i, n) {
+        if (a[i] == b[i]) break;
+        if (prev == a[i]) {
+            (ret *= a[i]) %= mo;
+        }
+        prev = a[i];
+    }
+    prev = -1;
+    for (int i = n-1; i >= 0; i--) {
+        if (a[i] == b[i]) break;
+        if (prev == b[i]) {
+            (ret *= b[i]) %= mo;
+        }
+        prev = b[i];
+    }
+    ll counter = 0;
+    rep(i, n) if (a[i] == b[i]) {
+        counter++;
+    }
+    rep(i, counter-2) {
+        (ret *= M) %=mo;
+    }
+        cout << ret << endl;
+
+
+=======
     ll tef = 0;
     rep(i, n) {
         tef |= a[i] == M && b[i] == M;
@@ -107,5 +145,6 @@ int main(void) {
     cout << ret << endl;
 
  
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     return 0;
 }

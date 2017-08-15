@@ -53,6 +53,11 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+<<<<<<< HEAD
+int main(void) {
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+=======
 const int nmax = 300;
 
 int ret = 1e8;
@@ -114,5 +119,6 @@ int main(void) {
     cout << ret << endl;
 
 
+>>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     return 0;
 }

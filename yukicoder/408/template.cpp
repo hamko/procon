@@ -30,10 +30,7 @@ auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ost
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-<<<<<<< HEAD
-=======
 template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
->>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
@@ -57,140 +54,52 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-<<<<<<< HEAD
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-=======
-vvll g, gr;
+    ll n, m; cin >> n >> m;
+    vll a(m), b(m);
+    vvll g(n);
+    unordered_set<P> edges;
+    rep(i, m) {
+        cin >> a[i] >> b[i]; a[i]--, b[i]--;
+        g[a[i]].pb(b[i]);
+        g[b[i]].pb(a[i]);
+        edges.insert(P(a[i], b[i]));
+        edges.insert(P(b[i], a[i]));
+    }
+    vector<P> list;
+    for (auto u : g[0]) for (auto v : g[u]) if (v && u && u != v) list.pb(P(u, v));
 
-vll order;
-ll order_counter = 0;
-void scc_for(ll v) {
-    if (order[v] >= 0) return;
-    order[v] = INF;
-    for (auto u : g[v]) 
-        scc_for(u);
-    order[v] = order_counter++;
-}
-vvll scc_set;
-vector<bool> flag;
-void scc_rev(ll i, ll v) {
-    if (flag[v]) return;
-    flag[v] = 1;
-    scc_set[i].pb(v);
-    for (auto u : gr[v]) 
-        scc_rev(i, u);
-}
-vvll getSCC(void) {
-    ll n = g.size();
+    vector<unordered_set<ll>> memo(n);
+    for (auto x : list) {
+        memo[x.se].insert(x.fi);
+    }
 
-    order.resize(n, -1);
-    order_counter = 0;
-    scc_set.clear();
-    flag.resize(n);
-
-    rep(v, g.size()) 
-        scc_for(v);
-    vll order_rev(n);
-    rep(i, n) 
-        order_rev[n-1-order[i]] = i;
-    rep(i, g.size()) {
-        ll v = order_rev[i];
-        if (!flag[v]) {
-            scc_set.pb({});
-            scc_rev(scc_set.size()-1, v);
+    rep(i, m) {
+        if (edges.count(P(a[i], b[i])) == 0) continue;
+        bool erased_a = 0, erased_b = 0;
+        if (memo[a[i]].count(b[i])) {
+            memo[a[i]].erase(b[i]);
+            erased_a = 1;
         }
-    }
-    return scc_set;
-}
-
-unordered_set<ll> cycle;
-vll grundy;
-ll grundy_dfs(ll v) {
-    if (cycle.count(v)) 
-        return -1;
-    if (grundy[v] >= 0) {
-        return grundy[v];
-    }
-    if (g[v].size() == 0) {
-        return grundy[v] = 0;
-    }
-
-    unordered_set<ll> memo;
-    for (auto&& u : g[v]) {
-        memo.insert(grundy_dfs(u));
-    }
-    rep(i, INF) {
-        if (!memo.count(i)) {
-            return grundy[v] = i;
+        if (memo[b[i]].count(a[i])) {
+            memo[b[i]].erase(a[i]);
+            erased_b = 1;
         }
-    }
-    assert(0);
-    return -1;
-}
+        bool f = 0;
+        ll as = memo[a[i]].size(), bs = memo[b[i]].size();
+        f |= (as != 0 && bs != 0 && (as > 1 || bs > 1));
+        f |= (as == 1 && bs == 1 && *memo[a[i]].begin() != *memo[b[i]].begin());
+        if (erased_a) 
+            memo[a[i]].insert(b[i]);
+        if (erased_b) 
+            memo[b[i]].insert(a[i]);
 
-
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-    g.resize(n), gr.resize(n);
-    rep(i, n) {
-        g [a[i]-1].pb(i);
-        gr[i].pb(a[i]-1);
-    }
-
-    vvll scc = getSCC();
-
-    for (auto&& vv : scc) if (vv.size() > 1) 
-        for (auto&& v : vv) 
-            cycle.insert(v);
-    if (cycle.empty()) 
-        return 0;
-
-    grundy = vll(n, -1);
-    rep(i, n) if (!cycle.count(i)) 
-        grundy_dfs(i);
-
-    ll v = *cycle.begin();
-    unordered_set<ll> memo;
-    for (auto u : g[v]) 
-        memo.insert(grundy[u]);
-
-    cycle = {};
-    ll counter = 2;
-    rep(i, INF) {
-        if (!counter) break;
-        if (!memo.count(i)) {
-            auto backup = grundy;
-            grundy[v] = i;
-            rep(i, n) 
-                grundy_dfs(i);
-            
-            rep(i, n) {
-                assert(grundy[i] != -1);
-                unordered_set<ll> memo;
-                for (auto&& u : g[i]) 
-                    memo.insert(grundy[u]);
-                ll grundy_i = -1;
-                rep(i, INF) {
-                    if (!memo.count(i)) {
-                        grundy_i = i;
-                        break;
-                    }
-                }
-                if (grundy[i] != grundy_i) 
-                    goto SKIP;
-            }
-            cout << "POSSIBLE" << endl;
+        if (f) {
+            cout << "YES" << endl;
             return 0;
-            SKIP:;
-            grundy = backup;
-            counter--;
         }
     }
-    cout << "IMPOSSIBLE" << endl;
+    cout << "NO" << endl;
 
->>>>>>> eb9ff41e88412dd939ca113c34ff2444c3d43df6
     return 0;
 }
