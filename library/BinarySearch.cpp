@@ -15,6 +15,7 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 #define MAX_N 100005
 
+// TODO 二分探索のライブラリをまともにする。111100000のパターンも作るなど。BinarySearch1100とか、そんな感じの関数名が良い
 
 // 整数二分探索
 // f: 単調増加関数. 000111, 111111, 000000を許容する（11110000で探索したい場合は、自分でfを反転すること）
