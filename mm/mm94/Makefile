@@ -8,7 +8,7 @@ HEADS = $(shell ls *.h 2> /dev/null) $(shell ls *.hpp 2> /dev/null)
 CFLAGS = -std=c++11 -g -Wall  -fsanitize=undefined -Wno-deprecated -Wno-unneeded-internal-declaration -DLOCAL -pg
 LFLAGS = -lm
 
-PROD = brutal ga input greedy skip_greedy context_greedy annealing large_change feature_experiment statistics sort sentinels prune bridge duplicate game s4 s10 e12
+PROD = brutal ga input greedy skip_greedy context_greedy annealing large_change feature_experiment statistics sort prune bridge duplicate game s4 s10 e12
 
 all: $(PROD)
 
@@ -40,9 +40,6 @@ statistics: statistics.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LFLAGS)
 
 sort: sort.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LFLAGS)
-
-sentinels: sentinels.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LFLAGS)
 
 prune: prune.o

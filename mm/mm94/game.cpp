@@ -531,11 +531,9 @@ public:
                 swap_rc(u, v);
             }
 
-            if (cyc % 1000 == 0) {
-                /*
+            if (cyc % 1 == 0) {
                 cout << cyc << " " << t << " " << ret_eval.score << " " << ret_eval.num << "#score" << endl;
                 cout << peval.ri - peval.li << " " << peval.rj - peval.lj << endl;
-                */
             }
         }
 
