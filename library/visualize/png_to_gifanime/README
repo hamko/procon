@@ -1,0 +1,5 @@
+g++ main.cpp mypng.cpp -lpng
+./a.out
+
+cd sort
+ls * | sort | awk '{if (NR%3==0)print}' > tmp;  convert -delay 1 -loop 0 `cat tmp` movie.gif
