@@ -23,19 +23,34 @@ for run_dir in sys.argv[1:]:
     y += [np.mean(scores)];
     err += [np.std(scores)];
 
+    if i == 0: 
+        d1 = scores;
+    elif i == 1:
+        d2 = scores;
+
     i += 1
 
 print(x)
 print(y)
 print(err)
 
-errorbar(x,y,yerr=err)
-#legend()
-legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
-# 右側の余白を調整
-subplots_adjust(right=0.7)
+xlim(xmin=-1, xmax=len(sys.argv)-1)
+xticks(np.arange(len(sys.argv)-1),sys.argv[1:])
+errorbar(x,y,yerr=err,fmt='ro',ecolor='g')
 
-title("scores for test cases")
+from scipy import stats
+p = None
+if i >= 2:
+    t, p = stats.ttest_ind(d1, d2, equal_var=False);
+
+if p == None:
+    title("Comparison of scores with std error bars")
+else:
+    title("Comparison of scores with std error bars (p="+str(p)+")")
+
 xlabel("Case")
 ylabel("Points")
+
+
 show()
+
