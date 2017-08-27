@@ -180,7 +180,7 @@ int save_png_to_file(RGBBitmap *bitmap, const char *path)
 }
 
 // just alloc
-RGBBitmap *allocRGBBitmap(size_t width, size_t height)
+RGBBitmap *allocRGBBitmap(size_t height, size_t width)
 {
     RGBBitmap *img = (RGBBitmap*)malloc(sizeof(RGBBitmap));
     img->width = width; 

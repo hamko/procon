@@ -110,20 +110,27 @@ int main(int argc, char** argv)
         rep(i, n-1) rep(j, n-i-1) {
             if (a[j] > a[j+1]) {
                 swap(a[j], a[j+1]);
-
-                RGBBitmap *img = allocRGBBitmap(m/*width*/, n/*height*/);
-                rep(i, n) {
-                    rep(j, a[i]) {
-                        getPixelAt(img, i, j).blue = 255;
-                        getPixelAt(img, i, j).green = 255;
-                        getPixelAt(img, i, j).red = 255;
-                    }
-                }
-                char filename[1024];
-                sprintf(filename, "sort/%04lld_%04lld.png", i, j);
-                save_png_to_file(img, (const char*)filename);
-
             }
+            RGBBitmap *img = allocRGBBitmap(n/*height*/, m/*width*/);
+            rep(k, n) {
+                rep(l, a[k]) {
+                    ll col = (k == j ? 0 : 255);
+                    getPixelAt(img, k, l).blue = col;
+                    getPixelAt(img, k, l).green = col;
+                    getPixelAt(img, k, l).red = 255;
+                }
+                repi(l, a[k], m) {
+                    getPixelAt(img, k, l).blue = 0;
+                    getPixelAt(img, k, l).green = 0;
+                    getPixelAt(img, k, l).red = 0;
+                }
+            }
+            char filename[1024]={};
+            sprintf(filename, "sort/%04lld_%04lld.png", i, j);
+            cout << filename << endl;
+            save_png_to_file(img, (const char*)filename);
+            freeRGBBitmap(img);
+
             cout << a << endl;
         }
 
