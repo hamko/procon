@@ -1,3 +1,6 @@
+// 重要！！！！！！！！！！！！
+// 何故か配列じゃないと動かないので、必ず使うときには配列に移してから使うこと！！
+// v.data()みたいなのではバグる！！！！！！TODO なおす
 #include <bits/stdc++.h>
 #include <sys/time.h>
 using namespace std;
