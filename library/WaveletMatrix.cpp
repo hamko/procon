@@ -139,55 +139,57 @@ template<int N> char FID<N>::popcount[1<<FID<N>::block];
 // Wavelet Matrix
 /*****************/
 // 長さNで、値域[0, m=2^D)の整数を管理する
+#define ENABLE_SUM
 template<class T, int N, int D> class wavelet {
     int n, zs[D];
     FID<N> dat[D];
-
-    void max_dfs(int d, int l, int r, int &k, T val, vector<T> &vs) {
-        if(l >= r or !k) return;
-        if(d == D) {
-            while(l++ < r and k > 0) vs.push_back(val), k--;
-            return;
-        }
-        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-        // if min, change this order
-        max_dfs(d+1, lc+zs[d], rc+zs[d], k, 1ULL<<(D-d-1)|val,vs);
-        max_dfs(d+1, l-lc, r-rc, k, val, vs);
-    }
-
-    T max_dfs(int d, int l, int r, T val, T a, T b) {
-        if(r-l <= 0 or val >= b) return -1;
-        if(d == D) return val>=a? val: -1;
-        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-        T ret = max_dfs(d+1, lc+zs[d], rc+zs[d], 1ULL<<(D-d-1)|val, a, b);
-        if(~ret) return ret;
-        return max_dfs(d+1, l-lc, r-rc, val, a, b);
-    }
-
-    int freq_dfs(int d, int l, int r, T val, T a, T b) {
-        if(l == r) return 0;
-        if(d == D) return (a <= val and val < b)? r-l: 0;
-        T nv = 1ULL<<(D-d-1)|val, nnv = ((1ULL<<(D-d-1))-1)|nv;
-        if(nnv < a or b <= val) return 0;
-        if(a <= val and nnv < b) return r-l;
-        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-        return freq_dfs(d+1,l-lc,r-rc,val,a,b)+
-            freq_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b);
-    }
-
-    void list_dfs(int d, int l, int r, T val, T a, T b, vector<pair<T,int>> &vs) {
-        if(val >= b or r-l <= 0) return;
-        if(d == D) {
-            if(a <= val) vs.push_back(make_pair(val,r-l));
-            return;
-        }
-        T nv = val|(1LL<<(D-d-1)), nnv = nv|(((1LL<<(D-d-1))-1));
-        if(nnv < a) return;
-        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-        list_dfs(d+1,l-lc,r-rc,val,a,b,vs);
-        list_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b,vs);
-    }
 public:
+#ifdef ENABLE_SUM
+    T raw_data[D+1][N] = {};
+    T sum_data[D+1][N+1] = {};
+    wavelet(int n, T seq[]) : n(n) {
+        T l[N] = {}, r[N] = {};
+        bool b[N] = {};
+        memcpy(raw_data[0], seq, sizeof(T)*n);
+        for (int d = 0; d < D; d++) {
+            int lh = 0, rh = 0;
+            for (int i = 0; i < n; i++) {
+                b[i] = (raw_data[d][i]>>(D-d-1))&1;
+                if(b[i]) r[rh++] = raw_data[d][i];
+                else l[lh++] = raw_data[d][i];
+            }
+            dat[d] = FID<N>(n,b);
+            zs[d] = lh;
+            swap(l,raw_data[d+1]);
+            memcpy(raw_data[d+1]+lh, r, rh*sizeof(T));
+        }
+        rep(d, D+1) rep(i, N) sum_data[d][i+1] = sum_data[d][i] + raw_data[d][i];
+    }
+    // 深さdでの列の[l, r)での累積和を求める
+    T getSum(int d, int l, int r) {
+        return sum_data[d][r] - sum_data[d][l];
+    }
+     // get sum of elements in [l,r) in [a,b)
+    // O(log m)
+    T sum_dfs(int d, int l, int r, T val, T a, T b) {
+        // Wavelet Matrixの深さdで、
+        // [l, r)が[val, nv) = [val, val+(1ll<<(D-d)))の値域を表現している時、
+        // [a, b)の値域のものの和は？
+
+        if(l == r) return 0; // valは無いので0を返す
+        if(d == D) return (a <= val and val < b)? (r-l)*val: 0; // 深さDでは全部の値が同じなので、そのままかけて返す
+
+        T nv = 1ULL<<(D-d-1)|val, nnv = ((1ULL<<(D-d-1))-1)|nv;
+        if(nnv < a or b <= val) // どんなに1を選んでもaに満たなかったり、すでに最大を超えていたら0
+            return 0; 
+        if (a <= val and nnv < b) // これからどう選んでも a <= [l, r) < bの場合、累積和を返す
+            return getSum(d, l, r); 
+
+        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
+        return sum_dfs(d+1,l-lc,r-rc,val,a,b)+ sum_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b);
+    }
+    T sum(int l, int r, T a, T b) { return sum_dfs(0,l,r,0,a,b); }
+#else 
     wavelet(int n, T seq[]) : n(n) {
         T f[N], l[N], r[N];
         bool b[N];
@@ -206,9 +208,16 @@ public:
             memcpy(f+lh, r, rh*sizeof(T));
         }
     }
-    void print(void) {
+#endif
+   void print(void) {
         rep(i, D) cout << zs[i] << " "; cout << endl;
         rep(i, D) dat[i].print();
+        /*
+        cout << "Raw" << endl;
+        rep(d, D+1) { rep(i, N) cout << raw_data[d][i] << " "; cout << endl; }
+        cout << "Sum" << endl;
+        rep(d, D+1) { rep(i, N+1) cout << sum_data[d][i] << " "; cout << endl; }
+        */
     }
 
     // get, []: i番目の要素
@@ -230,6 +239,7 @@ public:
     // O(log m)
     int count(T val, int l, int r) {
         for (int d = 0; d < D; d++) {
+            // ここで[l, r)にxのd桁目までが全て入っていることを保証(d>0)
             bool b = (val>>(D-d-1))&1;
             l = dat[d].count(b,l)+b*zs[d];
             r = dat[d].count(b,r)+b*zs[d];
@@ -260,6 +270,17 @@ public:
 
     // maximum: 区間[l,r)で大きい順にk個
     // O(k log m)
+    void max_dfs(int d, int l, int r, int &k, T val, vector<T> &vs) {
+        if(l >= r or !k) return;
+        if(d == D) {
+            while(l++ < r and k > 0) vs.push_back(val), k--;
+            return;
+        }
+        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
+        // if min, change this order
+        max_dfs(d+1, lc+zs[d], rc+zs[d], k, 1ULL<<(D-d-1)|val,vs);
+        max_dfs(d+1, l-lc, r-rc, k, val, vs);
+    }
     vector<T> maximum(int l, int r, int k) {
         if (r-l < k) k = r-l;
         if(k < 0) return {};
@@ -268,6 +289,18 @@ public:
         return ret;
     }
 
+    // 添字[l, r)の要素で、値が[a, b)のもののうち最大値を求める
+    // valは上からd bit決めて他0を埋めた時の値。
+    //
+    // O(log m)
+    T max_dfs(int d, int l, int r, T val, T a, T b) {
+        if(r-l <= 0 or val >= b) return -1;
+        if(d == D) return val>=a? val: -1;
+        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
+        T ret = max_dfs(d+1, lc+zs[d], rc+zs[d], 1ULL<<(D-d-1)|val, a, b);
+        if(~ret) return ret; // 1側を見て見つかったならそれに越したことはない
+        return max_dfs(d+1, l-lc, r-rc, val, a, b); // なければ0側を見る
+    }
     T maximum(int l, int r, T a, T b) { return max_dfs(0,l,r,0,a,b); }
 
     // k is 0-indexed!!!!
@@ -278,15 +311,13 @@ public:
         T ret = 0;
         for (int d = 0; d < D; d++) {
             int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-            if(rc-lc > k) {
-                l = lc+zs[d];
-                r = rc+zs[d];
+            // lc - rc = [l, r)で立っている1の数
+            if(rc-lc > k) { // 1の数にkが収まっていれば
+                l = lc+zs[d], r = rc+zs[d]; // 1側に遷移
                 ret |= 1ULL<<(D-d-1);
-            }
-            else {
-                k -= rc-lc;
-                l -= lc;
-                r -= rc;
+            } else { // 0側ならば
+                k -= rc-lc; // 1側にあった数だけkを削って次へ
+                l -= lc, r -= rc;
             }
         }
         return ret;
@@ -294,6 +325,18 @@ public:
 
     // freq_list: 区間[l,r)で値が[lb,ub)になる値とその出現回数の組のリスト
     // O(k log m), kはヒット数
+    void list_dfs(int d, int l, int r, T val, T a, T b, vector<pair<T,int>> &vs) {
+        if(val >= b or r-l <= 0) return;
+        if(d == D) {
+            if(a <= val) vs.push_back(make_pair(val,r-l));
+            return;
+        }
+        T nv = val|(1LL<<(D-d-1)), nnv = nv|(((1LL<<(D-d-1))-1));
+        if(nnv < a) return;
+        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
+        list_dfs(d+1,l-lc,r-rc,val,a,b,vs);
+        list_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b,vs);
+    }
     vector<pair<T,int>> freq_list(int l, int r, T a, T b) {
         vector<pair<T,int>> ret;
         list_dfs(0,l,r,0,a,b,ret);
@@ -310,9 +353,21 @@ public:
                 ret.push_back(make_pair(select(e.first,i,l), e.first));
         return ret;
     }
+
     // number of elements in [l,r) in [a,b)
     // O(log m)
+    int freq_dfs(int d, int l, int r, T val, T a, T b) {
+        if(l == r) return 0;
+        if(d == D) return (a <= val and val < b)? r-l: 0;
+        T nv = 1ULL<<(D-d-1)|val, nnv = ((1ULL<<(D-d-1))-1)|nv;
+        if(nnv < a or b <= val) return 0;
+        if(a <= val and nnv < b) return r-l;
+        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
+        return freq_dfs(d+1,l-lc,r-rc,val,a,b)+
+            freq_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b);
+    }
     int freq(int l, int r, T a, T b) { return freq_dfs(0,l,r,0,a,b); }
+
 
     // TODO
     // [l, r)区間内部で、a以上の最小値（これさえあればselectで自由に飛べる）
@@ -357,6 +412,11 @@ int main(void) {
         cout << w.freq(0, n, 2, 8) << endl;
         cout << "freq_list" << endl;
         cout << w.freq_list(0, n, 2, 8) << endl;
+
+        cout << "sum" << endl; // ENABLE_SUMのdefineが必要。sumクエリはメモリをO(ND)とかなり使う。
+        cout << w.sum(0, n, 2, 7) << endl;
+        cout << w.sum(0, n, 2, 8) << endl;
+        cout << w.sum(0, n, 2, 9) << endl;
 
         cout << "get_rect" << endl;
         // TODO
