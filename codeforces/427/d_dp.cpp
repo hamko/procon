@@ -36,6 +36,7 @@ template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, c
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
 template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
 string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); reverse(all(s)); return s; }
+template <typename T> ostream &operator<<(ostream &o, const priority_queue<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} o << endl; return o; }
 
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
@@ -54,32 +55,26 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-const int maxn = 5010;
-const int maxw = 6000;
-ll dp[maxn][maxw] = {};
+string s; 
+bool isPal[5010][5010];
+int16_t dp[5010][5010];
 int main(void) {
-    ll n, w; cin >> n >> w;
+    cin >> s;
+    ll n = s.length();
+    
+    rep(i, n) 
+        isPal[i][i+1] = isPal[i][i] = 1;
+    repi(len, 2, n+1) rep(i, n) if (i + len <= n) 
+        isPal[i][i+len] = (isPal[i+1][i+len-1] && s[i] == s[i+len-1]);
 
-    vector<P> ab(n);
-    rep(i, n) cin >> ab[i].fi >> ab[i].se;
-    sort(all(ab)); reverse(all(ab));
+    rep(i, n) dp[i][i+1] = 1;
+    repi(len, 2, n+1) rep(i, n) if (i + len <= n && isPal[i][i+len]) 
+        dp[i][i+len] = 1 + dp[i][i+len/2];
 
-    vll a(n), b(n);
-    rep(i, n) a[i] = ab[i].fi, b[i] = ab[i].se;
+    vll ret(n+1);
+    for (auto&& v : dp) for (auto&& x : v) ret[x]++;
+    rep(i, n) ret[n-i-1] += ret[n-i];
+    rep(i, n) cout << ret[i+1] << " "; cout << endl;
 
-    // 配るDP
-    // dp[i][j] = ちょうどi個見て、重さがちょうどjであるような選び方のうち最も価値が高いもの
-    rep(i, maxn) rep(j, maxw) dp[i][j] = -1;
-    dp[0][0] = 0;
-    rep(i, n) rep(j, maxw) if (dp[i][j] != -1) {
-        if (j + a[i] < maxw)
-            chmax(dp[i+1][j+a[i]], dp[i][j] + b[i]);
-        chmax(dp[i+1][j], dp[i][j]);
-    }
-
-    ll ret = 0;
-    rep(i, n) rep(j, w+1) chmax(ret, b[i] + dp[i][j]);
-
-    cout << ret << endl;
     return 0;
 }

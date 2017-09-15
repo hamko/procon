@@ -54,32 +54,25 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-const int maxn = 5010;
-const int maxw = 6000;
-ll dp[maxn][maxw] = {};
 int main(void) {
-    ll n, w; cin >> n >> w;
-
-    vector<P> ab(n);
-    rep(i, n) cin >> ab[i].fi >> ab[i].se;
-    sort(all(ab)); reverse(all(ab));
-
-    vll a(n), b(n);
-    rep(i, n) a[i] = ab[i].fi, b[i] = ab[i].se;
-
-    // 配るDP
-    // dp[i][j] = ちょうどi個見て、重さがちょうどjであるような選び方のうち最も価値が高いもの
-    rep(i, maxn) rep(j, maxw) dp[i][j] = -1;
-    dp[0][0] = 0;
-    rep(i, n) rep(j, maxw) if (dp[i][j] != -1) {
-        if (j + a[i] < maxw)
-            chmax(dp[i+1][j+a[i]], dp[i][j] + b[i]);
-        chmax(dp[i+1][j], dp[i][j]);
+    ll n, m; cin >> n >> m;
+    vvll g(n, vll(n, INF));
+    rep(i, n) g[i][i] = 0;
+    rep(i, m) {
+        ll a, b, c; cin >> a >> b >> c; a--, b--;
+        g[a][b] = g[b][a] = c;
     }
-
-    ll ret = 0;
-    rep(i, n) rep(j, w+1) chmax(ret, b[i] + dp[i][j]);
-
-    cout << ret << endl;
+    rep(k, n) rep(i, n) rep(j, n) chmin(g[i][j], g[i][k] + g[k][j]);
+    ll k; cin >> k;
+    rep(_, k) {
+        ll x, y, z; cin >> x >> y >> z; x--, y--;
+        if (z < g[x][y]) { 
+            g[x][y] = g[y][x] = z;
+            rep(i, n) rep(j, n) g[i][j] = min({g[i][j], g[i][x]+g[x][y]+g[y][j], g[i][y]+g[y][x]+g[x][j]});
+        }
+        ll ret = 0; rep(i, n) rep(j, n) if (i < j) ret += g[i][j];
+        cout << ret << endl;
+    }
+        
     return 0;
 }

@@ -54,32 +54,43 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-const int maxn = 5010;
-const int maxw = 6000;
-ll dp[maxn][maxw] = {};
 int main(void) {
-    ll n, w; cin >> n >> w;
-
-    vector<P> ab(n);
-    rep(i, n) cin >> ab[i].fi >> ab[i].se;
-    sort(all(ab)); reverse(all(ab));
-
-    vll a(n), b(n);
-    rep(i, n) a[i] = ab[i].fi, b[i] = ab[i].se;
-
-    // 配るDP
-    // dp[i][j] = ちょうどi個見て、重さがちょうどjであるような選び方のうち最も価値が高いもの
-    rep(i, maxn) rep(j, maxw) dp[i][j] = -1;
-    dp[0][0] = 0;
-    rep(i, n) rep(j, maxw) if (dp[i][j] != -1) {
-        if (j + a[i] < maxw)
-            chmax(dp[i+1][j+a[i]], dp[i][j] + b[i]);
-        chmax(dp[i+1][j], dp[i][j]);
+    ll n; cin >> n;
+    vvll g(n);
+    rep(i, n-1) {
+        ll u, v; cin >> u >> v; u--, v--;
+        g[u].pb(v), g[v].pb(u);
     }
 
-    ll ret = 0;
-    rep(i, n) rep(j, w+1) chmax(ret, b[i] + dp[i][j]);
+    vector<double> d(n);
+    function<double(ll, ll)> dfs1 = [&](ll u, ll p) {
+        ll num = g[u].size() - (p != -1);
+        if (p != -1 && g[u].size() <= 1) 
+            return d[u] = 0;
 
-    cout << ret << endl;
+        double ret = 0;
+        for (auto v : g[u]) if (v != p) 
+            ret += dfs1(v, u);
+
+        return d[u] = ret / num + 1;
+    };
+    dfs1(0, -1);
+
+    vector<double> ret(n);
+    function<void(ll, ll, double)> dfs2 = [&](ll u, ll p, double dpar) {
+        double sum = g[u].size();
+        for (auto v : g[u]) if (v != p) sum += d[v];
+        if (p != -1) sum += dpar;
+
+        ret[u] = (p == -1 ? d[u] : sum / g[u].size());
+
+        for (auto v : g[u]) if (v != p) 
+            dfs2(v, u, g[u].size() > 1 ? (sum - d[v] - 1) / (g[u].size() - 1) : 0);
+    };
+    dfs2(0, -1, 0);
+
+    rep(i, n) 
+        cout << ldout << ret[i] << endl;
+
     return 0;
 }

@@ -52,20 +52,40 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-// i個取って、最後に取ったものがj番目, hは今までに取ったことがあるか
-ll dp[5010][5010][2];
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-    dp[0][0] = 0; 
-    rep(i, n) {
-        chmax(dp[i+1][0], dp[i][0]);
-        chmax(dp[i+1][0], dp[i][1]);
+// dp[i] = [0, i)と少しでもかぶるような区間を全て無いものとしたことにした時の、最大得点
+ll n;
+vll dp, a, l, r;
+ll dfs(ll i) {
+    if (i >= n) return dp[i] = 0;
+    if (dp[i] != -INF) return dp[i];
 
-        chmax(dp[i+1][1], dp[i][0] ^ a[i]);
-        chmax(dp[i+1][1], dp[i][0] );
-        chmax(dp[i+1][1], dp[i][0]);
-    }
-    
+    // i番目を選ばない
+    chmax(dp[i], dfs(i+1));
+
+    // i番目を選べない
+    repi(j, l[i], r[i]+1) if (l[j] < i) return dp[i];
+
+    ll last = r[i] + 1;
+    set<ll> found;
+    repi(j, l[i], last) 
+        chmax(last, r[j] + 1), found.insert(a[j]);
+
+    ll score = 0;
+    for (auto x : found) score ^= x;
+    chmax(dp[i], dfs(last) + score);
+
+    return dp[i];
+}
+
+int main(void) {
+    cin >> n;
+    a = vll(n); cin >> a;
+    dp = vll(n+1, -INF), l = vll(n, INF), r = vll(n, -INF);
+
+    rep(i, n) rep(j, n) if (a[j] == a[i]) 
+        chmin(l[i], j), chmax(r[i], j);
+
+    cout << dfs(0) << endl;
+
     return 0;
 }

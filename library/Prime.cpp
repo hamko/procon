@@ -223,48 +223,91 @@ ll getDivisorsNum(ll n) {
 /**********************************************************/
 // 前処理なしの素数判定
 /**********************************************************/
-// Millar-Rabin Test
-using ull = unsigned long long;
-static vll cands_small = {2, 7, 61,};
-static vll cands_large = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
-bool isPrime(const ll &n){
-    vll& cands = cands_small;
-    if (n >= (1ll << 32)) 
-        cands = cands_large;
+#define ull unsigned long long
+// dla n < 2^32: inline ull mul(ull a, ull b, ull mod) { return (a*b) % mod; }
+const int _k = 25; const ull _mask = (1<<_k)-1;
+ull mul (ull a, ull b, ull mod) { // zaĹ‚: b, mod < 2^(64-_k)
+    ull result = 0;
+    while (a) {
+        ull temp = (b * (a & _mask)) % mod;
+        result = (result + temp) % mod;
+        a >>= _k;
+        b = (b << _k) % mod;
+    }
+    return result;
+}
+ 
+ull pow(ull a, ull w, ull mod) {
+    ull res = 1;
+    while (w){
+        if (w&1) res = mul(res, a, mod);
+        a = mul(a, a, mod);
+        w /= 2;
+    }
+    return res;
+}
+ 
+bool primetest(ull n, int a) {
+    if (a > n-1) return 1;
+    ull d = n-1;
+    int s = 0;
+    while (!(d&1)) {
+        d /= 2;
+        s++;
+    }
+    ull x = pow(a, d, n);
+    if (x == 1 || x == n-1) return 1;
+    rep(i,s-1){
+        x = mul(x, x, n);
+        if (x == 1) return 0;
+        if (x == n-1) return 1;
+    }
+    return 0;
+}
 
-    if (n == 2) 
-        return true;
-    else if (n < 2)
-        return false;
-    else if (!(n & 1))
-        return false;
-
-    ll needed = cands.size();
-
-    const ll m = n - 1, d = m / (m & -m);
-    auto modpow = [&](ll a, ll b){
-        ll res = 1;
-        while (b) {
-            if (b & 1) res = res * a % n;
-            a = a * a % n;
-            b >>= 1;
+bool isPrime(ull n) {
+    if (n < 4) return n > 1;
+    bool pr = n%2;
+    if (n < (1LL << 32)) {
+       for (int a : {2,7,61}) pr = pr && primetest(n,a);
+    } else if (n < (1LL << 48)) {
+       for (int a : {2,3,5,7,11,13,17}) pr = pr && primetest(n,a);
+    } else {
+       for (int a : {2,325,9375,28178,450775,9780504,1795265022}) pr = pr && primetest(n,a);
+    }
+    return pr;
+}
+ 
+// O(n^0.25)
+// ローのアルゴリズム
+// 計算結果はrho_retに保存される
+map<ull,int> rho_ret; // {p, k}, pの素因数がk個存在
+ull find_factor(ull z) {
+    if (!(z&1)) return 2;
+    ull c = rand() % z, x = 2, y = 2, d = 1;
+    while (d == 1) {
+        ull tp = (mul(y,y,z) + c) % z;
+        y = (mul(tp,tp,z) + c) % z;
+        x = (mul(x,x,z) + c) % z;
+        d = __gcd(x>y ? x-y : y-x, z);
+    }
+    return d;
+}
+void rhofact_rec(ull z) {
+    if (z==1) return;
+    if (isPrime(z)) { rho_ret[z]++; return; }
+    while(1) {
+        ull f = find_factor(z);
+        if (f != z) {
+            rhofact_rec(f);
+            rhofact_rec(z/f);
+            break;
         }
-        return res;
-    };
-    auto suspect = [&](ll a, ll t){
-        a = modpow(a,t);
-        while (t != n - 1 && a != 1 && a != n - 1){
-            a = a * a % n;
-            t <<= 1;
-        }
-        return a == n - 1 || (t & 1);
-    };
-
-    rep(i, needed) 
-        if(cands[i] % n && !suspect(cands[i], d))
-            return false;
-
-    return true;
+    }
+}
+void rho(ull z) {
+    rho_ret.clear();
+    rhofact_rec(z);
 }
 
 // ガウス素数＝複素数の素数判定
@@ -339,7 +382,13 @@ int main(void) {
     // 範囲LCM
     set<ll> a = {2, 3, 4, 6, 8, 10};
     cout << lcmSmall(a) << endl;
+    
+    // 大きい数字の素因数分解
+    repi(i, 1e12, 1e12+10) {
+        rho(i);
+        cout << rho_ret << endl;
+    }
+    
     return 0;
-
 }
 

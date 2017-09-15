@@ -42,20 +42,66 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-vll manacher(string S) {
-    vll R(S.length());
-    int i = 0, j = 0;
-    while (i < S.size()) {
-        while(i-j >= 0 && i+j < S.size() && S[i-j] == S[i+j]) ++j;
-        R[i] = j;
-        int k = 1;
-        while(i-k >= 0 && i+k < S.size() && k+R[i-k] < j) R[i+k] = R[i-k], ++k;
-        i += k; j -= k;
+class manacher {
+public: 
+    string s; // 元の入力文字列
+    vll r; // a$b$c$aのように$で区切った文字列msに対して、ms[i]を中心とした最大半径
+    vll pal; // s[i/2]を中心とした回文半径。abbaなら1012101
+
+    // [l, r)が回文ならば1
+    // 空文字列や、l>rではtrueを返す
+    //
+    // O(1)
+    bool isPalindrome(ll l, ll r) {
+        if (r - l <= 0) return 1;
+        if ((r - l) % 2 == 0) {
+            return (r - l) / 2 <= pal[l + r - 1];
+        } else {
+            return (r - l + 1) / 2 <= pal[l + r - 1];
+        }
     }
-    return R;
-}
+
+    // O(n)
+    manacher(string raw_s) : s(raw_s) {
+        ll n = raw_s.size()*2-1;
+        r.resize(n);
+        pal.resize(n);
+
+        // 偶数長の回文を扱うためにダミー文字を挿入
+        string ms(n, '$'); 
+        rep(i, raw_s.size()) ms[2*i] = s[i];
+
+        // manacher
+        int i = 0, j = 0;
+        while (i < n) {
+            while(i-j >= 0 && i+j < n && ms[i-j] == ms[i+j]) ++j;
+            r[i] = j;
+            int k = 1;
+            while(i-k >= 0 && i+k < n && k+r[i-k] < j) r[i+k] = r[i-k], ++k;
+            i += k; j -= k;
+        }
+
+        // 半径を計算
+        rep(i, pal.size()) pal[i] = (r[i] + (i % 2 == 0)) / 2;
+    }
+};
 
 int main(void) {
+    string s = "abbab";
+    manacher m(s); 
+    cout << s << endl;
+
+    ll n = s.size();
+    rep(i, n) {
+        rep(j, n+1) {
+            if (i < j) 
+                cout << m.isPalindrome(i, j);
+            else 
+                cout << '#';
+
+        }
+        cout << endl;
+    }
 
     return 0;
 }
