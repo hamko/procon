@@ -81,127 +81,19 @@ bool ok(set<P> ret) {
     }
     return 1;
 }
-vector<P> edges;
-vector<P> ret_edges;
-vector<bovvoid dfs(ll v, ll p) {
-    if (used[v]) return;
-    used[v] = 1;
-    if (p != -1) edges.pb(P(p, v));
-    for (auto next_v : g[v]) if (v != p) {
-        dfs(next_v, v);
-    }
-}
-oid dfs(ll v, ll p) {
-    if (used[v]) return;
-    used[v] = 1;
-    if (p != -1) edges.pb(P(p, v));
-    for (auto next_v : g[v]) if (v != p) {
-        dfs(next_v, v);
-    }
-}
-ol> used;
-vll correct;
-vvoid dfs(ll v, ll p) {
-    if (used[v]) return;
-    used[v] = 1;
-    if (p != -1) edges.pb(P(p, v));
-    for (auto next_v : g[v]) if (v != p) {
-        dfs(next_v, v);
-    }
-}
-oid dfs(ll v, ll p) {
-    if (used[v]) return;
-    used[v] = 1;
-    if (p != -1) edges.pb(P(p, v));
-    for (auto next_v : g[v]) if (v != p) {
-        dfs(next_v, v);
-    }
-}
-
-ll dfs2(ll v) {
-    if (!g[v].size()) return isCorrect(v, correct[v]);
-    for (auto x : g[v]) {
-        ll tmp = dfs2(x);
-        if (tmp % 2) 
-            ret_edges.pb(P(v, x));
-        correct[v] += tmp;
-    }
-    return (ll)isCorrect(v, correct[v]);
-}
-struct UnionFind {
-    vector<int> data;
-    UnionFind(int size) : data(size, -1) { }
-    // x, yをマージ, O(A^-1)
-    bool unite(int x, int y) {
-        x = root(x); y = root(y);
-        if (x != y) {
-            if (data[y] < data[x]) swap(x, y);
-            data[x] += data[y]; data[y] = x;
-        }
-        return x != y;
-    }
-    // x, yが同じ集合なら1, O(A^-1)
-    bool find(int x, int y) {
-        return root(x) == root(y);
-    }
-    // xの根を探す。同じ集合なら同じ根が帰る, O(A^-1)
-    int root(int x) {
-        return data[x] < 0 ? x : data[x] = root(data[x]);
-    }
-    // xが含まれる集合の大きさを返す, O(A^-1)
-    int size(int x) {
-        return -data[root(x)];
-    }
-    // 分離されている集合の数を返す, O(n)
-    int getSetNum(void) {
-        unordered_map<int, int> c;
-        rep(i, data.size()) {
-            c[root(i)]++;
-        }
-        return c.size();
-    }
-    // 頂点vと連結な集合を返す, O(n)
-    vector<int> getContainingSet(int v) {
-        vector<int> ret;
-        for (int i = 0; i < data.size(); i++) 
-            if (root(i) == root(v))
-                ret.push_back(i);
-        return ret;
-    }
-
-    // 集合ごとに全部の要素を出力, O(n)
-    vector<vector<int>> getUnionList(void) {
-        map<int, vector<int>> c;
-        for (int i = 0; i < data.size(); i++) 
-            c[root(i)].pb(i);
-        vector<vector<int>> v;
-        for (auto x : c) 
-            v.push_back(x.second);
-        return v;
-    }
-};
-ostream &operator<<(ostream &o, struct UnionFind v) {  v.getUnionList(); int i = 0; for (auto x : v.getUnionList()) { o << i << "\t"; for (auto y : x) o << y << " "; o << endl; i++;} return o; }
-
 
 int main(void) {
     splay(n); splay(m);
     rep(i, n) splay(a[i]);
     g.resize(n);
     unordered_map<P, ll> memo;
-    UnionFind uf(n);
     rep(i, m) {
         int u, v; splay(u), splay(v), u--, v--;
-        if (!uf.find(u, v)) {
-            uf.unite(u, v);
-            g[u].pb(v);
-            g[v].pb(u);
-            memo[P(u, v)] = i;
-            memo[P(v, u)] = i;
-        }
+        g[u].pb(v);
+        g[v].pb(u);
+        memo[P(u, v)] = i;
+        memo[P(v, u)] = i;
     }
-
-    used.resize(n);
-    correct.resize(n);
 
     ll existsMinus = -1;
     rep(i, n) if (a[i] == -1) existsMinus = i;
@@ -215,9 +107,19 @@ int main(void) {
     }
     if (existsMinus == -1) existsMinus = 0;
 
+    vector<bool> used(n);
+    vector<P> edges;
+    function<void(ll, ll)> dfs = [&](ll v, ll p) {
+        used[v] = 1;
+        if (p != -1) edges.pb(P(p, v));
+        for (auto next_v : g[v]) if (next_v != p && !used[v]) {
+            dfs(next_v, v);
+        }
+    };
     dfs(existsMinus, -1);
 
     rep(i, n) g[i].clear();
+    vll correct(n);
     for (auto x : edges) {
         g[x.fi].pb(x.se);
         correct[x.fi]++, correct[x.se]++;
@@ -228,6 +130,17 @@ int main(void) {
         }
     }
 
+    vector<P> ret_edges;
+    function<ll(ll)> dfs2 = [&](ll v) {
+        if (!g[v].size()) return isCorrect(v, correct[v]);
+        for (auto x : g[v]) {
+            ll tmp = dfs2(x);
+            if (tmp % 2) 
+                ret_edges.pb(P(v, x));
+            correct[v] += tmp;
+        }
+        return (ll)isCorrect(v, correct[v]);
+    };
     dfs2(existsMinus);
 
     unordered_set<P> ret;
@@ -237,6 +150,13 @@ int main(void) {
     for (auto x : ret) {
         cout << memo[x] + 1 << endl;
     }
+
+    /*
+    if (!ok(ret)) {
+        cout << "NG" << endl;
+        assert(0);
+    }
+    */
 
     return 0;
 }
