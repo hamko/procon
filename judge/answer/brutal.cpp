@@ -57,6 +57,7 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     ll n; cin >> n;
+    assert(n <= 8);
     vll a(n); cin >> a;
     cout << accumulate(all(a), 0ll) << endl;
     return 0;

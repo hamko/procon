@@ -58,8 +58,7 @@ static const long long mo = 1e9+7;
 int main(void) {
     ll n; cin >> n;
     vll a(n); cin >> a;
-    ll ret = 0;
-    rep(i, n) ret += a[i];
-    cout << ret << endl;
+    cout << accumulate(all(a), 0ll) << endl;
+
     return 0;
 }

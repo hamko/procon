@@ -1,35 +1,32 @@
 #!/usr/bin/env python3
 
 from sys import argv, exit
-from os import path, chdir, makedirs, getcwd
+from os import path, chdir, makedirs, getcwd, remove
 from binascii import crc32
 from subprocess import run, call, check_call, TimeoutExpired, CalledProcessError, DEVNULL
 from datetime import datetime
 from termcolor import colored, cprint
 import toml
 
-if len(argv) > 3:
+if not 2 <= len(argv) <= 3:
     print('usage: ./allmaker toml-file [answer name]')
     exit(1)
 
 config = toml.load(open(argv[1]))
 
 # makerディレクトリの中で行われる
-#
-# 正解出力を作る
+# 入力を作る
 def casemake():
     def testmake(test):
         testname = test['Name']
         isText = ('Text' in test) and test['Text']
 
-        print('# MakeTest {} {}cases'.format(testname, test['Number']))
+        print('# Make input test cases: {} {}cases'.format(testname, test['Number']))
         
         if not isText:
             # make testname
-            print('# make {}'.format(testname))
+            print('# make input {}'.format(testname))
             check_call(['make', testname], stdout=DEVNULL)
-            st = 'yoyoyoyoyoy su papapapapapapa'
-            hs = crc32((st+testname+config['hash']).encode())
         
         for i in range(test['Number']):
             # output filename
@@ -40,7 +37,7 @@ def casemake():
                 ifn = '../examples/' + testname + str(i) + '.in'
                 check_call(['cp', ifn, ofn])
             else:
-                check_call(['./'+testname, str(i), str(hs)],
+                check_call(['./'+testname, str(i)],
                     stdout=open(ofn, 'w'))
             # run verify
             check_call(['./'+config['verify']], stdin=open(ofn, 'r'), stdout=DEVNULL)
@@ -65,6 +62,7 @@ def casemake():
     chdir('..')
 
 # answerディレクトリの中で行われる
+# 入力から出力を作る
 def solmake():
     print('# clear ./out')
     run(['rm', '-r', 'out'])
@@ -72,20 +70,34 @@ def solmake():
     chdir('answer')
 
     # make answer
-    ansname = config['answer']
     print('# make answer')
-    run(['make', ansname], stdout=DEVNULL, check=True) 
+    if 'judge_solution' in config:
+        ansname = config['judge_solution']
+        run(['make', ansname], stdout=DEVNULL, check=True) 
 
     for test in config['tests']:
+        if 'NoOut' in test: 
+            print(test);
+            continue
         testname = test['Name']
         for i in range(test['Number']):
-            # ifn:input filename
-            # ofn:output filename
             ifn = '../in/' + testname + str(i) + '.in'
             ofn = '../out/' + testname + str(i) + '.out'
+            if ('Text' in test) and path.exists('../examples/'+testname+str(i)+'.out'):
+                run(['cp', '../examples/'+testname+str(i)+'.in',  ifn])
+                run(['cp', '../examples/'+testname+str(i)+'.out', ofn])
+            else:
+                if 'judge_solution' not in config:
+                    continue
 
-            run(['./'+ansname],
-                stdin=open(ifn, 'r'), stdout=open(ofn, 'w'), check=True)
+                # judge solutionが対応できないようなテストケースがあって、assertで弾いている場合、NoOutとする
+                try:
+                    check_call(['./'+ansname],
+                        stdin=open(ifn, 'r'), stdout=open(ofn, 'w'))
+                except CalledProcessError: 
+                    remove(ofn)
+                else:
+                    end = datetime.now();
 
     # make clean
 #    print('# make clean')
@@ -127,18 +139,21 @@ def judgeother():
                     res = colored('RE', on_color='on_red')
                 else:
                     end = datetime.now();
-                    try:
-                        # output check
-                        # checkerが指定されていればそれを使い、なければdiffコマンドを使う
-                        if 'checker' in config:
-                            check_call(['../maker/'+config['checker'],
-                                ifn, ofn, afn], stdout=DEVNULL)
-                        else:
-                            check_call(['diff', ofn, afn], stdout=DEVNULL)
-                    except CalledProcessError:
-                        res = colored('WA', on_color='on_yellow')
+                    if not path.exists(afn):
+                        res = colored('NO', on_color='on_grey')
                     else:
-                        res = colored('AC', on_color='on_green')
+                        try:
+                            # output check
+                            # checkerが指定されていればそれを使い、なければdiffコマンドを使う
+                            if 'checker' in config:
+                                check_call(['../maker/'+config['checker'],
+                                    ifn, ofn, afn], stdout=DEVNULL)
+                            else:
+                                check_call(['diff', ofn, afn], stdout=DEVNULL)
+                        except CalledProcessError:
+                            res = colored('WA', on_color='on_yellow')
+                        else:
+                            res = colored('AC', on_color='on_green')
 
                 end = datetime.now();
 
@@ -172,9 +187,9 @@ def judgeother():
                 checkans(tl*3, answer);
 #    check_call(['make', 'clean'], stdout=DEVNULL) # 最後にclean
 
-print(colored('Start Casemake', on_color='on_magenta'))
+print(colored('Start Input Maker', on_color='on_magenta'))
 casemake()
-print(colored('Start Solmake', on_color='on_magenta'))
+print(colored('Start Output Maker', on_color='on_magenta'))
 solmake()
-print(colored('Start Judgeother', on_color='on_magenta'))
+print(colored('Start Judge', on_color='on_magenta'))
 judgeother()

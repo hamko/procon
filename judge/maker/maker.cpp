@@ -16,7 +16,7 @@ int main(void)
 
     cout << n << endl;
     rep(i, n) {
-        cout << randr(1, 10) << " ";
+        cout << randr(1, n) << " ";
     }
     cout << endl;
 
