@@ -110,9 +110,10 @@ int main(void) {
     vector<bool> used(n);
     vector<P> edges;
     function<void(ll, ll)> dfs = [&](ll v, ll p) {
+        cout << v << endl;
         used[v] = 1;
         if (p != -1) edges.pb(P(p, v));
-        for (auto next_v : g[v]) if (next_v != p && !used[v]) {
+        for (auto next_v : g[v]) if (next_v != p && !used[next_v]) {
             dfs(next_v, v);
         }
     };
