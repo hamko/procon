@@ -1,10 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
+using ll = long long;
+
 
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 struct Pool {
     int pos;
-    char mem[2e8]; // 200MB
+    char mem[(ll)2e8]; // 200MB
     Pool(){ free(); }
     template<class T>
         T *fetch(size_t n = 1) {
