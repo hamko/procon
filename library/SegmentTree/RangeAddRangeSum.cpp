@@ -5,7 +5,7 @@ using namespace std;
 
 struct Pool {
     int pos;
-    char mem[20000000]; // 20MB
+    char mem[(ll)2e8]; // 200MB
     Pool(){ free(); }
     template<class T>
         T *fetch(size_t n = 1) {
