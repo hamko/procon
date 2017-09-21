@@ -1,0 +1,18 @@
+answer = "brutal"
+timeLimit = 3.0 # sec
+verify = "verify"
+checker = "output_checker"
+hash = "g49wohjtg34uhj"
+
+[[tests]]
+	Name = "example"
+	Number = 3
+	Text = true
+#[[tests]]
+#	Name = "maker"
+#	Number = 2
+
+[[answers]]
+	Name = "brutal"
+[[answers]]
+	Name = "ans"

@@ -1,0 +1,56 @@
+# testsにTextフィールドがある場合、
+# これが問答無用で優先される。
+# judge_solutionがあったとしても、上書きされることはない
+
+# テストケースの出力が自動生成される条件：
+#   judge_solutionがあって、
+#   testsのNoOutフィールドがなくて、
+#   そのようなテストケースについて、judge_solutionがassertなどで自滅しない場合
+
+# NOはNoOutの意味。
+# NoOutが出ているということは、少なくともTLEもMLEもしていないということが保証されている
+
+
+
+# 入力->出力の自動生成のためのプログラム。
+# answer/ディレクトリでmakeした時に、この名前のバイナリができる必要がある
+# time limitより時間がかかっても良い。
+judge_solution = "brutal"
+
+# 時間制限
+timeLimit = 3.0 # sec
+
+# 入力テスト用のプログラム。
+# デフォルトでは何も書かれていない。
+verify = "verify"
+
+# 正解とユーザデータの比較。
+# デフォルトでは、スペース区切りで文字列が一致していればOK
+checker = "output_checker"
+
+# examplesフォルダからテストケースをコピーしてくる
+#
+# Textがtrueで、かつexamplesフォルダに"Name0.in"と"Name0.out"のセットがあるならば、
+# examplesフォルダからテストケースをコピーしてくる
+#
+# Textがtrueで、かつexamplesフォルダに"Name0.in"があって"Name0.out"がなければ、
+# 入力だけコピーしてきて、出力はanswerを使って自動生成する。
+[[tests]]
+	Name = "example"
+	Number = 3
+	Text = true
+
+# 入出力の自動生成
+#
+# maker/maker.cppで入力を自動生成する。
+# 出力はanswerを使って自動生成する。
+[[tests]]
+	Name = "maker"
+	Number = 50
+
+#[[answers]]
+#	Name = "brutal"
+[[answers]]
+	Name = "ans"
+[[answers]]
+	Name = "ans_cin"
