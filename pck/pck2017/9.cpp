@@ -149,7 +149,6 @@ int main(void) {
     rep(i, n) used.add(i, i+1, 1);
 
     stack<ll> pos[256];
-//    rep(i, n) 
     rep(i, n) 
         pos[s[n-i-1]].push(n-i-1);
 
