@@ -31,6 +31,8 @@ def casemake():
         for i in range(test['Number']):
             # output filename
             ofn = '../in/' + testname + str(i) + '.in'
+
+            if isText:
                 # input filename
                 ifn = '../examples/' + testname + str(i) + '.in'
                 check_call(['cp', ifn, ofn])

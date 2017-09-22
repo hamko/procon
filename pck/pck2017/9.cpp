@@ -40,7 +40,7 @@ template <typename T> ostream &operator<<(ostream &o, const priority_queue<T> &v
 
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
-struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
+void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
 
 size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 namespace myhash{ const int Bsizes[]={3,9,13,17,21,25,29,33,37,41,45,49,53,57,61,65,69,73,77,81}; const int xor_nums[]={0x100007d1,0x5ff049c9,0x14560859,0x07087fef,0x3e277d49,0x4dba1f17,0x709c5988,0x05904258,0x1aa71872,0x238819b3,0x7b002bb7,0x1cf91302,0x0012290a,0x1083576b,0x76473e49,0x3d86295b,0x20536814,0x08634f4d,0x115405e8,0x0e6359f2}; const int hash_key=xor_nums[rand()%20]; const int mod_key=xor_nums[rand()%20]; template <typename T> struct myhash{ std::size_t operator()(const T& val) const { return (hash<T>{}(val)%mod_key)^hash_key; } }; };
@@ -55,75 +55,135 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-int n, m;
-const int k = 19; // k bitを管理する。x&(1<<0)からx&(1<<18)まで
-//const int k = 19; // k bitを管理する。x&(1<<0)からx&(1<<18)まで
-const int size = 1<<(k+1);
-const int offset = size / 2;
+struct Pool {
+    int pos;
+    char mem[(ll)2e8];
+    Pool(){ free(); }
+    template<class T>
+        T *fetch(size_t n = 1) {
+            T *res = (T*)(mem + pos);
+            pos += sizeof(T)*n;
+            return res;
+        }
+    void free(){ pos = 0; }
+};
+Pool pool;
 
-// 1-indexed 完全二分木
-// g[offset+i] = iが存在する
-//
-// g[i]の親はg[i/2]
-// g[i]の子はg[i<<1], g[1+(i<<1)]
-// iを根とする部分木の葉の数はsize>>clz(i)
-int g[size];
-char msb[size];
+template<class T>
+struct SegmentTree {
+    T *dat, *lazy;
+    int n, ql, qr;
+    const size_t size_;
+    SegmentTree(int n_) : size_(n_) {
+        n = 1;
+        while(n < n_) n <<= 1;
+        dat = pool.fetch<T>(n+n);
+        lazy = pool.fetch<T>(n+n);
+        fill_n(dat, n*4, 0);
+    }
+    void pushdown(int v, int nl, int nr){
+        dat[v] += lazy[v] * (nr - nl);
+        if(v < n){
+            lazy[v<<1] += lazy[v];
+            lazy[v<<1|1] += lazy[v];
+        }
+        lazy[v] = 0;
+    }
+    void pullup(int v){
+        dat[v] = dat[v<<1] + dat[v<<1|1];
+    }
+    void add(int n, int nl, int nr, const T &x){
+        pushdown(n, nl, nr);
+        if(nr <= ql || qr <= nl){
+            return;
+        } else if(ql <= nl && nr <= qr){
+            lazy[n] += x;
+            pushdown(n, nl, nr);
+        } else {
+            int m = (nl + nr) / 2;
+            add(n<<1, nl, m, x);
+            add(n<<1|1, m, nr, x);
+            pullup(n);
+        }
+    }
+    void add(int l, int r, const T &x){
+        ql = l; qr = r;
+        return add(1, 0, size(), x);
+    }
+    T sum(int n, int nl, int nr){
+        pushdown(n, nl, nr);
+        if(nr <= ql || qr <= nl){
+            return 0;
+        } else if(ql <= nl && nr <= qr){
+            return dat[n];
+        } else {
+            int m = (nl + nr) / 2;
+            T l = sum(n<<1, nl, m);
+            T r = sum(n<<1|1, m, nr);
+            pullup(n);
+            return l + r;
+        }
+    }
+    T sum(int l, int r){
+        ql = l; qr = r;
+        return sum(1, 0, size());
+    }
+    size_t size() const { return size_; }
+    vector<T> to_a(int l = -1, int r = -1){
+        if(l == -1) l = 0;
+        if(r == -1) r = size();
+        vector<T> res(r-l);
+        for(int i = l; i < r; i++) res[i-l] = sum(i, i+1);
+        return res;
+    }
+    T operator [] (const int &idx) { return sum(idx, idx + 1); }
+};
+
 
 int main(void) {
-    scanf("%d %d", &n, &m);
-    unordered_set<int> memo;
+    string s; cin >> s;
+    ll n = s.length();
+    ll k; cin >> k;
+
+    SegmentTree<ll> used(n);
+    rep(i, n) used.add(i, i+1, 1);
+
+    stack<ll> pos[256];
+    rep(i, n) 
+        pos[s[i]].push(i);
+
+    string ret;
+    ll cur = 0;
     rep(i, n) {
-        int u; scanf("%d", &u);
-        if (memo.count(u)) continue;
-        memo.insert(u);
-        g[offset+u] = 1;
-    }
-    for (int i = offset - 1; i >= 1; i--) {
-        g[i] = g[i<<1] + g[1+(i<<1)];
-    }
+        ll swapped = 0;
+        repi(j, 'a', s[cur]) if (pos[j].size()) {
+            ll p = pos[j].top();
+            ll swap_num = used.sum(cur+1, p+1);
+            if (swap_num <= k) {
+                k -= swap_num;
+                ret += s[p];
+                used.add(p, p+1, -1);
+                pos[j].pop();
+                swapped = 1;
 
-    int tmp = 0;
-    rep(i, size) {
-        if (i >= (1ll << tmp)) 
-            tmp++;
-        msb[i] = tmp;
-    }
-//    rep(i, 100) cout << (int)msb[i] << " "; cout << endl;
-//    rep(i, size) cout << g[i] << " "; cout  << endl;
-
-
-    int x = 0;
-    rep(i, m) {
-//        cout << "#######"<<endl;
-        int tmp; scanf("%d", &tmp);
-        x ^= tmp;
-
-        int node = 1;
-        int ret = 0;
-        for (int j = k - 1; j >= 0; j--) {
-            if ((x & (1ll << j)) == 0) { // 弱い順
-//                cout << "small" << endl;
-//                cout << g[node * 2] << " " <<  (size >> msb[node * 2]) << endl;
-                if (g[node * 2] < (size >> msb[node * 2])) {
-                    node = node * 2;
-                } else {
-                    node = node * 2 + 1;
-                    ret |= 1 << j;
-                }
-            } else { // 強い順
-//                cout << "large" << endl;
-//                cout << g[node * 2 + 1] << " " << (size >> msb[node * 2 + 1]) << endl;
-                if (g[node * 2 + 1] < (size >> msb[node * 2 + 1])) {
-                    node = node * 2 + 1;
-                } else {
-                    node = node * 2;
-                    ret |= 1 << j;
-                }
+                break;
             }
         }
-        cout << ret << endl;
+        if (!swapped) {
+            ret += s[cur];
+            used.add(cur, cur+1, -1);
+            pos[s[cur]].pop();
+
+            cur = INF;
+            repi(j, 'a', 'z'+1) if (pos[j].size()) {
+                chmin(cur, pos[j].top());
+            }
+        }
     }
+
+    rep(i, n) if (used.sum(i, i+1) == 1) 
+        ret += s[i];
+    cout << ret << endl;
 
     return 0;
 }
