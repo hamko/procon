@@ -559,7 +559,7 @@ public:
 // 使い方
 // togasat::Solver sat(n);
 // x_1, ... x_nの変数が確保される。
-// addClouseなどは1-index!!
+// addClouseなどは1-index!! 理由は、not Aを-Aとして表現するから！
 //
 // sat.addClause({i, j, h}) 
 //      x_iもしくはx_jもしくはx_hが成立する
