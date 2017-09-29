@@ -157,6 +157,7 @@ arr plu(const arr &A, const arr &B) {
     return C;
 }
 // 構築なし累乗
+// return A^e
 //
 // O(n^3 log e)
 matrix pow(const matrix &A, long long e) {
@@ -165,7 +166,7 @@ matrix pow(const matrix &A, long long e) {
 }
 // 構築付き累乗
 //
-// powA: A^2^i
+// return powA: A^2^i
 // O(n^3 log e)
 matrix pow(const vector<matrix>& powA, long long e) { // powA[0]がA
 //    cout << powA[0] << "^" << e <<endl;

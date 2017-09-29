@@ -33,16 +33,19 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 
-ll LIS(vector<ll> a&) {
-        vll dp; dp.reserve(100000);
-        rep(i, a.size()) {
-            auto it = lower_bound(all(dp), a[i]);
-            if (it == dp.end()) 
-                dp.pb(a[i]);
-            else
-                *it = a[i];
-        }
-        return dp.size();
+// Strict LIS
+ll LIS(vector<ll>& a) {
+    // dp[i][len] = [0, i]のから取れる長さlenのLISを想定した時、その最後の要素として考えられる最小の値
+    // iはdpテーブルを使い回している
+    vll dp; dp.reserve(100000);
+    rep(i, a.size()) {
+        auto it = lower_bound(all(dp), a[i]);
+        if (it == dp.end()) 
+            dp.pb(a[i]);
+        else
+            *it = a[i];
+    }
+    return dp.size();
 }
 
 int main(void) {
