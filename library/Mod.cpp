@@ -78,6 +78,7 @@ Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b);
 // assertでnを超えていないかをきちんとテストすること。
 //
 // O(n log mo)
+// TODO O(n + log mo)に改善できます
 vector<Mod> fact, rfact;
 void constructFactorial(const long long n) {
     fact.resize(n);
@@ -85,7 +86,7 @@ void constructFactorial(const long long n) {
     fact[0] = rfact[0] = 1;
     for (int i = 1; i < n; i++) {
         fact[i] = fact[i-1] * i;
-        rfact[i] = Mod(1) / fact[i];
+        rfact[i] = Mod(1) / fact[i]; // TODO ここをMod(1) / fact[n]を一回計算して、あとはnをかける、n-1をかける…とすると計算量が改善する
     }
 }
 
