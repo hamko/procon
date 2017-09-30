@@ -582,9 +582,9 @@ int main(void) {
             sat.addClause(tmp);
         }
         ll ret = sat.solve();
+        if (ret == 0) {
             cout << "Possible" << endl;
             sat.print_answer();
-        if (ret == 0) {
         } else {
             cout << "Impossible" << endl;
         }

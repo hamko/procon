@@ -568,7 +568,7 @@ public:
 //
 // sat.solve
 //      0ならSAT, 1ならUNSAT, 2ならエラーなり解を見つけられなかったり
-//      SATなら副作用でsolver.assigns[i]にx_{i+1}の割当結果が得られる
+//      SATなら副作用で、solver.assigns[i]にx_{i+1}の割当結果が得られる
 //      注意すべきなのは、0がtrueで1がfalseであること
 
 
