@@ -215,6 +215,7 @@ Num branch_and_bound(const vector<pair<Var,Var> > &bounds, const Mat &A, const V
 
 //Num branch_and_bound(const vector<pair<Var,Var> > &bounds, const Mat &A, const Vec &b, const Vec &c, Vec &out_assigns) {
 int main(void) {
+#if 0
     {
         // x = (x_0, x_1)^T
         //
@@ -253,32 +254,62 @@ int main(void) {
         cout << branch_and_bound(bounds, A, b, c, out_assigns) << endl;
         cout << out_assigns<<endl;
     }
+#endif
 
-    ll n, k; cin >> n >> k;
-    vector<pair<Var, Var>> bounds(n);
-    rep(i, n) {
-        /*
-        bounds[i].fi = rand() % 10;
-        bounds[i].se = 10 + rand() % 10;
-        */
-        bounds[i].fi = 0;
-        bounds[i].se = 10;
+
+#if 0
+    {
+        ll n = 10, k = 10; // cin >> n >> k;
+        vector<pair<Var, Var>> bounds(n);
+        rep(i, n) {
+            /*
+               bounds[i].fi = rand() % 10;
+               bounds[i].se = 10 + rand() % 10;
+               */
+            bounds[i].fi = 0;
+            bounds[i].se = 10;
+        }
+        Mat A(k, Vec(n)); 
+        rep(i, k) rep(j, n) {
+            A[i][j] = rand() % 10;
+        }
+        Vec b(k);
+        rep(i, k) {
+            b[i] = 100 + rand() % 100;
+        }
+        Vec c(n);
+        rep(i, n) {
+            c[i] = rand() % 10;
+        }
+        Vec out_assigns;
+        cout << branch_and_bound(bounds, A, b, c, out_assigns) << endl;
+        cout << out_assigns<<endl;
     }
-    Mat A(k, Vec(n)); 
-    rep(i, k) rep(j, n) {
-        A[i][j] = rand() % 10;
+#endif
+
+    // 01ナップザック
+    {
+        ll n, W; cin >> n >> W;
+        vll p(n), w(n);
+        rep(i, n) {
+            cin >> p[i] >> w[i];
+        }
+        vector<pair<Var, Var>> bounds(n);
+        rep(i, n) bounds[i] = pair<Var, Var>(0, 1);
+        Mat A(1);
+        rep(i, n) {
+            A[0].pb(w[i]);
+        }
+        Vec b(1);
+        b[0] = W;
+        Vec c(n);
+        rep(i, n) 
+            c[i] = p[i];
+
+        Vec out_assigns;
+        cout << branch_and_bound(bounds, A, b, c, out_assigns) << endl;
+        cout << out_assigns<<endl;
     }
-    Vec b(k);
-    rep(i, k) {
-        b[i] = 100 + rand() % 100;
-    }
-    Vec c(n);
-    rep(i, n) {
-        c[i] = rand() % 10;
-    }
-    Vec out_assigns;
-    cout << branch_and_bound(bounds, A, b, c, out_assigns) << endl;
-    cout << out_assigns<<endl;
 
     return 0;
 }
