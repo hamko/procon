@@ -50,70 +50,236 @@ struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL);
 struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); cin.tie(0); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 #define rand randxor
 
-static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-int main(int argc, char const *argv[])
-{
-  unsigned long i, less, greater, equal, c = 0;
-  float min, max, guess, maxltguess, mingtguess, median;
-  float sum = 0;
+typedef double Num;
+typedef short Var;
+typedef vector<Num> Vec;
+typedef vector<Vec> Mat;
+const Num Inf = numeric_limits<Num>::infinity();
+const Num NaN = numeric_limits<Num>::quiet_NaN();
+#define IsNaN(x) (x != x)
+const Num EPS = 1e-10;
+inline bool isInteger(Num x) { return abs(floor(x) - x) <= EPS; }
 
-  //  vll a = {1, 2, 4, 5, 6};
-  vector<double> a(1e7);
-  rep(i, a.size()) a[i] = rand() % 10000000;
-  min = *min_element(all(a));
-  max = *max_element(all(a));
-  ll N = a.size();
-  printf("Looking for median\n");
-  while (1) {
-      cout << "iter"<<endl;
-      guess = (min+max)/2;
-      less = 0; greater = 0; equal = 0;
-      maxltguess = min;
-      mingtguess = max;
-      c = 0;
-      for (i = 0; i < a.size(); i++) {
-          float n = a[i];
-          if (n < guess) {
-              less++;
-              if (n > maxltguess) {
-                  maxltguess = n;
-              }
-          } else if (n > guess) {
-              greater++;
-              if (n < mingtguess) {
-                  mingtguess = n;
-              }
-          } else {
-              equal++;
-          }	
-          c = i + 1;
-      }
-      if (less <= (N+1)/2 && greater <= (N+1)/2) {
-          break;
-      }
-      else if (less>greater) {
-          max = maxltguess;
-      }
-      else {
-          min = mingtguess;
-      }
-  }
+#define rer(i,l,u) for(int (i)=(int)(l);(i)<=(int)(u);++(i))
+#define reu(i,l,u) for(int (i)=(int)(l);(i)<(int)(u);++(i))
 
-  if (less >= (N+1)/2) {
-      median = maxltguess;
-  }
-  else if (less+equal >= (N+1)/2) {
-      median = guess;
-  }
-  else {
-      median = mingtguess;
-  }
+Num simplex(const Mat& A, const Vec& b, const Vec& c, vector<Num> &out_assigns) {
+	const int m = A.size(), n = A[0].size();
+	Mat D(m+1, Vec(n+1)); vi id(n+m+1);
+	rer(i, 0, n+m) id[i] = i;
+	rep(i, m) {
+		rep(j, n) D[i][j] = -A[i][j];
+		D[i][n] = b[i];
+	}
+	rep(j, n) D[m][j] = c[j];
+	while(1) {
+		int r = m, s = n+m;
+		rep(i, m) if(D[i][n] < -EPS && id[n+r] > id[n+i]) r = i;
+		rep(j, n) if(D[m][j] > EPS && id[s] > id[j]) s = j;
+		if(r == m && s == n + m) break;
+		if(id[n + r] < id[s]) {
+			s = n + m;
+			rep(j, n) if(D[r][j] > EPS && id[s] > id[j]) s = j;
+		}else {
+			r = m;
+			rep(i, m) if(D[i][s] < -EPS && id[n+r] > id[n+i]) r = i;
+		}
+		if(r == m) { /* Unbounded */ return Inf; }
+		if(s == n + m) { /* NoSolution */ return NaN; }
+		swap(id[s], id[n+r]);
+		D[r][s] = 1. / D[r][s];
+		rer(j, 0, n) if(j != s) D[r][j] *= -D[r][s];
+		rer(i, 0, m) if(i != r && abs(D[i][s]) > EPS) {
+			rer(j, 0, n) if(j != s) D[i][j] += D[r][j] * D[i][s];
+			D[i][s] *= D[r][s];
+		}
+	}
 
-  printf("Median: %f\n",median);
+	out_assigns.assign(n, 0);
+	rep(i, m) if(id[n+i] < n)
+		out_assigns[id[n+i]] = D[i][n];
 
-  return 0;
+	return D[m][n];
 }
+
+Num go_simplex(const unique_ptr<Var[]> &vars, int orderi, Mat A, Vec b, Vec c, vector<Num> &out_assigns) {
+	int m = b.size();
+	Num cs = 0;
+	rep(i, orderi) {
+		Num val = vars[i];
+		rep(j, m) {
+			b[j] -= A[j][i] * val;
+			A[j][i] = 0;
+		}
+		cs += c[i] * val;
+		c[i] = 0;
+	}
+	Num solution = simplex(A, b, c, out_assigns);
+	if(!IsNaN(solution) && solution != Inf) {
+		solution += cs;
+		rep(i, orderi)
+			out_assigns[i] = vars[i];
+	}
+	return solution;
+}
+
+pair<Num, Num> get_relaxedbound_simplex(const unique_ptr<Var[]> &vars, int orderi, const Mat &org_A, const Vec &org_b, const Vec &org_c, Num best) {
+	if(IsNaN(best)) best = -Inf;
+	int n = org_c.size(), m = org_b.size();
+	Mat A(m+1, Vec(n - orderi)); Vec b(m+1), c(n - orderi);
+	rep(j, m) b[j] = org_b[j];
+	rep(i, orderi) {
+		Num val = vars[i];
+		rep(j, m)
+			b[j] -= org_A[j][i] * val;
+		best -= org_c[i] * val;
+	}
+	reu(i, orderi, n) {
+		rep(j, m) A[j][i - orderi] = org_A[j][i];
+		A[m][i - orderi] = -org_c[i];
+	}
+	b[m] = -best;
+	vector<Num> tmp;
+	c[0] = 1;
+	Num upper = simplex(A, b, c, tmp);
+	c[0] = -1;
+	Num lower = -simplex(A, b, c, tmp);
+	return make_pair(lower, upper);
+}
+
+// Input: 
+// x = (x_0, x_1, ..., x_{n-1})^T
+//
+// s.t. A x <= b
+// max  c^t x
+//
+// A = k x n
+// b = k
+// c = n
+//
+// Output:
+// 副作用でout_assignsに変数が入る。
+Num branch_and_bound(const vector<pair<Var,Var> > &bounds, const Mat &A, const Vec &b, const Vec &c, Vec &out_assigns) {
+    int n = bounds.size(), m = b.size();
+    assert(n == c.size()); assert(n == A[0].size()); assert(m == A.size());
+
+	Num best = NaN;
+	//BFS
+	vector<unique_ptr<Var[]>> q, next;
+	next.push_back(nullptr);
+	int orderi = 0;
+	while(!next.empty()) {
+		q.swap(next);
+		while(!q.empty()) {
+			unique_ptr<Var[]> assigns = move(q.back()); Vec relaxed_assigns; q.pop_back();
+			Num relaxed = go_simplex(assigns, orderi, A, b, c, relaxed_assigns);
+			if(IsNaN(relaxed) || best >= relaxed - EPS) continue;
+			
+			bool bounds_ok = true;
+			rep(i, n) {
+				Num assign = relaxed_assigns[i];
+				bool e = bounds[i].first - EPS <= assign && assign <= bounds[i].second + EPS;
+				e &= abs(assign - floor(assign + EPS)) <= EPS;
+				if(!(bounds_ok &= e)) break;
+			}
+			if(bounds_ok) {
+				if(IsNaN(best) || best < relaxed) {
+					best = relaxed;
+					out_assigns = relaxed_assigns;
+				}
+				continue;
+			}
+
+			if(orderi == n) continue;
+			
+			pair<Num, Num> relaxed_bound = get_relaxedbound_simplex(assigns, orderi, A, b, c, best);
+			Var lower = (Var)(max((Num)bounds[orderi].first, relaxed_bound.first) + 1 - EPS);
+			Var upper = (Var)(min((Num)bounds[orderi].second, relaxed_bound.second) + EPS);
+			
+			for(int x = upper; x >= lower; x --) {
+				unique_ptr<Var[]> nx(new Var[orderi+1]);
+				for(int i = 0; i < orderi; i ++) nx[i] = assigns[i];
+				nx[orderi] = x;
+				next.push_back(move(nx));
+			}
+		}
+		orderi ++;
+	}
+	
+	return best;
+}
+
+//Num branch_and_bound(const vector<pair<Var,Var> > &bounds, const Mat &A, const Vec &b, const Vec &c, Vec &out_assigns) {
+int main(void) {
+    {
+        // x = (x_0, x_1)^T
+        //
+        // s.t. A x <= b
+        // max  c^t x
+
+        // 1 <= x_0 <= 4
+        // 3 <= x_1 <= 7
+        //
+        // s.t.
+        // 1 x_0 + 2 x_1 <= 9
+        // 5 x_0 + 9 x_1 <= 41
+        //
+        // max
+        // 1 x_0 + 2 x_1
+        vector<pair<Var, Var>> bounds = {
+            {1, 3},
+            {4, 7},
+            {2, 9},
+        };
+        Mat A = {
+            {1, 2, 3},
+            {5, 9, 4},
+        };
+        Vec b = {
+            100,
+            100,
+        };
+        Vec c = {
+            1,
+            2,
+            8,
+        };
+
+        Vec out_assigns;
+        cout << branch_and_bound(bounds, A, b, c, out_assigns) << endl;
+        cout << out_assigns<<endl;
+    }
+
+    ll n, k; cin >> n >> k;
+    vector<pair<Var, Var>> bounds(n);
+    rep(i, n) {
+        /*
+        bounds[i].fi = rand() % 10;
+        bounds[i].se = 10 + rand() % 10;
+        */
+        bounds[i].fi = 0;
+        bounds[i].se = 10;
+    }
+    Mat A(k, Vec(n)); 
+    rep(i, k) rep(j, n) {
+        A[i][j] = rand() % 10;
+    }
+    Vec b(k);
+    rep(i, k) {
+        b[i] = 100 + rand() % 100;
+    }
+    Vec c(n);
+    rep(i, n) {
+        c[i] = rand() % 10;
+    }
+    Vec out_assigns;
+    cout << branch_and_bound(bounds, A, b, c, out_assigns) << endl;
+    cout << out_assigns<<endl;
+
+    return 0;
+}
+
