@@ -273,7 +273,7 @@ public:
 
     // maximum: 区間[l,r)で大きい順にk個
     // O(k log m)
-    void max_dfs(int d, int l, int r, int &k, T val, vector<T> &vs) {
+    void list_max_dfs(int d, int l, int r, int &k, T val, vector<T> &vs) {
         if(l >= r or !k) return;
         if(d == D) {
             while(l++ < r and k > 0) vs.push_back(val), k--;
@@ -281,14 +281,14 @@ public:
         }
         int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
         // if min, change this order
-        max_dfs(d+1, lc+zs[d], rc+zs[d], k, 1ULL<<(D-d-1)|val,vs);
-        max_dfs(d+1, l-lc, r-rc, k, val, vs);
+        list_max_dfs(d+1, lc+zs[d], rc+zs[d], k, 1ULL<<(D-d-1)|val,vs);
+        list_max_dfs(d+1, l-lc, r-rc, k, val, vs);
     }
-    vector<T> maximum(int l, int r, int k) {
+    vector<T> list_max(int l, int r, int k) {
         if (r-l < k) k = r-l;
         if(k < 0) return {};
         vector<T> ret;
-        max_dfs(0,l,r,k,0,ret);
+        list_max_dfs(0,l,r,k,0,ret);
         return ret;
     }
 
@@ -296,20 +296,20 @@ public:
     // valは上からd bit決めて他0を埋めた時の値。
     //
     // O(log m)
-    T max_dfs(int d, int l, int r, T val, T a, T b) {
+    T rangemax_dfs(int d, int l, int r, T val, T a, T b) {
         if(r-l <= 0 or val >= b) return -1;
         if(d == D) return val>=a? val: -1;
         int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-        T ret = max_dfs(d+1, lc+zs[d], rc+zs[d], 1ULL<<(D-d-1)|val, a, b);
+        T ret = rangemax_dfs(d+1, lc+zs[d], rc+zs[d], 1ULL<<(D-d-1)|val, a, b);
         if(~ret) return ret; // 1側を見て見つかったならそれに越したことはない
-        return max_dfs(d+1, l-lc, r-rc, val, a, b); // なければ0側を見る
+        return rangemax_dfs(d+1, l-lc, r-rc, val, a, b); // なければ0側を見る
     }
-    T maximum(int l, int r, T a, T b) { return max_dfs(0,l,r,0,a,b); }
+    T rangemax(int l, int r, T a, T b) { return rangemax_dfs(0,l,r,0,a,b); }
 
     // k is 0-indexed!!!!
-    // kth_number: 区間[l,r)でk番目に大きい数
+    // quantile: 区間[l,r)でk番目に大きい数
     // O(log m)
-    T kth_number(int l, int r, int k) {
+    T quantile(int l, int r, int k) {
         if(r-l <= k or k < 0) return -1;
         T ret = 0;
         for (int d = 0; d < D; d++) {
@@ -325,10 +325,12 @@ public:
         }
         return ret;
     }
+    T min(int l, int r) { return quantile(l, r, 0); }
+    T max(int l, int r) { return quantile(l, r, r-l-1); }
 
     // freq_list: 区間[l,r)で値が[lb,ub)になる値とその出現回数の組のリスト
     // O(k log m), kはヒット数
-    void list_dfs(int d, int l, int r, T val, T a, T b, vector<pair<T,int>> &vs) {
+    void list_freq_dfs(int d, int l, int r, T val, T a, T b, vector<pair<T,int>> &vs) {
         if(val >= b or r-l <= 0) return;
         if(d == D) {
             if(a <= val) vs.push_back(make_pair(val,r-l));
@@ -337,19 +339,19 @@ public:
         T nv = val|(1LL<<(D-d-1)), nnv = nv|(((1LL<<(D-d-1))-1));
         if(nnv < a) return;
         int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-        list_dfs(d+1,l-lc,r-rc,val,a,b,vs);
-        list_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b,vs);
+        list_freq_dfs(d+1,l-lc,r-rc,val,a,b,vs);
+        list_freq_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b,vs);
     }
-    vector<pair<T,int>> freq_list(int l, int r, T a, T b) {
+    vector<pair<T,int>> list_freq(int l, int r, T a, T b) {
         vector<pair<T,int>> ret;
-        list_dfs(0,l,r,0,a,b,ret);
+        list_freq_dfs(0,l,r,0,a,b,ret);
         return ret;
     }
 
     // get_rect: 区間[l,r)で値が[lb,ub)になる要素の位置とその値の組(つまり矩形内にある点の座標)のリスト
     // O(k log m), kはヒット数
     vector<pair<int,T>> get_rect(int l, int r, T a, T b) {
-        vector<pair<T,int>> res = freq_list(l,r,a,b);
+        vector<pair<T,int>> res = list_freq(l,r,a,b);
         vector<pair<int,T>> ret;
         for(auto &e: res)
             for (int i = 0; i < e.second; i++)
@@ -373,11 +375,6 @@ public:
 
 
     // TODO
-    // [l, r)区間内部で、a以上の最小値（これさえあればselectで自由に飛べる）
-    // int l, int r, T a
-    //
-    // すごくやる気のない実装としては、[a, x]のfreqについて二分探索してO(log^2 n)
-    //
     // 普通に
     // https://www.slideshare.net/pfi/ss-15916040
     // rangemaxk, rangemink, prevvalue, nextvalue, intersectを実装するのが良さそう
@@ -406,15 +403,20 @@ int main(void) {
         rep(i, n) cout << w.count(1ll, i) << " "; cout << endl;
         cout << "select" << endl;
         rep(i, n) cout << w.select(1ll, i) << " "; cout << endl;
-        cout << "maximum" << endl;
+        cout << "rangemax" << endl;
+        cout << w.rangemax(0, n, 2, 7) << endl;
+        cout << "max, min" << endl;
+        cout << w.max(2, 6) << endl;
+        cout << w.min(2, 6) << endl;
+        cout << "list maximum" << endl;
         rep(i, n+1) 
-            cout << w.maximum(0, n, i) << endl;
+            cout << w.list_max(0, n, i) << endl;
         cout << "kth" << endl;
-        rep(i, n) cout << w.kth_number(0, n, i) << " "; cout << endl;
+        rep(i, n) cout << w.quantile(0, n, i) << " "; cout << endl;
         cout << "freq" << endl;
         cout << w.freq(0, n, 2, 8) << endl;
-        cout << "freq_list" << endl;
-        cout << w.freq_list(0, n, 2, 8) << endl;
+        cout << "list_freq" << endl;
+        cout << w.list_freq(0, n, 2, 8) << endl;
 
         cout << "sum" << endl; // ENABLE_SUMのdefineが必要。sumクエリはメモリをO(ND)とかなり使う。
         cout << w.sum(0, n, 2, 7) << endl;

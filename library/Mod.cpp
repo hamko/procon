@@ -91,6 +91,7 @@ void constructFactorial(const long long n) {
 }
 
 // O(1)
+// constructFactorialしておけば、n, r=1e7くらいまではいけます
 Mod nCr(const long long n, const long long r) {
 //    assert(n < (long long)fact.size());
     if (n < 0 || r < 0) return 0;
