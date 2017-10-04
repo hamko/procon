@@ -75,27 +75,35 @@ Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b);
 // n!と1/n!のテーブルを作る。
 // nCrを高速に計算するためのもの。
 //
-// assertでnを超えていないかをきちんとテストすること。
-//
-// O(n log mo)
-// TODO O(n + log mo)に改善できます
+// O(n + log mo)
 vector<Mod> fact, rfact;
 void constructFactorial(const long long n) {
     fact.resize(n);
     rfact.resize(n);
     fact[0] = rfact[0] = 1;
-    for (int i = 1; i < n; i++) {
-        fact[i] = fact[i-1] * i;
-        rfact[i] = Mod(1) / fact[i]; // TODO ここをMod(1) / fact[n]を一回計算して、あとはnをかける、n-1をかける…とすると計算量が改善する
+    for (int i = 0; i < n - 1; i++) {
+        fact[i+1] = fact[i] * (i+1);
     }
+    rfact[n-1] = Mod(1) / fact[n-1]; 
+    for (int i = n - 1; i >= 1; i--) 
+        rfact[i-1] = rfact[i] * i; // ((n-1)!)^-1 = (n!)^-1 * n
 }
 
 // O(1)
 // constructFactorialしておけば、n, r=1e7くらいまではいけます
 Mod nCr(const long long n, const long long r) {
-//    assert(n < (long long)fact.size());
     if (n < 0 || r < 0) return 0;
     return fact[n] * rfact[r] * rfact[n-r];
+}
+
+// O(r.size())
+// sum(r)! / r[0]! / r[1]! / ...
+Mod nCr(const vector<long long> r) {
+    ll sum = accumulate(all(r), 0ll);
+    Mod ret = fact[sum];
+    rep(i, r.size()) 
+        ret *= rfact[r[i]];
+    return ret;
 }
 
 // O(k log mo) 
@@ -115,6 +123,8 @@ Mod nBm(const long long n, const long long m) {
     if (n < 0 || m < 0) return 0;
     return nCr(n + m, n);
 }
+
+
 
 /*************************************/
 // GF(p)の行列演算
