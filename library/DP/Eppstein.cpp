@@ -1,3 +1,49 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ばぐっている！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include <bits/stdc++.h>
 #include <sys/time.h>
 using namespace std;
@@ -86,7 +132,7 @@ ll solveBrutal(ll dp0) {
             chmin(dp[i], dp[j] + w(j, i-1));
         }
     }
-    cout << dp <<"Brutal"<< endl;
+//    cout << dp <<"Brutal"<< endl;
     return dp[n];
 }
 
@@ -189,24 +235,20 @@ int main(void) {
         }
         cout << endl;
     }
+    */
 
     ll is_monge = isMonge();
-    if (is_monge) {
-        cout << "Monge OK" << endl;
-    } else {
-        cout << "NOT Monge" << endl;
-    }
+    assert(is_monge);
 
-    */
     ll ret_m = solveMonge(0);
-    /*
     ll ret_b = solveBrutal(0);
+    /*
     cout << ret_b << " " << ret_m << endl;
     if (ret_b != ret_m) {
         cout << "Not Match" << endl;
     }
-    */
-
     cout << -ret_m << endl;
+    */
+    assert(ret_m == ret_b);
     return 0;
 }
