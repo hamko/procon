@@ -16,7 +16,7 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 #define exists find_if
 #define forall all_of
 
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = int32_t; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
@@ -51,12 +51,55 @@ struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); c
 #define rand randxor
 
 static const double EPS = 1e-14;
-static const long long INF = 1e18;
+static const long long INF = 2020202020;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll n; input(n);
+    vvll g(n, vll(n, 0));
+    
+    vector<tuple<ll, ll, ll>> memo;
+    rep(i, n) rep(j, n) {
+        input(g[i][j]);
+        memo.pb(mt(g[i][j], i, j));
+    }
+    sort(all(memo));
+    vector<vector<P>> ret(n);
+    ll counter = 0;
+    rep(_, memo.size()) {
+        counter++; 
+        ll cost, i, j; tie(cost, i, j) = memo[_];
+        // iからjの最短経路を求めます
+        priority_queue<tuple<ll, ll>, vector<tuple<ll, ll>>, greater<tuple<ll, ll>>> q;
+        vll dist(n, INF);
+        vector<bool> used(n);
+        q.push(mt(0, i));
+        while (!q.empty()) {
+            ll c, v; tie(c, v) = q.top(), q.pop();
+            if (used[v]) continue;
+            used[v] = 1;
+            dist[v] = c;
+            if (v == j) break;
+            for (auto x : ret[v]) if (!used[x.fi] && c + x.se < dist[x.fi]) {
+                q.push(mt(c + x.se, x.fi));
+            }
+        }
+
+        if (dist[j] < g[i][j]) {
+            cout << -1 << endl;
+            return 0;
+        } else if (dist[j] == g[i][j]) {
+        } else {
+            ret[i].pb(P(j, g[i][j]));
+            ret[j].pb(P(i, g[i][j]));
+        }
+    }
+
+    long long ans = 0;
+    rep(i, n) for (auto x : ret[i]) {
+        ans += x.se;
+    }
+    cout << ans / 2 << endl;
     return 0;
 }

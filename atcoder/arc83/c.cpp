@@ -55,8 +55,28 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+bool dp[3010][3010];
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll a, b, c, d, e, f; cin >> a >> b >> c >> d >> e >> f;
+    dp[0][0] = 1;
+    rep(i, 3010) rep(j, 3010) {
+        if (!dp[i][j]) continue;
+        if (i+100*a < 3010) dp[i+100*a][j] = 1;
+        if (i+100*b < 3010) dp[i+100*b][j] = 1;
+        if (j+1*c < 3010) dp[i][j+1*c] = 1;
+        if (j+1*d < 3010) dp[i][j+1*d] = 1;
+    }
+    double ret = -INF;
+    ll x, y;
+    rep(i, 3010) rep(j, 3010) if (dp[i][j]) if (i != 0) {
+        if (i + j > f) continue;
+        if (i / 100 * e < j) continue;
+        if (ret < ((double)j / ((double)i + (double) j))) {
+            ret = ((double)j / ((double)i + (double) j));
+            x = i, y = j;
+        }
+    }
+
+    cout << x + y << " " << y << endl;
     return 0;
 }

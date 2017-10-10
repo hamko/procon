@@ -55,8 +55,61 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+template<typename Val, typename Cmp = less<Val> >
+struct MonotonicQueue {
+    vector<pair<Val, int>> q;
+    int head, tail;
+    Cmp cmp;
+    MonotonicQueue(int n, Cmp cmp = Cmp()) : cmp(cmp) { q.resize(n); clear(); }
+    bool empty() const { return head == tail; }
+    void clear() { head = tail = 0; }
+    // x超の末尾要素を全削除して、末尾に(i, x)を追加
+    void enque(int i, Val x) {
+        while (head < tail && cmp(x, q[tail - 1].first)) 
+            --tail;
+        q[tail++] = make_pair(x, i); 
+    }
+    // 先頭の#iを全削除
+    void deque(int i) {
+        if (head < tail && q[head].second == i) 
+            ++head;
+    }
+    Val get() const {
+        return q[head].first;
+    }
+    pair<Val,int> getPair() const {
+        return q[head];
+    }
+    void print(void) {
+        for (int i = head; i < tail; i++)
+            cout << q[i] << " ";
+        cout << endl;
+    }
+};
+
+vll solve(ll n, vll& a) {
+    MonotonicQueue<ll, greater_equal<ll>> q(n+1);
+    q.enque(-1, INF);
+
+    vll ret(n);
+    repi(i, 1, n+1) {
+        q.enque(i-1, a[i-1]);
+//        cout << i-1 - q.q[q.tail-2].se - 1 << endl;
+//        q.print();
+        ret[i-1] = i-1 - q.q[q.tail-2].se - 1;
+    }
+    return ret;
+}
+
 int main(void) {
     ll n; cin >> n;
     vll a(n); cin >> a;
+    vll ret1, ret2;
+    ret1 = solve(n, a);
+    reverse(all(a));
+    ret2 = solve(n, a);
+    rep(i, n) {
+        cout << ret1[i] + ret2[n-i-1] << endl;
+    }
     return 0;
 }

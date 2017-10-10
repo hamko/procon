@@ -51,12 +51,62 @@ struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); c
 #define rand randxor
 
 static const double EPS = 1e-14;
-static const long long INF = 1e18;
 static const long long mo = 1e9+7;
+static const long long INF = 0x3f3f3f3f3f3f3f3fLL;
 #define ldout fixed << setprecision(40) 
 
-int main(void) {
-    ll n; cin >> n;
+template<typename Val, typename Cmp = less<Val> >
+struct MonotonicQueue {
+    vector<pair<Val, int>> q;
+    int head, tail; // q[head, tail)が実際に入っている値
+    Cmp cmp;
+    MonotonicQueue(int n, Cmp cmp = Cmp()) : cmp(cmp) { q.resize(n); clear(); }
+    bool empty() const { return head == tail; }
+    void clear() { head = tail = 0; }
+    int size() const { return tail - head; }
+    // x超の末尾要素を全削除して、末尾に(i, x)を追加
+    void enque(int i, Val x) {
+        while (head < tail && cmp(x, q[tail - 1].first)) 
+            --tail;
+        q[tail++] = make_pair(x, i); 
+    }
+    // 先頭の#iを全削除
+    void deque(int i) {
+        if (head < tail && q[head].second == i) 
+            ++head;
+    }
+    Val get() const { return q[head].first; }
+    int get_i() const { return q[head].second; }
+    Val at(int i) const { return q[head+i].first; }
+    int at_i(int i) const { return q[head+i].second; }
+    void print(void) {
+        for (int i = head; i < tail; i++)
+            cout << q[i] << " ";
+        cout << endl;
+    }
+};
+
+// yukicoder 489
+int main() {
+    ll n, k, K; cin >> n >> k >> K;
     vll a(n); cin >> a;
+    MonotonicQueue<ll> q(n);
+    q.enque(0, a[0]);
+    ll ret = 0;
+    ll reti = 0, retj = 0;
+    repi(i, 1, n) {
+        if (ret < a[i] - q.get()) {
+            ret = a[i] - q.get();
+            reti = q.get_i();
+            retj = i;
+        }
+        q.enque(i, a[i]);
+        q.deque(i-k);
+//        q.print();
+    }
+    cout << ret * K << endl;
+    if (ret) {
+        cout << reti << " " << retj << endl;
+    }
     return 0;
 }
