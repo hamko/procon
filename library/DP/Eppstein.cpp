@@ -53,11 +53,23 @@ struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL);
 struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); cin.tie(0); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 #define rand randxor
 
+ll n;
+vll a, x, y;
+ll w(ll i, ll j) {
+    // 点P, Qがそれぞれn個ある。
+    // 点P_i = (a[i], 0)
+    // 点Q_i = (x[i], y[i])
+    //
+    // この時、cost[i][j] = 点P_iと点Q_iの二乗距離
+    // cost[i][j]は順QIを満たすことが知られている
+    return -((a[i]-x[j])*(a[i]-x[j]) + y[j]*y[j]);
+}
+
+
 using vvll = vector<vector<ll>>;
-bool isMonge(vvll& a) {
-    ll n = a.size();
+bool isMonge() {
     rep(i, n) repi(j, i, n) repi(k, j, n) repi(l, k, n) {
-        if (a[i][l] + a[j][k] <= a[i][k] + a[j][l]) {
+        if (w(i, l) + w(j, k) <= w(i, k) + w(j, l)) {
         } else {
             cout << i << " " << j << " " << k << " " << l << " " << "HIT" << endl;
             return 0;
@@ -66,13 +78,12 @@ bool isMonge(vvll& a) {
     return 1;
 }
 
-ll solveBrutal(vvll& w, ll dp0) {
-    ll n = w.size();
+ll solveBrutal(ll dp0) {
     vll dp(n+1);
     dp[0] = dp0;
     repi(i, 1, n+1) {
         rep(j, i) {
-            chmin(dp[i], dp[j] + w[j][i-1]);
+            chmin(dp[i], dp[j] + w(j, i-1));
         }
     }
     cout << dp <<"Brutal"<< endl;
@@ -95,31 +106,29 @@ ll solveBrutal(vvll& w, ll dp0) {
 //
 // 一般にO(n log n)
 // Closest Zero Propertyが満たされていて、hをO(1)自前実装するならばO(n)
-ll solveMonge(vvll& w, ll dp0) {
-    ll n = w.size();
-
+ll solveMonge(ll dp0) {
     vll dp(n+1);
     dp[0] = dp0;
-
 
     // i in [0, n), j in [1, n]
     auto C = [&](ll i, ll j) { 
         assert(i<=j-1); 
-        return dp[i] + w[i][j-1]; // -1は、論文でのw(i, j)の遷移jは[1, n]だが、この実装のcost functionは0-indexedで[0, n)だから。
+        return dp[i] + w(i, j-1); // -1は、論文でのw(i, j)の遷移jは[1, n]だが、この実装のcost functionは0-indexedで[0, n)だから。
     }; 
 
-    // C(l, h) <= C(k, h)となるような最小のk < h <=n.
+    // C(l, h) <= C(k, h)となるような最小のk < h <= n.
     // もしなければn+1を返す。
     //
-    // O(log n)
+    // wがClosest Zero Propertyを満たしていて、これを自前実装するならばO(1)
+    // デフォルトでO(log n)
     auto h = [&](ll l, ll k) { 
-        if (w[l][n-1] - w[k][n-1] <= dp[k] - dp[l]) 
+        if (w(l, n-1) - w(k, n-1) <= dp[k] - dp[l]) 
             return n+1;
 
         ll ng = k, ok = n;
         while (ok - ng > 1) {
             ll mid = (ok + ng) / 2;
-            if (w[l][mid-1] - w[k][mid-1] <= dp[k] - dp[l]) 
+            if (w(l, mid-1) - w(k, mid-1) <= dp[k] - dp[l]) 
                 mid = ok;
             else 
                 mid = ng;
@@ -159,52 +168,39 @@ ll solveMonge(vvll& w, ll dp0) {
         if (s.back().se == j+1) 
             s.pop_back();
     }
-    cout << dp << "Eppstein" << endl;
+//    cout << dp << "Eppstein" << endl;
     return dp[n];
 }
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n);
+    cin >> n;
+    a.resize(n);
+    x.resize(n);
+    y.resize(n);
     rep(i, n) a[i] = rand() % 10;
-    sort(all(a));
-    vll x(n), y(n);
     rep(i, n) x[i] = rand() % 10, y[i] = rand() % 10;
-    sort(all(x));
 
-    // 点P, Qがそれぞれn個ある。
-    // 点P_i = (a[i], 0)
-    // 点Q_i = (x[i], y[i])
-    //
-    // この時、cost[i][j] = 点P_iと点Q_iの二乗距離
-    // cost[i][j]はMongeであることが知られている
-    vvll cost(n, vector<ll>(n));
-    rep(i, n) repi(j, i, n) {
-        cost[i][j] = (a[i]-x[j])*(a[i]-x[j]) + y[j]*y[j];
-        cost[i][j] *= -1;
-    }
+    sort(all(a)); sort(all(x));
 
     /*
     rep(i, n) { 
         rep(j, n) {
-            cout << cost[i][j] << "\t";
+            cout << w(i, j) << "\t";
         }
         cout << endl;
     }
-    */
 
-    /*
-    ll is_monge = isMonge(cost);
+    ll is_monge = isMonge();
     if (is_monge) {
         cout << "Monge OK" << endl;
     } else {
         cout << "NOT Monge" << endl;
     }
-    */
 
-    ll ret_m = solveMonge(cost, 0);
+    */
+    ll ret_m = solveMonge(0);
     /*
-    ll ret_b = solveBrutal(cost, 0);
+    ll ret_b = solveBrutal(0);
     cout << ret_b << " " << ret_m << endl;
     if (ret_b != ret_m) {
         cout << "Not Match" << endl;
