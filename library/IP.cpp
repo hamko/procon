@@ -294,21 +294,37 @@ int main(void) {
         rep(i, n) {
             cin >> p[i] >> w[i];
         }
-        vector<pair<Var, Var>> bounds(n);
-        rep(i, n) bounds[i] = pair<Var, Var>(0, 1);
-        Mat A(1);
-        rep(i, n) {
-            A[0].pb(w[i]);
-        }
-        Vec b(1);
-        b[0] = W;
-        Vec c(n);
-        rep(i, n) 
-            c[i] = p[i];
+        {
+            vector<pair<Var, Var>> bounds(n);
+            rep(i, n) bounds[i] = pair<Var, Var>(0, 1);
+            Mat A(1);
+            rep(i, n) {
+                A[0].pb(w[i]);
+            }
+            Vec b(1);
+            b[0] = W;
+            Vec c(n);
+            rep(i, n) 
+                c[i] = p[i];
 
-        Vec out_assigns;
-        cout << branch_and_bound(bounds, A, b, c, out_assigns) << endl;
-        cout << out_assigns<<endl;
+            Vec out_assigns;
+            cout << branch_and_bound(bounds, A, b, c, out_assigns) << endl;
+            cout << out_assigns<<endl;
+        }
+        {
+            ll ret = 0;
+            rep(mask, 1ll<<n) {
+                ll wsum = 0, psum = 0;
+                rep(i, n) if (mask & (1ll << i)) {
+                    wsum += w[i];
+                    psum += p[i];
+                    if (wsum > W) goto SKIP;
+                }
+                chmax(ret, psum);
+                SKIP:;
+            }
+            cout << ret << endl;
+        }
     }
 
     return 0;
