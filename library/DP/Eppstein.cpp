@@ -1,49 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ばぐっている！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #include <bits/stdc++.h>
 #include <sys/time.h>
 using namespace std;
@@ -101,20 +55,37 @@ struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); c
 
 ll n;
 vll a, x, y;
-ll w(ll i, ll j) {
+
+// 状態1<=j<=nの確定のときに、状態0<=k<jからの遷移kを選ぶ時のコスト
+ll w_InverseQuadrangleInequality(ll k, ll j) {
+    assert(1<=j&&j<=n);
+    assert(0<=k&&k<j);
     // 点P, Qがそれぞれn個ある。
-    // 点P_i = (a[i], 0)
-    // 点Q_i = (x[i], y[i])
+    // 点P_i = (a[k], 0)
+    // 点Q_i = (x[k], y[i])
     //
     // この時、cost[i][j] = 点P_iと点Q_iの二乗距離
     // cost[i][j]は順QIを満たすことが知られている
-    return -((a[i]-x[j])*(a[i]-x[j]) + y[j]*y[j]);
+    return -((a[j-1]-x[k])*(a[j-1]-x[k]) + y[k]*y[k]);
+}
+// 状態1<=j<=nの確定のときに、状態0<=k<iからの遷移kを選ぶ時のコスト
+ll w_QuadrangleInequality(ll k, ll j) {
+    assert(1<=j&&j<=n);
+    assert(0<=k&&k<j);
+    // 点P, Qがそれぞれn個ある。
+    // 点P_i = (a[k], 0)
+    // 点Q_i = (x[k], y[i])
+    //
+    // この時、cost[i][j] = 点P_iと点Q_iの二乗距離
+    // cost[i][j]は順QIを満たすことが知られている
+    return +((a[j-1]-x[k])*(a[j-1]-x[k]) + y[k]*y[k]);
 }
 
 
+
 using vvll = vector<vector<ll>>;
-bool isMonge() {
-    rep(i, n) repi(j, i, n) repi(k, j, n) repi(l, k, n) {
+bool isInverseQuadrangleInequality(function<ll(ll, ll)> w) {
+    repi(i, 1, n) repi(j, i, n) repi(k, j, n) repi(l, k, n) {
         if (w(i, l) + w(j, k) <= w(i, k) + w(j, l)) {
         } else {
             cout << i << " " << j << " " << k << " " << l << " " << "HIT" << endl;
@@ -123,13 +94,24 @@ bool isMonge() {
     }
     return 1;
 }
+bool isQuadrangleInequality(function<ll(ll, ll)> w) {
+    repi(i, 1, n) repi(j, i, n) repi(k, j, n) repi(l, k, n) {
+        if (w(i, l) + w(j, k) >= w(i, k) + w(j, l)) {
+        } else {
+            cout << i << " " << j << " " << k << " " << l << " " << "HIT" << endl;
+            return 0;
+        }
+    }
+    return 1;
+}
 
-ll solveBrutal(ll dp0) {
-    vll dp(n+1);
+
+ll solveBrutal(ll dp0, function<ll(ll, ll)> w) {
+    vll dp(n+1, INF);
     dp[0] = dp0;
     repi(i, 1, n+1) {
         rep(j, i) {
-            chmin(dp[i], dp[j] + w(j, i-1));
+            chmin(dp[i], dp[j] + w(j, i));
         }
     }
 //    cout << dp <<"Brutal"<< endl;
@@ -152,14 +134,14 @@ ll solveBrutal(ll dp0) {
 //
 // 一般にO(n log n)
 // Closest Zero Propertyが満たされていて、hをO(1)自前実装するならばO(n)
-ll solveMonge(ll dp0) {
+ll solveInverseQuadrangleInequality(ll dp0, function<ll(ll, ll)> w) {
     vll dp(n+1);
     dp[0] = dp0;
 
-    // i in [0, n), j in [1, n]
-    auto C = [&](ll i, ll j) { 
-        assert(i<=j-1); 
-        return dp[i] + w(i, j-1); // -1は、論文でのw(i, j)の遷移jは[1, n]だが、この実装のcost functionは0-indexedで[0, n)だから。
+    // 状態rの確定のために、遷移kをしようとした時の候補
+    // k in [0, n), r in [1, n]
+    auto C = [&](ll k, ll r) { 
+        return dp[k] + w(k, r);
     }; 
 
     // C(l, h) <= C(k, h)となるような最小のk < h <= n.
@@ -168,30 +150,34 @@ ll solveMonge(ll dp0) {
     // wがClosest Zero Propertyを満たしていて、これを自前実装するならばO(1)
     // デフォルトでO(log n)
     auto h = [&](ll l, ll k) { 
-        if (w(l, n-1) - w(k, n-1) <= dp[k] - dp[l]) 
+//        if (!(C(l, n) <= C(k, n))) 
+        if (!(w(l, n) - w(k, n) <= dp[k] - dp[l])) 
             return n+1;
 
         ll ng = k, ok = n;
         while (ok - ng > 1) {
             ll mid = (ok + ng) / 2;
-            if (w(l, mid-1) - w(k, mid-1) <= dp[k] - dp[l]) 
-                mid = ok;
+//            if (C(l, mid) <= C(k, mid)) 
+            if (w(l, mid) - w(k, mid) <= dp[k] - dp[l])
+                ok = mid; 
             else 
-                mid = ng;
+                ng = mid;
         }
+        return ok;
         /*
         // Brutal
-        ll ret = 0;
+        ll ret = -1;
         repi(hc, k+1, n+1) { 
             if (C(l, hc) <= C(k, hc)) {
                 ret = hc;
                 break;
             }
         }
-        ret = n + 1;
-        assert(ret == ok);
-        */
-        return ok;
+        if (ret < 0)
+            ret = n + 1;
+        return ret;
+//        assert(ret == ok);
+//        */
     };
 
     vector<P> s = {P(0, n+1)};
@@ -218,37 +204,175 @@ ll solveMonge(ll dp0) {
     return dp[n];
 }
 
+// Zvi Galil; Raffaele Giancarlo, "Speeding up dynamic programming with applications to molecular biology", 1987
+// D. Eppstein, Z. Galil, and R. Giancalco: "Speeding up Dynamic Programming", 29th IEEE Symposium on Foundations of Computer Science, White Plains, New York, pp. 488-496, 1988.
+// 
+// dp[j] = min_{0 <= k < j} (dp[k] + w(k, j)) (0 <= j <= n)
+// wが逆Quadrangle Inequalityを満たす場合のO(n log n)あるいはO(n)解法
+//
+// given: 
+// dp[0] 
+//
+// given: 
+// wは0-indexed monge n*n行列 (逆Quadrangle Ineqalityを満たす)
+//
+// この実装は """"逆"""" Quadrangle Inequalityであることに注意！！！！
+// 逆ではないQuadrangle Inequalityを満たす場合は、wの全要素に-1をかけておくと良い。
+//
+// 一般にO(n log n)
+// Closest Zero Propertyが満たされていて、hをO(1)自前実装するならばO(n)
+ll solveQuadrangleInequality(ll dp0, function<ll(ll, ll)> w) {
+    vll dp(n+1);
+    dp[0] = dp0;
+
+    // 状態rの確定のために、遷移kをしようとした時の候補
+    // k in [0, n), r in [1, n]
+    auto C = [&](ll k, ll r) { 
+        assert(0<=k&&k<n && 1<=r<=n);
+        return dp[k] + w(k, r);
+    }; 
+
+    // C(l, h) <= C(k, h)となるような最小のl < h <= n. (k < l < n)
+    // もしなければn+1を返す。
+    //
+    // wがClosest Zero Propertyを満たしていて、これを自前実装するならばO(1)
+    // デフォルトでO(log n)
+    auto h = [&](ll l, ll k) { 
+        assert(k<l&&l<n);
+        if (!(w(l, n) - w(k, n) <= dp[k] - dp[l])) 
+            return n+1;
+
+        ll ng = l, ok = n;
+        while (ok - ng > 1) {
+            ll mid = (ok + ng) / 2;
+            if (w(l, mid) - w(k, mid) <= dp[k] - dp[l]) 
+                ok = mid; 
+            else 
+                ng = mid;
+        }
+        return ok;
+
+        // Brutal
+        /*
+        ll ret = -1;
+        repi(hc, l+1, n+1) { 
+            if (w(l, hc) - w(k, hc) <= dp[k] - dp[l]) {
+                ret = hc;
+                break;
+            }
+        }
+        if (ret < 0)
+            ret = n + 1;
+        assert(ret == ok);
+        return ret;
+        */
+    };
+
+    deque<P> Q = {P(0, 1)};
+    repi(j, 1, n+1) {
+        ll l = Q.back().fi; // 最小のつもり
+        if (C(j-1, j) <= C(l, j)) {
+            dp[j] = C(j-1, j);
+            Q.clear();
+            Q.push_back(P(j-1, j+1));
+        } else {
+            dp[j] = C(l, j);
+            while (C(j-1, Q[0].se) <= C(Q[0].fi, Q[0].se))  
+                Q.pop_front();
+            ll hc = h(j-1, Q[0].fi); 
+            if (hc != n + 1)
+                Q.push_front(P(j-1, hc));
+            if (Q.size() >= 2 && j + 1 == Q[Q.size()-2].se)
+                Q.pop_back();
+            else 
+                Q.back().se++;
+        }
+    }
+
+//    cout << dp << "Eppstein" << endl;
+    return dp[n];
+}
+
+
+void compareMax(void) {
+    function<ll(ll, ll)> w = w_InverseQuadrangleInequality;
+    ll ret_m = solveInverseQuadrangleInequality(0, w);
+#if 1
+    ll ret_b = solveBrutal(0, w);
+    if (ret_b != ret_m) {
+        cout << "Not Match" << endl;
+        cout << "Jury : " << ret_b << ", Participant : " << ret_m<<endl;
+        cout << a << endl;
+        cout << x << endl;
+        cout << y << endl;
+
+        repi(i, 1, n+1) { 
+            rep(j, i) {
+                cout << w(j, i) << "\t";
+            }
+            cout << endl;
+        }
+
+        ll is_monge = isInverseQuadrangleInequality(w);
+        if (is_monge) {
+            cout << "Monge OK" << endl;
+        } else {
+            cout << "NOT Monge" << endl;
+        }
+    }
+    assert(ret_b == ret_m);
+#endif
+    cout << -ret_m << endl;
+}
+
+void compareMin(void) {
+    function<ll(ll, ll)> w = w_QuadrangleInequality;
+    ll ret_m = solveQuadrangleInequality(0, w);
+#if 1
+    ll ret_b = solveBrutal(0, w);
+    if (ret_b != ret_m) {
+        cout << "Not Match" << endl;
+        cout << "Jury : " << ret_b << ", Participant : " << ret_m<<endl;
+        cout << a << endl;
+        cout << x << endl;
+        cout << y << endl;
+
+        repi(i, 1, n+1) { 
+            rep(j, i) {
+                cout << w(j, i) << "\t";
+            }
+            cout << endl;
+        }
+
+        ll is_monge = isQuadrangleInequality(w);
+        if (is_monge) {
+            cout << "Monge OK" << endl;
+        } else {
+            cout << "NOT Monge" << endl;
+        }
+    }
+    assert(ret_b == ret_m);
+#endif
+    cout << ret_m << endl;
+}
+
+
 int main(void) {
     cin >> n;
     a.resize(n);
     x.resize(n);
     y.resize(n);
-    rep(i, n) a[i] = rand() % 10;
-    rep(i, n) x[i] = rand() % 10, y[i] = rand() % 10;
-
-    sort(all(a)); sort(all(x));
-
-    /*
-    rep(i, n) { 
-        rep(j, n) {
-            cout << w(i, j) << "\t";
-        }
-        cout << endl;
+    cin >> a;
+    cin >> x;
+    cin >> y;
+    assert(1<=n&&n<=1e5);
+    rep(i, n) {
+        assert(0<=a[i]&&a[i]<=1e5);
+        assert(0<=x[i]&&x[i]<=1e5);
+        assert(0<=y[i]&&y[i]<=1e5);
     }
-    */
+    compareMin();
+    compareMax();
 
-    ll is_monge = isMonge();
-    assert(is_monge);
-
-    ll ret_m = solveMonge(0);
-    ll ret_b = solveBrutal(0);
-    /*
-    cout << ret_b << " " << ret_m << endl;
-    if (ret_b != ret_m) {
-        cout << "Not Match" << endl;
-    }
-    cout << -ret_m << endl;
-    */
-    assert(ret_m == ret_b);
     return 0;
 }
