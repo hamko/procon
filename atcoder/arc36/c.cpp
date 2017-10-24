@@ -54,41 +54,53 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
-
+const ll b = 300;
+ll dp[2][610][610];
 int main(void) {
-    ll n, a; cin >> n >> a; 
-    ll ret = INF;
-    rep(k, 40) {
-        // s^(k+1) <= n なる最小のsを探す
-        ll s = -1;
-        if (k == 0) {
-            s = n;
-        } else if (k == 1) {
-            s = floorl(sqrtl((ld)n)-1e-9);
-        } else {
-            s = 0;
-            rep(i, 10000000) {
-                if (powl(i, k+1) < n) {
-                    s = i;
-                } else {
-                    break;
+    ll n, k; cin >> n >> k;
+    string s; cin >> s;
+
+    dp[0][b][b] = 1;
+    rep(i, n) {
+        ll curr = i % 2, next = (i+1) % 2;
+        rep(j, 610) {
+            rep(h, 610) {
+                dp[next][j][h] = 0;
+            }
+        }
+        rep(j, 610) {
+            rep(h, 610) {
+                if (dp[curr][j][h] == 0) continue;
+                vector<tuple<ll, ll>> cand = {};
+                if (s[i] == '0' || s[i] == '?') {
+                    cand.pb(mt(min<ll>(b-1, j-1),h-1));
+                } 
+                if (s[i] == '1' || s[i] == '?') {
+                    cand.pb(mt(j+1,max<ll>(b+1, h+1)));
+                } 
+                for (auto x : cand) {
+                    ll jj, hh; tie(jj, hh) = x;
+                    if (jj > b+k) continue;
+                    if (jj < b-k) continue;
+                    if (hh > b+k) continue;
+                    if (hh < b-k) continue;
+                    (dp[next][jj][hh] += dp[curr][j][h]) %= mo;
                 }
             }
-//            while (powl(s+1, k+1) <= n) s++;
-        } 
-//        cout << k << " "<< s << endl;
-
-        ld tmp = powl(s, k+1);
-        rep(i, k+2) {
-//            cout << tmp << endl;
-            if (tmp >= n) {
-//                cout << k*a+s*(k+1)+i << ": "<<k << " " << s << " : " << i << " " << tmp << " " << endl;
-                chmin(ret, k*a+s*(k+1)+i);
-                break;
-            }
-            tmp /= (ld)s;
-            tmp *= (ld)(s+1);
         }
+        /*
+        rep(j, 610) {
+            rep(h, 610) {
+                if (dp[i+1][j][h]) {
+                    cout << i+1 << " " << j-b << " " << h-b << " : " << dp[i+1][j][h] << endl;
+                }
+            }
+        }
+        */
+    }
+    ll ret = 0;
+    ll i = n % 2; rep(j, 610) rep(h, 610) {
+        (ret += dp[i][j][h]) %= mo;
     }
     cout << ret << endl;
     return 0;

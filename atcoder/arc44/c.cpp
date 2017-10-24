@@ -55,41 +55,41 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-int main(void) {
-    ll n, a; cin >> n >> a; 
-    ll ret = INF;
-    rep(k, 40) {
-        // s^(k+1) <= n なる最小のsを探す
-        ll s = -1;
-        if (k == 0) {
-            s = n;
-        } else if (k == 1) {
-            s = floorl(sqrtl((ld)n)-1e-9);
-        } else {
-            s = 0;
-            rep(i, 10000000) {
-                if (powl(i, k+1) < n) {
-                    s = i;
-                } else {
-                    break;
-                }
+ll solve(vector<set<ll>>& q, ll w) {
+    ll ret = 0;
+    vll dp(w);
+    set<ll> prev_beam;
+    repi(t, 1, q.size()) {
+        // 前ビームがあったけど今はOKなところ
+        for (auto x : q[t-1]) if (!q[t].count(x)) { 
+            ll pos_r = x; while (pos_r < w && q[t-1].count(pos_r)) pos_r++;
+            ll pos_l = x; while (pos_l >= 0 && q[t-1].count(pos_l)) pos_l--;
+            if (pos_r < w) {
+                chmin(dp[x], dp[pos_r] + abs(x - pos_r));
             }
-//            while (powl(s+1, k+1) <= n) s++;
-        } 
-//        cout << k << " "<< s << endl;
-
-        ld tmp = powl(s, k+1);
-        rep(i, k+2) {
-//            cout << tmp << endl;
-            if (tmp >= n) {
-//                cout << k*a+s*(k+1)+i << ": "<<k << " " << s << " : " << i << " " << tmp << " " << endl;
-                chmin(ret, k*a+s*(k+1)+i);
-                break;
+            if (pos_l >= 0) {
+                chmin(dp[x], dp[pos_l] + abs(x - pos_l));
             }
-            tmp /= (ld)s;
-            tmp *= (ld)(s+1);
+        }
+        for (auto x : q[t]) { 
+            dp[x] = INF;
         }
     }
-    cout << ret << endl;
+
+    return *min_element(all(dp));
+}
+
+int main(void) {
+    ll w, h, q; cin >> w >> h >> q;
+    vector<set<ll>> qw(100010), qh(100010);
+    rep(i, q) {
+        ll t, d, x; cin >> t >> d >> x; x--;
+        (d ? qh : qw)[t].insert(x);
+    }
+    rep(i, qw.size()) if (qw[i].size() >= w) { cout << -1 << endl; return 0; }
+    rep(i, qh.size()) if (qh[i].size() >= h) { cout << -1 << endl; return 0; }
+//    solve(qw, w);
+
+    cout << solve(qw, w) + solve(qh, h) << endl;
     return 0;
 }

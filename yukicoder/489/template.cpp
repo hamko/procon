@@ -51,45 +51,62 @@ struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); c
 #define rand randxor
 
 static const double EPS = 1e-14;
-static const long long INF = 1e18;
 static const long long mo = 1e9+7;
+static const long long INF = 0x3f3f3f3f3f3f3f3fLL;
 #define ldout fixed << setprecision(40) 
 
-int main(void) {
-    ll n, a; cin >> n >> a; 
-    ll ret = INF;
-    rep(k, 40) {
-        // s^(k+1) <= n なる最小のsを探す
-        ll s = -1;
-        if (k == 0) {
-            s = n;
-        } else if (k == 1) {
-            s = floorl(sqrtl((ld)n)-1e-9);
-        } else {
-            s = 0;
-            rep(i, 10000000) {
-                if (powl(i, k+1) < n) {
-                    s = i;
-                } else {
-                    break;
-                }
-            }
-//            while (powl(s+1, k+1) <= n) s++;
-        } 
-//        cout << k << " "<< s << endl;
-
-        ld tmp = powl(s, k+1);
-        rep(i, k+2) {
-//            cout << tmp << endl;
-            if (tmp >= n) {
-//                cout << k*a+s*(k+1)+i << ": "<<k << " " << s << " : " << i << " " << tmp << " " << endl;
-                chmin(ret, k*a+s*(k+1)+i);
-                break;
-            }
-            tmp /= (ld)s;
-            tmp *= (ld)(s+1);
-        }
+template<typename Val, typename Cmp = less<Val> >
+struct MonotonicQueue {
+    vector<pair<Val, int>> q;
+    int head, tail;
+    Cmp cmp;
+    MonotonicQueue(int n, Cmp cmp = Cmp()) : cmp(cmp) { q.resize(n); clear(); }
+    bool empty() const { return head == tail; }
+    void clear() { head = tail = 0; }
+    // x超の末尾要素を全削除して、末尾に(i, x)を追加
+    void enque(int i, Val x) {
+        while (head < tail && cmp(x, q[tail - 1].first)) 
+            --tail;
+        q[tail++] = make_pair(x, i); 
     }
-    cout << ret << endl;
+    // 先頭の#iを全削除
+    void deque(int i) {
+        if (head < tail && q[head].second == i) 
+            ++head;
+    }
+    Val get() const {
+        return q[head].first;
+    }
+    pair<Val,int> getPair() const {
+        return q[head];
+    }
+    void print(void) {
+        for (int i = head; i < tail; i++)
+            cout << q[i] << " ";
+        cout << endl;
+    }
+};
+
+int main() {
+    ll n, k, K; cin >> n >> k >> K;
+    vll a(n); cin >> a;
+    MonotonicQueue<ll> q(n);
+    q.enque(0, a[0]);
+    ll ret = 0;
+    ll reti = 0, retj = 0;
+    repi(i, 1, n) {
+        if (ret < a[i] - q.get()) {
+            ret = a[i] - q.get();
+            reti = q.getPair().se;
+            retj = i;
+        }
+        q.enque(i, a[i]);
+        q.deque(i-k);
+//        q.print();
+    }
+    cout << ret * K << endl;
+    if (ret) {
+        cout << reti << " " << retj << endl;
+    }
     return 0;
 }

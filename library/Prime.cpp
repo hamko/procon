@@ -223,64 +223,36 @@ ll getDivisorsNum(ll n) {
 /**********************************************************/
 // 前処理なしの素数判定
 /**********************************************************/
-#define ull unsigned long long
-// dla n < 2^32: inline ull mul(ull a, ull b, ull mod) { return (a*b) % mod; }
-const int _k = 25; const ull _mask = (1<<_k)-1;
-ull mul (ull a, ull b, ull mod) { // zaĹ‚: b, mod < 2^(64-_k)
-    ull result = 0;
-    while (a) {
-        ull temp = (b * (a & _mask)) % mod;
-        result = (result + temp) % mod;
-        a >>= _k;
-        b = (b << _k) % mod;
+using u64 = unsigned long long;
+using u128 = __uint128_t;
+__uint128_t mul(u64 a, u64 b, u64 m) { return u128(a) * b % m; };
+bool isPrime(unsigned long long n) {
+    if (n <= 1) return false;
+    if (n == 2) return true;
+    static mt19937 mt(time(NULL));
+    u64 s = n - 1;
+    int e = 0;
+    for (; s % 2 == 0; s /= 2) e++;
+    for (int ii = 0; ii < 8; ii++) {
+        u64 x = std::uniform_int_distribution<u64>(2, n - 1)(mt);
+        u64 r = 1;
+        for (u64 i = s; i > 0; i >>= 1, x = mul(x, x, n)) {
+            if (i & 1) r = mul(r, x, n);
+        }
+        if (r == 1) continue;
+        for (int i = 1; i < e && r != n - 1; i++) {
+            r = mul(r, r, n);
+        }
+        if (r != n - 1) return false;
     }
-    return result;
-}
- 
-ull pow(ull a, ull w, ull mod) {
-    ull res = 1;
-    while (w){
-        if (w&1) res = mul(res, a, mod);
-        a = mul(a, a, mod);
-        w /= 2;
-    }
-    return res;
-}
- 
-bool primetest(ull n, int a) {
-    if (a > n-1) return 1;
-    ull d = n-1;
-    int s = 0;
-    while (!(d&1)) {
-        d /= 2;
-        s++;
-    }
-    ull x = pow(a, d, n);
-    if (x == 1 || x == n-1) return 1;
-    rep(i,s-1){
-        x = mul(x, x, n);
-        if (x == 1) return 0;
-        if (x == n-1) return 1;
-    }
-    return 0;
+    return true;
 }
 
-bool isPrime(ull n) {
-    if (n < 4) return n > 1;
-    bool pr = n%2;
-    if (n < (1LL << 32)) {
-       for (int a : {2,7,61}) pr = pr && primetest(n,a);
-    } else if (n < (1LL << 48)) {
-       for (int a : {2,3,5,7,11,13,17}) pr = pr && primetest(n,a);
-    } else {
-       for (int a : {2,325,9375,28178,450775,9780504,1795265022}) pr = pr && primetest(n,a);
-    }
-    return pr;
-}
- 
+
 // O(n^0.25)
 // ローのアルゴリズム
 // 計算結果はrho_retに保存される
+using ull = unsigned long long;
 map<ull,int> rho_ret; // {p, k}, pの素因数がk個存在
 ull find_factor(ull z) {
     if (!(z&1)) return 2;

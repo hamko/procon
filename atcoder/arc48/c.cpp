@@ -55,41 +55,75 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-int main(void) {
-    ll n, a; cin >> n >> a; 
-    ll ret = INF;
-    rep(k, 40) {
-        // s^(k+1) <= n なる最小のsを探す
-        ll s = -1;
-        if (k == 0) {
-            s = n;
-        } else if (k == 1) {
-            s = floorl(sqrtl((ld)n)-1e-9);
-        } else {
-            s = 0;
-            rep(i, 10000000) {
-                if (powl(i, k+1) < n) {
-                    s = i;
-                } else {
-                    break;
-                }
-            }
-//            while (powl(s+1, k+1) <= n) s++;
-        } 
-//        cout << k << " "<< s << endl;
-
-        ld tmp = powl(s, k+1);
-        rep(i, k+2) {
-//            cout << tmp << endl;
-            if (tmp >= n) {
-//                cout << k*a+s*(k+1)+i << ": "<<k << " " << s << " : " << i << " " << tmp << " " << endl;
-                chmin(ret, k*a+s*(k+1)+i);
-                break;
-            }
-            tmp /= (ld)s;
-            tmp *= (ld)(s+1);
-        }
+class Mod {
+    public:
+        int num;
+        Mod() : Mod(0) {}
+        Mod(long long int n) : num(n) { }
+        Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mo; num = tmp; }
+        Mod(int n) : Mod(static_cast<long long int>(n)) {}
+        operator int() { return num; }
+};
+istream &operator>>(istream &is, Mod &x) { long long int n; is >> n; x = n; return is; }
+ostream &operator<<(ostream &o, const Mod &x) { o << x.num; return o; }
+Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % mo); }
+Mod operator+(const long long int a, const Mod b) { return Mod(a) + b; }
+Mod operator+(const Mod a, const long long int b) { return b + a; }
+Mod operator++(Mod &a) { return a + Mod(1); }
+Mod operator-(const Mod a, const Mod b) { return Mod((mo + a.num - b.num) % mo); }
+Mod operator-(const long long int a, const Mod b) { return Mod(a) - b; }
+Mod operator--(Mod &a) { return a - Mod(1); }
+Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % mo); }
+Mod operator*(const long long int a, const Mod b) { return Mod(a)*b; }
+Mod operator*(const Mod a, const long long int b) { return Mod(b)*a; }
+Mod operator*(const Mod a, const int b) { return Mod(b)*a; }
+Mod operator+=(Mod &a, const Mod b) { return a = a + b; }
+Mod operator+=(long long int &a, const Mod b) { return a = a + b; }
+Mod operator-=(Mod &a, const Mod b) { return a = a - b; }
+Mod operator-=(long long int &a, const Mod b) { return a = a - b; }
+Mod operator*=(Mod &a, const Mod b) { return a = a * b; }
+Mod operator*=(long long int &a, const Mod b) { return a = a * b; }
+Mod operator*=(Mod& a, const long long int &b) { return a = a * b; }
+Mod factorial(const long long n) {
+    if (n < 0) return 0;
+    Mod ret = 1;
+    for (int i = 1; i <= n; i++) {
+        ret *= i;
     }
-    cout << ret << endl;
+    return ret;
+}
+Mod operator^(const Mod a, const long long n) {
+    if (n == 0) return Mod(1);
+    Mod res = (a * a) ^ (n / 2);
+    if (n % 2) res = res * a;
+    return res;
+}
+Mod modpowsum(const Mod a, const long long b) {
+    if (b == 0) return 0;
+    if (b % 2 == 1) return modpowsum(a, b - 1) * a + Mod(1);
+    Mod result = modpowsum(a, b / 2);
+    return result * (a ^ (b / 2)) + result;
+}
+
+
+/*************************************/
+// 以下、modは素数でなくてはならない！
+/*************************************/
+Mod inv(const Mod a) { return a ^ (mo - 2); }
+Mod operator/(const Mod a, const Mod b) { assert(b.num != 0); return a * inv(b); }
+Mod operator/(const long long int a, const Mod b) { assert(b.num != 0); return Mod(a) * inv(b); }
+Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b); }
+
+
+int main(void) {
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+    ll m = *min_element(all(a));
+    ll g = a[0] - m;
+    rep(i, n) {
+        if (a[i] - m) g = __gcd(g, a[i] - m);
+    }
+    cout << (Mod(2) ^ (*min_element(all(a)) + (g + 1) / 2)) << endl;
+    
     return 0;
 }
