@@ -16,11 +16,10 @@ int main(int argc, char** argv)
     if (argc >= 2) 
         x = atoi(argv[1]);
 
-    ll n = randr(1, (ll)10);
-    ll m = 9;
-    cout << n << " " << m << endl;
-    rep(i, m) {
-        cout << randr(1, n) << " " << randrf(-1, 1) << " " << randrf(-1, 1) << endl;
+    ll n = 40000;
+    cout << n << endl;
+    rep(i, n) {
+        cout << randr(1, 1e5)  << " " << randr(1, 1e5) << " " << randr(-1e4, 1e4) << endl;
     }
 
     return 0;

@@ -16,11 +16,19 @@ int main(int argc, char** argv)
     if (argc >= 2) 
         x = atoi(argv[1]);
 
-    ll n = randr(1, (ll)10);
-    ll m = 9;
-    cout << n << " " << m << endl;
-    rep(i, m) {
-        cout << randr(1, n) << " " << randrf(-1, 1) << " " << randrf(-1, 1) << endl;
+    ll n = x;
+    ll k = min<ll>(n,800);
+    cout << n << " " << k << endl;
+    vector<vll> g(n, vll(n));
+    rep(i, n) rep(j, n) if (i < j) 
+        g[i][j] = randr(0, 9);
+    rep(i, n) rep(j, n) if (i > j) 
+        g[i][j] = g[j][i];
+    rep(i, n) { 
+        rep(j, n) {
+            cout << g[i][j] << " ";
+        }
+        cout << endl;
     }
 
     return 0;

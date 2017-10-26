@@ -16,12 +16,14 @@ int main(int argc, char** argv)
     if (argc >= 2) 
         x = atoi(argv[1]);
 
-    ll n = randr(1, (ll)10);
-    ll m = 9;
-    cout << n << " " << m << endl;
-    rep(i, m) {
-        cout << randr(1, n) << " " << randrf(-1, 1) << " " << randrf(-1, 1) << endl;
+    ll n = 100000;
+    cout << n << endl;
+    ll m = 1;
+    cout << randr(-m, m) << " " << randr(-m, m) << " " << randr(-m, m) << endl;
+    rep(i, n) {
+        cout << randr(-m, m) << " ";
     }
+    cout << endl;
 
     return 0;
 }

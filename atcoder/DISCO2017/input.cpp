@@ -16,11 +16,15 @@ int main(int argc, char** argv)
     if (argc >= 2) 
         x = atoi(argv[1]);
 
-    ll n = randr(1, (ll)10);
-    ll m = 9;
+    ll n = 4;
+    ll m = 2;
     cout << n << " " << m << endl;
-    rep(i, m) {
-        cout << randr(1, n) << " " << randrf(-1, 1) << " " << randrf(-1, 1) << endl;
+    cout << 2 << " " << 1 << endl;
+    rep(i, n) {
+        rep(i, m) {
+            cout << (rand()%2?'.':'S');
+        }
+        cout << endl;
     }
 
     return 0;

@@ -12,16 +12,18 @@ int main(int argc, char** argv)
 {
     struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec);
 
-    ll x = 0;
+    ll x = 0, y = 0;
     if (argc >= 2) 
         x = atoi(argv[1]);
+    if (argc >= 3) 
+        y = atoi(argv[2]);
 
-    ll n = randr(1, (ll)10);
-    ll m = 9;
-    cout << n << " " << m << endl;
-    rep(i, m) {
-        cout << randr(1, n) << " " << randrf(-1, 1) << " " << randrf(-1, 1) << endl;
+    ll n = x;
+    string s; 
+    rep(i, n) {
+        s += 'a' + randr(0, y-1);
     }
+    cout << s << endl;
 
     return 0;
 }

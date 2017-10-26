@@ -17,11 +17,26 @@ int main(int argc, char** argv)
         x = atoi(argv[1]);
 
     ll n = randr(1, (ll)10);
-    ll m = 9;
-    cout << n << " " << m << endl;
-    rep(i, m) {
-        cout << randr(1, n) << " " << randrf(-1, 1) << " " << randrf(-1, 1) << endl;
+    cout << n << endl;
+    vll a(n);
+    rep(i, n) a[i] = randr(1, 100);
+    cout << endl;
+    vll b(n);
+    rep(i, n) b[i] = randr(1, 100);
+    cout << endl;
+    unordered_map<ll, ll> memo;
+    rep(i, n) {
+        memo[a[i]]++;
+        memo[b[i]]++;
     }
+    for (auto x : memo) {
+        if (x.second > 1) {
+            cout << "INVALID"<< endl;
+            return 1;
+        }
+    }
+    rep(i, n) { cout << a[i] << " "; } cout<<endl;
+    rep(i, n) { cout << b[i] << " "; } cout<<endl;
 
     return 0;
 }
