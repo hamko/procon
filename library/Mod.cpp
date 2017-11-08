@@ -1,82 +1,77 @@
 #include "bits/stdc++.h"
 using namespace std;
-
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
-#define fi first
-#define se second
-#define rep(i,n) for(int i = 0; i < n; i++)
-#define pb push_back
+#define rep(i,n) for(int (i)=0;(i)<(int)(n);++(i))
+#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>;
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
+template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
+template<class Ch, class Tr, class Tuple, size_t... Is>
+void print_tuple(basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){ using s = int[]; (void)s{0, (void(os << (Is == 0? "" : ", ") << get<Is>(t)), 0)...}; }
+template<class Ch, class Tr, class... Args> 
+auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
+ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; cout << endl; } return o; }
+template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+string bits_to_string(ll mask, ll n) { string s; rep(i, n) s += '0' + !!(mask & (1ll << i)); return s; }
+#define ldout fixed << setprecision(40) 
 
-// ヤコビ記号はnot yet
-// メビウスのμ関数not ye
-// カーマイケルのλ関数 not ye
 
-static const long long mo = 1e9+7;
-class Mod {
-    public:
-        int num;
-        Mod() : Mod(0) {}
-        Mod(long long int n) : num(n) { }
-        Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mo; num = tmp; }
-        Mod(int n) : Mod(static_cast<long long int>(n)) {}
-        operator int() { return num; }
+
+template<int MOD>
+struct ModInt {
+	static const int Mod = MOD;
+	unsigned x;
+	ModInt() : x(0) {}
+	ModInt(signed sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	ModInt(signed long long sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	int get() const { return (int)x; }
+
+	ModInt &operator+=(ModInt that) { if((x += that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator-=(ModInt that) { if((x += MOD - that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator*=(ModInt that) { x = (unsigned long long)x * that.x % MOD; return *this; }
+	ModInt &operator/=(ModInt that) { return *this *= that.inverse(); }
+
+	ModInt operator+(ModInt that) const { return ModInt(*this) += that; }
+	ModInt operator-(ModInt that) const { return ModInt(*this) -= that; }
+	ModInt operator*(ModInt that) const { return ModInt(*this) *= that; }
+	ModInt operator/(ModInt that) const { return ModInt(*this) /= that; }
+
+	ModInt inverse() const {
+		signed a = x, b = MOD, u = 1, v = 0;
+		while(b) {
+			signed t = a / b;
+			a -= t * b; std::swap(a, b);
+			u -= t * v; std::swap(u, v);
+		}
+		if(u < 0) u += Mod;
+		ModInt res; res.x = (unsigned)u;
+		return res;
+	}
+
+	bool operator==(ModInt that) const { return x == that.x; }
+	bool operator!=(ModInt that) const { return x != that.x; }
+	ModInt operator-() const { ModInt t; t.x = x == 0 ? 0 : Mod - x; return t; }
 };
-istream &operator>>(istream &is, Mod &x) { long long int n; is >> n; x = n; return is; }
-ostream &operator<<(ostream &o, const Mod &x) { o << x.num; return o; }
-Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % mo); }
-Mod operator+(const long long int a, const Mod b) { return Mod(a) + b; }
-Mod operator+(const Mod a, const long long int b) { return b + a; }
-Mod operator++(Mod &a) { return a + Mod(1); }
-Mod operator-(const Mod a, const Mod b) { return Mod((mo + a.num - b.num) % mo); }
-Mod operator-(const long long int a, const Mod b) { return Mod(a) - b; }
-Mod operator--(Mod &a) { return a - Mod(1); }
-Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % mo); }
-Mod operator*(const long long int a, const Mod b) { return Mod(a)*b; }
-Mod operator*(const Mod a, const long long int b) { return Mod(b)*a; }
-Mod operator*(const Mod a, const int b) { return Mod(b)*a; }
-Mod operator+=(Mod &a, const Mod b) { return a = a + b; }
-Mod operator+=(long long int &a, const Mod b) { return a = a + b; }
-Mod operator-=(Mod &a, const Mod b) { return a = a - b; }
-Mod operator-=(long long int &a, const Mod b) { return a = a - b; }
-Mod operator*=(Mod &a, const Mod b) { return a = a * b; }
-Mod operator*=(long long int &a, const Mod b) { return a = a * b; }
-Mod operator*=(Mod& a, const long long int &b) { return a = a * b; }
-Mod factorial(const long long n) {
-    if (n < 0) return 0;
-    Mod ret = 1;
-    for (int i = 1; i <= n; i++) {
-        ret *= i;
-    }
-    return ret;
+template<int MOD> ModInt<MOD> operator^(ModInt<MOD> a, unsigned long long k) {
+	ModInt<MOD> r = 1;
+	while(k) {
+		if(k & 1) r *= a;
+		a *= a;
+		k >>= 1;
+	}
+	return r;
 }
-Mod operator^(const Mod a, const long long n) {
-    if (n == 0) return Mod(1);
-    Mod res = (a * a) ^ (n / 2);
-    if (n % 2) res = res * a;
-    return res;
-}
-Mod modpowsum(const Mod a, const long long b) {
-    if (b == 0) return 0;
-    if (b % 2 == 1) return modpowsum(a, b - 1) * a + Mod(1);
-    Mod result = modpowsum(a, b / 2);
-    return result * (a ^ (b / 2)) + result;
-}
-
-
-/*************************************/
-// 以下、modは素数でなくてはならない！
-/*************************************/
-Mod inv(const Mod a) { return a ^ (mo - 2); }
-Mod operator/(const Mod a, const Mod b) { assert(b.num != 0); return a * inv(b); }
-Mod operator/(const long long int a, const Mod b) { assert(b.num != 0); return Mod(a) * inv(b); }
-Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b); }
+typedef ModInt<1000000007> mint;
+typedef vector<mint> vmint;
+ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
 
 // n!と1/n!のテーブルを作る。
 // nCrを高速に計算するためのもの。
 //
 // O(n + log mo)
-vector<Mod> fact, rfact;
+vector<mint> fact, rfact;
 void constructFactorial(const long long n) {
     fact.resize(n);
     rfact.resize(n);
@@ -84,448 +79,539 @@ void constructFactorial(const long long n) {
     for (int i = 0; i < n - 1; i++) {
         fact[i+1] = fact[i] * (i+1);
     }
-    rfact[n-1] = Mod(1) / fact[n-1]; 
+    rfact[n-1] = mint(1) / fact[n-1]; 
     for (int i = n - 1; i >= 1; i--) 
         rfact[i-1] = rfact[i] * i; // ((n-1)!)^-1 = (n!)^-1 * n
 }
 
 // O(1)
 // constructFactorialしておけば、n, r=1e7くらいまではいけます
-Mod nCr(const long long n, const long long r) {
+mint nCr(const long long n, const long long r) {
     if (n < 0 || r < 0) return 0;
     return fact[n] * rfact[r] * rfact[n-r];
 }
 
 // O(r.size())
 // sum(r)! / r[0]! / r[1]! / ...
-Mod nCr(const vector<long long> r) {
-    ll sum = accumulate(all(r), 0ll);
-    Mod ret = fact[sum];
+mint nCr(const vector<long long> r) {
+    ll sum = accumulate(r.begin(), r.end(), 0ll);
+    mint ret = fact[sum];
     rep(i, r.size()) 
         ret *= rfact[r[i]];
     return ret;
 }
 
 // O(k log mo) 
-Mod nCrWithoutConstruction(const long long n, const long long k) {
+mint nCrWithoutConstruction(const long long n, const long long k) {
     if (n < 0) return 0;
     if (k < 0) return 0;
-    Mod ret = 1;
+    mint ret = 1;
     for (int i = 0; i < k; i++) {
-        ret *= n - (Mod)i;
-        ret /= Mod(i+1);
-    }
-    return ret;
-}
-// n*mの盤面を左下から右上に行く場合の数
-// O(1)
-Mod nBm(const long long n, const long long m) {
-    if (n < 0 || m < 0) return 0;
-    return nCr(n + m, n);
-}
-
-
-
-/*************************************/
-// GF(p)の行列演算
-/*************************************/
-using number = Mod;
-using arr = vector<number>;
-using matrix = vector<vector<Mod>>;
-
-ostream &operator<<(ostream &o, const arr &v) { rep(i, v.size()) cout << v[i] << " "; return o; }
-ostream &operator<<(ostream &o, const matrix &v) { rep(i, v.size()) cout << v[i]; return o; }
-
-matrix zero(int n) { return matrix(n, arr(n, 0)); } // O(n^2)
-matrix identity(int n) { matrix A(n, arr(n, 0)); rep(i, n) A[i][i] = 1; return A; } // O(n^2)
-// O(n^2)
-arr mul(const matrix &A, const arr &x) { 
-    arr y(A.size(), 0); 
-    rep(i, A.size()) rep(j, A[0].size()) y[i] += A[i][j] * x[j]; 
-    return y; 
-} 
-// O(n^3)
-matrix mul(const matrix &A, const matrix &B) {
-    matrix C(A.size(), arr(B[0].size(), 0));
-    rep(i, C.size())
-        rep(j, C[i].size())
-        rep(k, A[i].size())
-        C[i][j] += A[i][k] * B[k][j];
-    return C;
-}
-// O(n^2)
-matrix plu(const matrix &A, const matrix &B) {
-    matrix C(A.size(), arr(B[0].size(), 0));
-    rep(i, C.size())
-        rep(j, C[i].size())
-            C[i][j] += A[i][j] + B[i][j];
-    return C;
-}
-// O(n^2)
-arr plu(const arr &A, const arr &B) {
-    arr C(A.size());
-    rep(i, A.size())
-        C[i] += A[i] + B[i];
-    return C;
-}
-// 構築なし累乗
-// return A^e
-//
-// O(n^3 log e)
-matrix pow(const matrix &A, long long e) {
-    return e == 0 ? identity(A.size())  :
-        e % 2 == 0 ? pow(mul(A, A), e/2) : mul(A, pow(A, e-1));
-}
-// 構築付き累乗
-//
-// return powA: A^2^i
-// O(n^3 log e)
-matrix pow(const vector<matrix>& powA, long long e) { // powA[0]がA
-//    cout << powA[0] << "^" << e <<endl;
-    if (e <= 0) return identity(powA[0].size());
-    matrix ret = identity(powA[0].size());
-    rep(i, powA.size()) if (e & (1ll << i)) {
-        ret = mul(ret, powA[i]);
-    }
-    return ret;
-}
-arr powmul(const vector<matrix>& powA, long long e, arr& a) { // powA[0]がA
-//    cout << powA[0] << "^" << e <<endl;
-    if (e <= 0) return a;
-    arr ret = a;
-    rep(i, powA.size()) if (e & (1ll << i)) {
-        ret = mul(powA[i], ret);
+        ret *= (mint)n - (mint)i;
+        ret /= mint(i+1);
     }
     return ret;
 }
 
-// Aを最大e乗まで計算するためのpowAを構築する。
-// powAは副作用で返す
-//
-// O(n^3 log e)
-void construct_powA(const matrix &A, long long e, vector<matrix>& powA) {
-    powA.clear();
-    powA.pb(A);
-    for (int i = 1; (1ll << i) < e; i++) {
-        powA.pb(mul(powA[i-1], powA[i-1]));
+
+
+
+
+
+// Matrix
+
+
+// 行列xベクトル
+vector<mint> mul(vector<vector<mint>> A, vector<mint> x) {
+    assert(A.size() >= 0); assert(A[0].size() == x.size());
+    vector<mint> b(A.size());
+    rep(i, A.size()) {
+        rep(j, A[0].size()) {
+            b[i] += A[i][j] * x[j];
+        }
     }
+    return b;
+}
+// 行列x行列
+vector<vector<mint>> mul(vector<vector<mint>> A, vector<vector<mint>> B) {
+    assert(A[0].size() == B.size());
+    vector<vector<mint>> C(A.size(), vector<mint>(B[0].size()));
+    rep(i, A.size()) rep(j, B[0].size()) {
+        rep(h, A[0].size()) {
+            C[i][j] += A[i][h] * B[h][j];
+        }
+    }
+    return C;
+}
+// ベクトル+ベクトル
+vector<mint> plu(vector<mint> x, vector<mint> y) {
+    assert(x.size() == y.size());
+    rep(i, x.size()) {
+        y[i] += x[i];
+    }
+    return y;
+}
+// 行列+行列
+vector<vector<mint>> plu(vector<vector<mint>> A, vector<vector<mint>> B) {
+    assert(A.size() == B.size());
+    assert(A[0].size() == B[0].size());
+    rep(i, A.size()) rep(j, A[0].size()) {
+        B[i][j] += A[i][j];
+    }
+    return B;
 }
 
-// O(n)
-number inner_product(const arr &a, const arr &b) {
-    number ans = 0;
-    for (int i = 0; i < (int)a.size(); ++i)
-        ans += a[i] * b[i];
-    return ans;
+
+vector<vector<mint>> transpose(vector<vector<mint>> A) {
+    rep(i, A.size()) repi(j, i+1, A.size()) swap(A[i][j], A[j][i]);
+    return A;
 }
-// O(n)
-number tr(const matrix &A) {
-    number ans = 0;
-    for (int i = 0; i < (int)A.size(); ++i)
-        ans += A[i][i];
-    return ans;
+mint dot(vector<mint> x, vector<mint> y) {
+    mint ret = 0;
+    rep(i, x.size())
+        ret += x[i] * y[i];
+    return ret;
 }
-// O( n^3 )
-// modは素数でなければならない！！
-number det(matrix A) {
-    int n = A.size();
-    assert(n == (int)A[0].size());
-    number ans = 1;
-    for (int i = 0; i < n; i++) {
-        int pivot = -1;
-        for (int j = i; j < n; j++)
-            if (A[j][i]) {
-                pivot = j;
-                break;
+vector<mint> pow(vector<vector<mint>> A, vector<mint> x, long long k) {
+    vector<vector<vector<mint>>> Ak; // Ak[i] = A^{2^i}
+
+    Ak.push_back(A);
+    rep(i, 70) 
+        Ak.push_back(mul(Ak[i], Ak[i]));
+    ll cyc = 0;
+    while (k) {
+        if (k & 1)
+            x = mul(Ak[cyc], x);
+        k /= 2;
+        cyc++;
+    }
+    return x;
+}
+
+
+
+
+// Black box liner algebra
+struct RandomModInt {
+    default_random_engine re;
+    uniform_int_distribution<int> dist;
+#ifndef _DEBUG
+    RandomModInt() : re(random_device{}()), dist(1, mint::Mod - 1) { }
+#else
+    RandomModInt() : re(), dist(1, mint::Mod - 1) { }
+#endif
+    mint operator()() {
+        mint r;
+        r.x = dist(re);
+        return r;
+    }
+} randomModInt;
+
+void randomModIntVector(vector<mint> &v) {
+    int n = (int)v.size();
+    for(int i = 0; i < n; ++ i)
+        v[i] = randomModInt();
+}
+
+
+// GF(mo)列sから、それを生成する最小線形漸化式Cを復元する
+//
+// 入力: 漸化式が生成したGF(mo)列s
+// 出力: d項間漸化式の係数C (size = d+1)
+// 漸化式
+//      C_0 s_{n} + C_1 s_{n-1} + ... + C_{L} s{n-L} = 0
+// がsを生成した時、Cを求める。
+//
+// O(n^2)
+//
+// 例:
+// s = [1, 2, 4, 8] -> C = [1, 1000000005(-2)] (s[1] - 2 * s[0] = 0)
+// s = [1, 1, 1, 1] -> C = [1, 1000000006(-1)] (s[1] - s[0] = 0)
+int berlekampMassey(const vector<mint> &s, vector<mint> &C) {
+    int N = (int)s.size();
+    C.assign(N + 1, mint());
+    vector<mint> B(N + 1, mint());
+    C[0] = B[0] = 1;
+    int degB = 0;
+    vector<mint> T;
+    int L = 0, m = 1;
+    mint b = 1;
+    for(int n = 0; n < N; ++ n) {
+        mint d = s[n];
+        for(int i = 1; i <= L; ++ i)
+            d += C[i] * s[n - i];
+        if(d == mint()) {
+            ++ m;
+        } else {
+            if(2 * L <= n)
+                T.assign(C.begin(), C.begin() + (L + 1));
+            mint coeff = -d * b.inverse();
+            for(int i = -1; i <= degB; ++ i)
+                C[m + i] += coeff * B[i];
+            if(2 * L <= n) {
+                L = n + 1 - L;
+                B.swap(T);
+                degB = (int)B.size() - 1;
+                b = d;
+                m = 1;
+            } else {
+                ++ m;
             }
-        if (pivot == -1) return 0;
-        if (i != pivot) {
-            swap(A[i], A[pivot]);
-            ans *= -1;
-        }
-        number tmpinv = inv(A[i][i]);
-        for (int j = i + 1; j < n; j++) {
-            number c = A[j][i] * tmpinv;
-            for (int k = i; k < n; k++) {
-                A[j][k] = (A[j][k] - c * A[i][k]);
-            }
-        }
-        ans *= A[i][i];
-    }
-    return ans;
-}
-
-// O( n^3 ).
-// int rank(matrix A) はまだ
-
-// O( n^3 ).
-// modが2の時だけ使える演算
-#define FOR(x,to) for(x=0;x<(to);x++) // repに変えちゃダメ。xがint xになると動かない
-int gf2_rank(matrix A) { /* input */
-    if (!A.size() || (A.size() && A[0].size())) return 0;
-    int n = A.size();
-    assert(mo == 2); 
-    
-    int i,j,k;
-    FOR(i,n) {
-        int be=i,mi=n+1;
-        for(j=i;j<n;j++) {
-            FOR(k,n) if(A[j][k]) break;
-            if(k<mi) be=j,mi=k;
-        }
-        if(mi>=n) break;
-        FOR(j,n) swap(A[i][j],A[be][j]);
-
-        FOR(j,n) if(i!=j&&A[j][mi]) {
-            FOR(k,n) A[j][k] += A[i][k]; // ^=のつもり
         }
     }
-    return i;
+    C.resize(L + 1);
+    return L;
 }
 
-// input : a, b
-// output : x, y  s.t. ax + by = （符号付き）gcd(a, b)
-int extGcd( int a, int b, int& x, int& y ) {
-  if ( b == 0 ) {
-    x = 1; y = 0; return a;
-  }
-  int g = extGcd( b, a % b, y, x );
-  y -= (a / b) * x;
-  return g;
-}
-
-// xn = 1 (mod p)
-int invMod(int n, int p) {
-  int x, y, g = extGcd ( n, p, x, y );
-  if (g == 1) return x;
-  else if (g == -1) return -x;
-  else return 0; // gcd(n, p) != 1，解なし
-}
-
-
-// 有限体上の線型方程式系 Ax = b (mod q)を解く
-// a = [A | b]: m × n の係数行列
-// x: 解を記録するベクトル
-// 計算量： O(min(m, n) * m * n)
-bool gauss(matrix a, arr& x, int m, int n, int q) {
-  int rank = 0;
-  vll pivot(n);
-  // 前進消去
-  for (int i = 0, j = 0; i < m && j < n-1; ++j) {
-    int p = -1;
-    Mod tmp = 0;
-
-    // ピボットを探す
-    for (int k = i; p < 0 && k < m; ++k) {
-      if (a[k][j] != 0) p = k;  // 有限体上なので非零で十分
-    }
-    // ランク落ち対策
-    if (p == -1) continue;
-    // 第i行と第p行を入れ替える
-    for (int k = j; k < n; ++k)
-      tmp = a[i][k], a[i][k] = a[p][k], a[p][k] = tmp;
-    // 第i行を使って掃き出す
-    for (int k = i+1; k < m; ++k) {
-      tmp = - a[k][j] * invMod(a[i][j], q) % q;
-      for (int l = j; l < n; ++l)
-        a[k][l] += tmp * a[i][l];
-    }
-    // 第i行を正規化： a[i][j] = 1 にする
-    tmp = invMod(a[i][j], q);
-    for (int k = j; k < n; ++k)
-      a[i][k] = a[i][k] * tmp % q;
-    pivot[i++] = j, rank++;
-  }
-  // 解の存在のチェック
-  for (int i = rank; i < m; ++i)
-    if (a[i][n-1] != 0) return false;
-  // 解をxに代入（後退代入）
-  for (int i = 0; i < rank; ++i)
-    x[i] = a[i][n-1];
-  for (int i = rank-1; i >= 0; --i) {
-    for (int j = pivot[i] + 1; j < n-1; ++j)
-      x[i] -= a[i][j] * x[j];
-//    x[i] -= x[i] / q * q, x[i] = (x[i] + q) % q;  // 0 <= x[i] < q に調整
-  }
-  rep(i, x.size()) x[i] += Mod(0);
-  return true;
-}
-arr solve(matrix a, arr b) {
-    int m = a.size();
-    arr ret(a.size());
-    rep(i, a.size()) {
-        a[i].pb(b[i]);
-    }
-    gauss(a, ret, m, m+1, mo);
-    return ret;
-}
-
-// a x + b y = gcd(a, b)なるx, yを一つ探す。
+// GF(mo)列aから、それを生成する最小線形漸化式\phiを復元する
+// berlekampMasseyとの違いは、係数の順序が違うのと安全用のassertチェックがあること。
 //
-// g = gcd(a, b)として、
-// 任意の整数kについて(x+k*b/g, y+k*a/g)が必要十分な解空間となる。
-long long extgcd(long long a, long long b, long long &x, long long &y) {
-    long long g = a; x = 1; y = 0;
-    if (b != 0) g = extgcd(b, a % b, y, x), y -= (a / b) * x;
-    return g;
+// 入力: 漸化式が生成したGF(mo)列a
+// 出力: d項間漸化式の係数\phi (size = d+1)
+// 漸化式
+//      \phi_0 a_{i} + \phi_1 a_{1} + ... + \phi_L a_L = 0
+// がaを生成した時、\phiを求める。
+//
+// O(n^2)
+//
+// 例:
+// s = [1, 2, 4, 8] -> C = [1000000005(-2), 1] (s[1] - 2 * s[0] = 0)
+// s = [1, 1, 1, 1] -> C = [1000000006(-1), 1] (s[1] - s[0] = 0)
+void computeMinimumPolynomialForLinearlyRecurrentSequence(const vector<mint> &a, vector<mint> &phi) {
+    assert(a.size() % 2 == 0);
+    int L = berlekampMassey(a, phi);
+    reverse(phi.begin(), phi.begin() + (L + 1));
 }
 
-// a x = b (mod m)を解く
-// これはa x + m k = bなるxの全列挙に他ならない。
+// 漸化式
+//      \phi_0 a_0 + \phi_1 a_1 + ... + \phi_L a_L = 0
+// と、initValues = a[0:phi.size()-1]が与えられる。
+// この時、a[k]をinitValues(=a[0:phi.size()-1])の線形結合の係数を返す。
+//     a[k] = coeff[0] * initValues[0] + coeff[1] * initValues[1] + ...  + coeff[d-1] * initValues[d-1] 
 //
-// bがgcd(a, m)で割り切れないならば、
-// 解なしである。
+// O(n^2 log k)
+void linearlyRecurrentSequenceCoeffs(long long k, const vector<mint> &phi_in, vector<mint> &coeffs) {
+	int d = (int)phi_in.size() - 1;
+	assert(d >= 0);
+	assert(phi_in[d].get() == 1);
+
+    coeffs = vector<mint>(d);
+	vector<mint> square;
+	coeffs[0] = 1;
+	int l = 0;
+	while ((k >> l) > 1) ++l;
+	for (; l >= 0; --l) {
+		square.assign(d * 2 - 1, mint());
+        rep(i, d) rep(j, d) square[i + j] += coeffs[i] * coeffs[j];
+		for (int i = d * 2 - 2; i >= d; -- i) {
+			mint c = square[i];
+			if (c.x == 0) continue;
+            rep(j, d) square[i - d + j] -= c * phi_in[j];
+		}
+        rep(i, d)
+			coeffs[i] = square[i];
+		if (k >> l & 1) {
+			mint lc = coeffs[d - 1];
+			for(int i = d - 1; i >= 1; -- i)
+				coeffs[i] = coeffs[i - 1] - lc * phi_in[i];
+			coeffs[0] = mint() - lc * phi_in[0];
+		}
+	}
+}
+
+// 漸化式
+//      \phi_0 a_{i} + \phi_1 a_{1} + ... + \phi_L a_L = 0
+// と、initValues = a[0:phi.size()-1]が与えられる。
+// この時、
+//      a_{k}を求める
+//
+// O(n^2 log k)
 // 
-// 割り切れるならば
-// すなわち、extgcd(a, m, x, k), x *= b / gcd(a, m), k *= b / gcd(a, m)で解ける。
-// 任意の整数nについて、x+n*m/gcd(a, m)が解である。
+// また、副産物として、a[k]をinitVectorの線形結合として表す係数coeffが得られる
+// a[k] = coeff[0] * initValues[0] + coeff[1] * initValues[1] + ...  + coeff[d-1] * initValues[d-1] 
+// 
+mint linearlyRecurrentSequenceValue(long long k, const vector<mint> &initValues, const vector<mint> &phi) {
+    int d = phi.size() - 1;
+	if(d == 0) return mint();
+	assert(d <= (int)initValues.size());
+    assert(k >= 0);
+
+    if(k < (int)initValues.size())
+        return initValues[(int)k];
+
+    vector<mint> coeffs;
+    linearlyRecurrentSequenceCoeffs(k, phi, coeffs);
+
+	mint res; rep(i, d) res += coeffs[i] * initValues[i];
+	return res;
+}
+
+// 線形漸化的数列aのk番目は？
+// O(n^2 log k)
+mint reconstruct(long long k, vector<mint> a) {
+    if (a.size() % 2) a.pop_back();
+    vector<mint> a_first_half;
+    rep(i, a.size() / 2)
+        a_first_half.push_back(a[i]);
+    vector<mint> phi;
+    computeMinimumPolynomialForLinearlyRecurrentSequence(a, phi);
+    return linearlyRecurrentSequenceValue(k, a_first_half, phi);
+}
+
+
+// GF(mod)の行列演算
+// thisが表す行列はAとする。
 //
-// ret.fi, ret.seに対して、
-// (1) ret.fi+k*ret.seが任意の解で、ret.fiは最小非負解
-// (2) ret.fiが-1だと解なし
-P solveLinearEquation(ll a, ll b, ll m) {
-    if (b % __gcd(a, m) != 0) {
-        return P(-1, -1);
-    } else {
-        ll x, k;
-        extgcd(a, m, x, k), x *= b / __gcd(a, m), k *= b / __gcd(a, m);
-        P ret = P(x, m / __gcd(a, m));
-        ret.fi %= ret.se;
-        ret.fi += ret.se;
-        ret.fi %= ret.se;
+// この行列演算は、「掛け算の実装のみを要求する」。
+// 合計で、O(n^2 + n^2 log k + n T(n))
+class matrixData {
+public:
+    int n;
+    matrixData(int n_arg) { n = n_arg; }
+    int size(void) { return n; }
+
+    // 行列Aとベクトルvec_inの掛け算して、vec_outを返す。
+    // vec_outはこの関数で確保される。
+    // 
+    // O(M(n)) : 密行列でO(n^2), コンパニオンでO(n), w要素疎行列でO(w)
+    virtual void productMatrixByVector(vmint& vec_out, const vmint& vec_in) = 0;
+
+    // 行列Aとベクトルdiag_inの掛け算して、副作用でAを更新する
+    // この関数は最小多項式を特性多項式に一致させるためのものなので、diag_inの掛け算方向は問わない
+    // 
+    // O(w) : w要素疎行列でO(w)
+    virtual void productDiagByMatrix(const vmint& diag_in) = 0;
+
+    // Black Box Linear Algebraを使って、最小多項式の係数を乱択計算する
+    // 乱択だがほぼ100%一致するので、答えが合っているかのチェックする必要なし
+    // 出力はthis->phiに格納される。
+    // 
+    // O(n^2 + n T(n)), T(n)は行列とベクトルの掛け算
+    void computeMinimumPolynomialUsingBlackBoxLinearAlgebra(vmint& phi_out) {
+        vector<mint> dp(n * 2), u(n), v(n);
+        randomModIntVector(u); randomModIntVector(v);
+        vector<mint> Aiv = v; // i = 0
+
+        // 2n個のdp[i]=u^t A^i vを列挙
+        vector<mint> Aiv_next;
+        rep(i, n * 2) {
+            rep(j, n) dp[i] += u[j] * Aiv[j];
+            productMatrixByVector(Aiv_next, Aiv);
+            Aiv = Aiv_next;
+        }
+
+        // dpが線形漸化的で、その係数が行列の最小多項式phi_outに高確率に一致する
+        computeMinimumPolynomialForLinearlyRecurrentSequence(dp, phi_out);
+    }
+
+    // A^k vec_inを、vec_outを返す。
+    // vec_outはこの関数で確保される。
+    // 
+    // O(n^2 log k)
+    void computeMatrixPowerByVector(vmint &res_out, const vmint &v_in, const long long k) {
+        res_out.assign(n, mint());
+
+        // 最小多項式を得る
+        vmint phi; computeMinimumPolynomialUsingBlackBoxLinearAlgebra(phi);
+
+        // A^k = \Sigma A^i coeffs[i]となるcoeffsを得る。
+        vector<mint> coeffs; linearlyRecurrentSequenceCoeffs(k, phi, coeffs);
+
+        // A^k v_inを具体的に計算
+        vmint vec = v_in, vec_next;
+        rep(i, phi.size() - 1) {
+            rep(j, n) res_out[j] += coeffs[i] * vec[j];
+            productMatrixByVector(vec_next, vec);
+            vec = vec_next;
+        }
+    }
+
+    // ベクトルbを入力として、A x = bなるxを返す。
+    // xこの関数で確保される。
+    // 
+    // O(n T(n)), T(n)は行列とベクトルの掛け算
+    void solve(vmint &x, const vmint &b) {
+        x.assign(n, mint());
+
+        // 最小多項式を得る
+        vmint phi; computeMinimumPolynomialUsingBlackBoxLinearAlgebra(phi);
+
+        // x = -1/phi[0]*(phi[1]*b+phi[2]*A*b+...+phi[d]*A^{d-1}*b)
+        // なのでそれを愚直に計算
+        vmint Aib = b;
+        repi(i, 1, phi.size()) {
+            rep(j, n) x[j] += phi[i] * Aib[j];
+            vmint Aib_next;
+            productMatrixByVector(Aib_next, Aib);
+            Aib = Aib_next;
+        }
+        rep(j, n) x[j] /= -phi[0];
+    }
+
+    // det(A)を高確率に求める
+    // 
+    // det(A) = (-1)^n char(A)(0)なので、まず特性方程式char(A)を求める。
+    // Black Box Linear Algebraで求めるのは最小多項式だが、
+    // ランダムな対角行列をかけると、最小多項式と特性方程式が高確率で一致する。
+    // 特性多項式というのは、要するにケイリーハミルトンの係数のことである。
+    // 
+    // 乱択だがほぼ100%一致するので、答えが合っているかのチェックする必要なし
+    ///
+    // O(n^2 + n T(n)), T(n)は行列とベクトルの掛け算
+    mint det(void) {
+        // ランダム対角行列DをAにかける
+        vmint D(n); randomModIntVector(D); productDiagByMatrix(D);
+
+        // 最小多項式phi(AD)を得る。
+        // ランダム対角行列Dをかけたので、これは高確率で特性多項式char(AD)でもある。
+        vmint Dphi; computeMinimumPolynomialUsingBlackBoxLinearAlgebra(Dphi);
+
+        // det(AD) = det(DA) = (-1)^n * char(AD)(0) = det(A) * \Pi D[i]
+        // なので、det(A) = (-1)^n * char(AD)(0) / (\Pi D[i])
+        mint ret = Dphi[0] * (n % 2 ? -1 : 1); rep(i, n) ret /= D[i];
+
+        // productDiagByMatrixは副作用で変更するので、行列を戻しとく
+        rep(i, n) D[i] = mint(1) / D[i];
+        productDiagByMatrix(D);
+
         return ret;
     }
-}
 
-/*************************************/
-// 謎演算
-/*************************************/
+    virtual ~matrixData() {}
+};
 
-
-
-// 線型連立合同式 a[i] x == b[i] (mod m[i]) (i = 0, ..., n-1) を解く．
-bool linearCongruences(const vector<long long> &a,
-        const vector<long long> &b,
-        const vector<long long> &m,
-        long long &x, long long &M) {
-    int n = a.size();
-    x = 0; M = 1;
-    rep(i, n) {
-        long long a_ = a[i] % M, b_ = b[i] - a[i] * x, m_ = m[i];
-        long long y, t, g = extgcd(a_, m_, y, t);
-        if (b_ % g) return false;
-        b_ /= g; m_ /= g;
-        x += M * (y * b_ % m_);
-        M *= m_;
+// yukicoder旨味の相乗効果用。O(n)
+class myMatrixData : public matrixData {
+public:
+    vmint data; // 行列のデータ。データのアラインメントはユーザに任せる。
+    myMatrixData(int n_arg, vmint &data_arg) : matrixData(n_arg) {
+        data = data_arg; 
     }
-    x = (x + M) % M;
-    return true;
-}
-
-// オイラーのφ関数
-// LookUp Version
-const int N = 1000000;
-long long eulerPhi(long long n) {
-    static int lookup = 0, p[N], f[N];
-    if (!lookup) {
-        rep(i,N) p[i] = 1, f[i] = i;
-        for (int i = 2; i < N; ++i) {
-            if (p[i]) {
-                f[i] -= f[i] / i;
-                for (int j = i+i; j < N; j+=i)
-                    p[j] = 0, f[j] -= f[j] / i;
-            }
-        }
-        lookup = 1;
+    // O(n)
+    virtual void productMatrixByVector(vmint& vec_out, const vmint& vec_in) {
+        vec_out.resize(n);
+        vec_out[0] = vec_in[0] * data[0];
+        rep(i, n-1) 
+            vec_out[i+1] = vec_out[i] + vec_in[i+1] * data[i+1];
     }
-    return f[n];
-}
+    // O(n), 対角行列は右からかける
+    virtual void productDiagByMatrix(const vmint& diag_in) {
+        rep(i, n) data[i] *= diag_in[i];
+    }
+
+    virtual ~myMatrixData() {}
+};
 
 
+/*
+   テンプレート
+*/
+class templateMatrixData : public matrixData {
+public:
+    vmint data; // 行列のデータ。データのアラインメントはユーザに任せる。
+    templateMatrixData(int n_arg, vmint &data_arg) : matrixData(n_arg) {
+        data = data_arg; 
+    }
+    virtual void productMatrixByVector(vmint& vec_out, const vmint& vec_in) {
+        cerr << "productMatrixByVector not implemented." << endl; exit(1); 
+    }
+    virtual void productDiagByMatrix(const vmint& diag_in) {
+        cerr << "productDiagByMatrix not implemented." << endl; exit(1); 
+    }
 
+    virtual ~templateMatrixData() {}
+};
+
+
+// TODO
+// 行列演算もっとマシにする. detとかAx=bソルバとか
+// euler's phi
 int main() {
-    cout << __gcd(12, 18) << endl;
-
-    cout << ((Mod)2 + (Mod)10) << endl;
-    cout << ((Mod)2 ^ 10ll) << endl;
-    cout << ((Mod)3 ^ 1000000ll) << endl;
-    Mod r(1000000), c(1000000);
-    cout << r * c + (Mod)1 << endl;
-    cout << modpowsum(3, 4) << endl; // 1 + 3 + 9 + 27
-
-    long long   n = 8e18;
-    printf("long long x 1= %Ld\n", n);
-    //    printf("long long x 2 = %Ld\n", n*2); // overflow
-    long double m = n;
-    printf("long double x 1= %Lf\n", m);
-    printf("long double x 2 = %Lf\n", m*2);
-
-    string s = "10000000000000";
-    Mod mod_from_str(s);
-    cout << mod_from_str << "#from string" << endl;
-
-    cout << "Input also works" << endl;
-    Mod input;
-    cin >> input; // input 10000000000
-    cout << input << endl;
+    {
+        constructFactorial(1000);
+        cout << nCr(10, 2) << endl;
+    }
 
     {
-        const int m = 4;
-        matrix a = {
-            {1, 1, 1, 0},
-            {1, 1, 0, 1}, 
-            {1, 0, 1, 1},
-            {0, 1, 1, 1},
-        };
-        arr b = {1, 0, 0, 1};
+        // 線形漸化式復元
+        vector<mint> a = {1, 2, 4, 8}, phi;
+        assert(reconstruct(10, a) == 1024);
+    }
+    {
+        // 線形漸化式復元
+        vector<mint> b = {1, 2, 3, 4}, phi;
+        assert(reconstruct(10, b) == 11);
+    }
 
-        arr ret(m);
-        for (int i = 0; i < m; ++i)
-            cout << ret[i] << " ";
-        cout << endl;
 
+    {
+        // Berlekamp Masseyのテスト
+        vector<mint> s = {1, 2, 4, 8}, C;
+        berlekampMassey(s, C);
+        cout << s << endl;
+        cout << C << endl;
+    }
+    {
+        // Berlekamp Masseyのテスト
+        vector<mint> s = {1, 1, 1, 1, 1, 1}, C;
+        berlekampMassey(s, C);
+        cout << s << endl;
+        cout << C << endl;
+    }
+    {
+        // Berlekamp Masseyをひっくりかえしたもののテスト
+        vector<mint> a = {100, 1, 0, 0, 0, 0}, phi;
+        computeMinimumPolynomialForLinearlyRecurrentSequence(a, phi);
         cout << a << endl;
-        cout << b << endl;
-        auto x = solve(a, b);
-        cout << x << "#ret" << endl;
-        cout << mul(a, x) << endl;
+        cout << phi << endl;
     }
-
-    
-    {
-        // a x + b y = gcd(a, b)
-        // g = gcd(a, b)として、任意の整数kについて(x+k*b/g, y+k*a/g)が必要十分な解空間となる。
-        ll a, b;
-        ll x, y;
-        
-        // 2 x + 5 y = 1
-        a = 2, b = 5;
-        extgcd(a, b, x, y);
-        cout << a << " " << x << " + " << b << " " << y << " = " << __gcd(a, b) << endl;
-
-        // 4 x + 10 y = 2
-        a = 4, b = 10;
-        extgcd(a, b, x, y);
-        rep(i, 10) { // 解空間の列挙
-            cout << a << " " << x << " + " << b << " " << y << " = " << __gcd(a, b) << endl;
-            x += b / __gcd(a, b), y -= a / __gcd(a, b);
-        }
-    }
-
 
     {
-        // a x = b (mod m)を解く
-        P ret; // ret.fi+k*ret.seが全てxの解である。
+        // A^c bを求める。
+        // 
+        //  (1, 2, 3) ^ c (1)
+        //  |1, 2, 0|     |1|
+        //  (1, 0, 0)     (1)
+        int n = 3; long long c = 4;
+        vmint data = {1, 2, 3};
+        myMatrixData m = myMatrixData(n, data);
 
-        ret = solveLinearEquation(4, 6, 10);
-        cout << ret << endl;
-
-        ret = solveLinearEquation(4, 0, 10);
-        cout << ret << endl;
-
-        ret = solveLinearEquation(4, 5, 10);
-        cout << ret << endl;
+        vmint res_out;
+        vmint b(n, 1);
+        m.computeMatrixPowerByVector(res_out, b, c);
+        cout << res_out << endl;
     }
 
-    return 0;
+    {
+        // A x = bを求める。
+        // 
+        //  (1, 2, 3)      (2)
+        //  |1, 2, 0| x =  |3|
+        //  (1, 0, 0)      (4)
+        int n = 3; 
+        vmint data = {1, 2, 3};
+        myMatrixData m = myMatrixData(n, data);
+
+        vmint x;
+        vmint b = {2, 3, 4};
+        m.solve(x, b);
+        cout << x << endl;
+
+   }
+   {
+       // det(A)を求める。
+       // 
+       //      (1, 2, 3) 
+       //  A = |1, 2, 0|
+       //      (1, 0, 0)
+       int n = 3; 
+       vmint data = {1, 2, 3};
+       myMatrixData m = myMatrixData(n, data);
+
+       cout << m.det() << endl;
+       cout << m.det() << endl;
+       cout << m.det() << endl;
+   }
+
+   return 0;
 }

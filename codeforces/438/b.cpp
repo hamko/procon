@@ -16,7 +16,7 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 #define exists find_if
 #define forall all_of
 
-using ll = unsigned int; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
@@ -51,55 +51,45 @@ struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); c
 #define rand randxor
 
 static const double EPS = 1e-14;
-static const long long INF = 1e9;
+static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-
-const ll len = 20;
-ll dp[76][1<<len];
 int main(void) {
-    ll n; cin >> n; string s; cin >> s;
-    vvll a(n+1, vll(n+1));
-    rep(i, n+1) rep(j, n+1) a[i][j] = INF;
-    rep(i, n) repi(j, i+1, n+1) {
-//        cout << i << " " << j << " " << a[i][j-1] <<endl;
-        if (j == i+1) 
-            a[i][j] = s[i] - '0';
-        else 
-            a[i][j] = a[i][j-1] * 2 + (s[j-1] - '0');
-        if (a[i][j] > len-1) {
-            a[i][j] = INF;
-            break;
-        }
+    ll h,m,s,t1,t2;cin>>h>>m>>s>>t1>>t2;
+    h %= 12;
+    t1%=12;
+    t2%=12;
+    t1*=3600;
+    t2*=3600;
+    if (t1>t2)swap(t1,t2);
+    /*
+    cout << t1 << endl;
+    cout << t2 << endl;
+    */
+    ll a=720*s,b=720*m+12*s,c=60*60*h+60*m+s;
+    vll t = {a,b,c};sort(all(t));
+    /*
+    cout <<t<<endl;
+    rep(i, 3) {
+        cout << (double)t[i]/(60*12*60)*360 << endl;
     }
+    */
+    rep(i, 3) t.pb(t[i]+12*60*60);
+//    cout <<t<<endl;
+    rep(i, t.size()-1) {
+        if (t[i] <= t1 && t1 <= t[i+1] &&
+                t[i] <= t2 && t2 <= t[i+1]) {
+            cout << "YES"<<endl;
+            return 0;
+        }
+        if (t[i] <= t1+12*60*60 && t1+12*60*60 <= t[i+1] &&
+                t[i] <= t2 && t2 <= t[i+1]) {
+            cout << "YES"<<endl;
+            return 0;
+        }
 
-    rep(i, n+1) {
-        dp[i][0] = 1;
     }
-    repi(i, 0, n) {
-//        cout << i << endl;
-        for (ll k = 0; k <= i; k++) if (a[k][i+1] != INF) {
-            rep(mask, 1<<len) {
-                ll& var = dp[k][mask];
-                if (!var) continue;
-//                cout << i << " " << k << " " << mask << " " << var<<endl;
-//                (dp[i+1][mask|(1<<a[k][i+1])] += dp[k][mask])%=mo;
-                ll& ret = dp[i+1][mask|(1<<a[k][i+1])];
-                ret += var;
-                if (ret >= mo) ret -= mo;
-            }
-        }
-    }
-    ll ret = 0;
-    rep(i, n+1) {
-        ll mask = 0;
-        rep(l, len-1) {
-            mask |= (1 << (l+1));
-            (ret += dp[i][mask]) %= mo;
-        }
-    }
-    cout << ret << endl;
-
+    cout <<"NO"<<endl;
     return 0;
 }
