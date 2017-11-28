@@ -16,7 +16,7 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 #define exists find_if
 #define forall all_of
 
-using ll = unsigned int; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
@@ -50,56 +50,86 @@ struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL);
 struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); cin.tie(0); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 #define rand randxor
 
+static const long long mo = 998244353;
+class Mod {
+    public:
+        int num;
+        Mod() : Mod(0) {}
+        Mod(long long int n) : num(n) { }
+        Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mo; num = tmp; }
+        Mod(int n) : Mod(static_cast<long long int>(n)) {}
+        operator int() { return num; }
+};
+istream &operator>>(istream &is, Mod &x) { long long int n; is >> n; x = n; return is; }
+ostream &operator<<(ostream &o, const Mod &x) { o << x.num; return o; }
+Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % mo); }
+Mod operator+(const long long int a, const Mod b) { return Mod(a) + b; }
+Mod operator+(const Mod a, const long long int b) { return b + a; }
+Mod operator++(Mod &a) { return a + Mod(1); }
+Mod operator-(const Mod a, const Mod b) { return Mod((mo + a.num - b.num) % mo); }
+Mod operator-(const long long int a, const Mod b) { return Mod(a) - b; }
+Mod operator--(Mod &a) { return a - Mod(1); }
+Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % mo); }
+Mod operator*(const long long int a, const Mod b) { return Mod(a)*b; }
+Mod operator*(const Mod a, const long long int b) { return Mod(b)*a; }
+Mod operator*(const Mod a, const int b) { return Mod(b)*a; }
+Mod operator+=(Mod &a, const Mod b) { return a = a + b; }
+Mod operator+=(long long int &a, const Mod b) { return a = a + b; }
+Mod operator-=(Mod &a, const Mod b) { return a = a - b; }
+Mod operator-=(long long int &a, const Mod b) { return a = a - b; }
+Mod operator*=(Mod &a, const Mod b) { return a = a * b; }
+Mod operator*=(long long int &a, const Mod b) { return a = a * b; }
+Mod operator*=(Mod& a, const long long int &b) { return a = a * b; }
+Mod factorial(const long long n) {
+    if (n < 0) return 0;
+    Mod ret = 1;
+    for (int i = 1; i <= n; i++) {
+        ret *= i;
+    }
+    return ret;
+}
+Mod operator^(const Mod a, const long long n) {
+    if (n == 0) return Mod(1);
+    Mod res = (a * a) ^ (n / 2);
+    if (n % 2) res = res * a;
+    return res;
+}
+
 static const double EPS = 1e-14;
-static const long long INF = 1e9;
-static const long long mo = 1e9+7;
+static const long long INF = 1e18;
 #define ldout fixed << setprecision(40) 
-
-
-const ll len = 20;
-ll dp[76][1<<len];
+map<tuple<ll, ll, ll>, set<ll>> lines;
 int main(void) {
-    ll n; cin >> n; string s; cin >> s;
-    vvll a(n+1, vll(n+1));
-    rep(i, n+1) rep(j, n+1) a[i][j] = INF;
-    rep(i, n) repi(j, i+1, n+1) {
-//        cout << i << " " << j << " " << a[i][j-1] <<endl;
-        if (j == i+1) 
-            a[i][j] = s[i] - '0';
-        else 
-            a[i][j] = a[i][j-1] * 2 + (s[j-1] - '0');
-        if (a[i][j] > len-1) {
-            a[i][j] = INF;
-            break;
+    ll n; cin >> n;
+
+    vll x(n), y(n);
+    rep(i, n) {
+        cin >> x[i] >> y[i];
+    }
+    rep(i, n) rep(j, n) if (i < j) {
+        ll x1 = x[i], y1 = y[i], x2 = x[j], y2 = y[j];
+        ll a = y2 - y1, b = -(x2 - x1), c = (y2-y1)*x1-(x2-x1)*y1;
+        ll g = -1;
+        if (a) {
+            g = a; g = __gcd(g, b); g = __gcd(g, c);
+            a /= g, b /= g, c /= g;
+            if (a < 0) a *= -1, b *= -1, c *= -1;
+        } else {
+            g = b; g = __gcd(g, a); g = __gcd(g, c);
+            a /= g, b /= g, c /= g;
+            if (b < 0) a *= -1, b *= -1, c *= -1;
         }
+        lines[mt(a, b, c)].insert(i);
+        lines[mt(a, b, c)].insert(j);
     }
 
-    rep(i, n+1) {
-        dp[i][0] = 1;
+    Mod ret = (Mod(2)^(n)) - Mod(1 + n);
+    for (auto&& line : lines) {
+//        cout << line.se << endl;
+        ret -= ((Mod(2)^((ll)line.se.size())) - Mod(1 + (ll)line.se.size()));
     }
-    repi(i, 0, n) {
-//        cout << i << endl;
-        for (ll k = 0; k <= i; k++) if (a[k][i+1] != INF) {
-            rep(mask, 1<<len) {
-                ll& var = dp[k][mask];
-                if (!var) continue;
-//                cout << i << " " << k << " " << mask << " " << var<<endl;
-//                (dp[i+1][mask|(1<<a[k][i+1])] += dp[k][mask])%=mo;
-                ll& ret = dp[i+1][mask|(1<<a[k][i+1])];
-                ret += var;
-                if (ret >= mo) ret -= mo;
-            }
-        }
-    }
-    ll ret = 0;
-    rep(i, n+1) {
-        ll mask = 0;
-        rep(l, len-1) {
-            mask |= (1 << (l+1));
-            (ret += dp[i][mask]) %= mo;
-        }
-    }
-    cout << ret << endl;
+    cout << ret  << endl;
+
 
     return 0;
 }

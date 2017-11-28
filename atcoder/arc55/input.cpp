@@ -10,10 +10,10 @@ ld randrf(ld i, ld j) { return ((ld)rand() / RAND_MAX) * (j - i) + i; }
 
 int main(int argc, char** argv)
 {
-    struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec);
-
-    rep(i, 26) {
-        cout << randr(0, 10) << endl;
+    rep(i, 999) {
+        rep(j, i+1) {
+            cout << i+1 << " " << j+1<<endl;
+        }
     }
 
     return 0;

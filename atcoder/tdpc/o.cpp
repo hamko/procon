@@ -16,7 +16,7 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 #define exists find_if
 #define forall all_of
 
-using ll = unsigned int; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
@@ -51,55 +51,139 @@ struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); c
 #define rand randxor
 
 static const double EPS = 1e-14;
-static const long long INF = 1e9;
+static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+class Mod {
+    public:
+        int num;
+        Mod() : Mod(0) {}
+        Mod(long long int n) : num(n) { }
+        Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mo; num = tmp; }
+        Mod(int n) : Mod(static_cast<long long int>(n)) {}
+        operator int() { return num; }
+};
+istream &operator>>(istream &is, Mod &x) { long long int n; is >> n; x = n; return is; }
+ostream &operator<<(ostream &o, const Mod &x) { o << x.num; return o; }
+Mod operator+(const Mod a, const Mod b) { return Mod((a.num + b.num) % mo); }
+Mod operator+(const long long int a, const Mod b) { return Mod(a) + b; }
+Mod operator+(const Mod a, const long long int b) { return b + a; }
+Mod operator++(Mod &a) { return a + Mod(1); }
+Mod operator-(const Mod a, const Mod b) { return Mod((mo + a.num - b.num) % mo); }
+Mod operator-(const long long int a, const Mod b) { return Mod(a) - b; }
+Mod operator--(Mod &a) { return a - Mod(1); }
+Mod operator*(const Mod a, const Mod b) { return Mod(((long long)a.num * b.num) % mo); }
+Mod operator*(const long long int a, const Mod b) { return Mod(a)*b; }
+Mod operator*(const Mod a, const long long int b) { return Mod(b)*a; }
+Mod operator*(const Mod a, const int b) { return Mod(b)*a; }
+Mod operator+=(Mod &a, const Mod b) { return a = a + b; }
+Mod operator+=(long long int &a, const Mod b) { return a = a + b; }
+Mod operator-=(Mod &a, const Mod b) { return a = a - b; }
+Mod operator-=(long long int &a, const Mod b) { return a = a - b; }
+Mod operator*=(Mod &a, const Mod b) { return a = a * b; }
+Mod operator*=(long long int &a, const Mod b) { return a = a * b; }
+Mod operator*=(Mod& a, const long long int &b) { return a = a * b; }
+Mod factorial(const long long n) {
+    if (n < 0) return 0;
+    Mod ret = 1;
+    for (int i = 1; i <= n; i++) {
+        ret *= i;
+    }
+    return ret;
+}
+Mod operator^(const Mod a, const long long n) {
+    if (n == 0) return Mod(1);
+    Mod res = (a * a) ^ (n / 2);
+    if (n % 2) res = res * a;
+    return res;
+}
+Mod modpowsum(const Mod a, const long long b) {
+    if (b == 0) return 0;
+    if (b % 2 == 1) return modpowsum(a, b - 1) * a + Mod(1);
+    Mod result = modpowsum(a, b / 2);
+    return result * (a ^ (b / 2)) + result;
+}
 
-const ll len = 20;
-ll dp[76][1<<len];
+
+/*************************************/
+// 以下、modは素数でなくてはならない！
+/*************************************/
+Mod inv(const Mod a) { return a ^ (mo - 2); }
+Mod operator/(const Mod a, const Mod b) { assert(b.num != 0); return a * inv(b); }
+Mod operator/(const long long int a, const Mod b) { assert(b.num != 0); return Mod(a) * inv(b); }
+Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b); }
+
+// n!と1/n!のテーブルを作る。
+// nCrを高速に計算するためのもの。
+//
+// O(n + log mo)
+vector<Mod> fact, rfact;
+void constructFactorial(const long long n) {
+    fact.resize(n);
+    rfact.resize(n);
+    fact[0] = rfact[0] = 1;
+    for (int i = 0; i < n - 1; i++) {
+        fact[i+1] = fact[i] * (i+1);
+    }
+    rfact[n-1] = Mod(1) / fact[n-1]; 
+    for (int i = n - 1; i >= 1; i--) 
+        rfact[i-1] = rfact[i] * i; // ((n-1)!)^-1 = (n!)^-1 * n
+}
+
+// O(1)
+// constructFactorialしておけば、n, r=1e7くらいまではいけます
+Mod nCr(const long long n, const long long r) {
+    if (n < 0 || r < 0) return 0;
+    return fact[n] * rfact[r] * rfact[n-r];
+}
+
+// O(r.size())
+// sum(r)! / r[0]! / r[1]! / ...
+Mod nCr(const vector<long long> r) {
+    ll sum = accumulate(all(r), 0ll);
+    Mod ret = fact[sum];
+    rep(i, r.size()) 
+        ret *= rfact[r[i]];
+    return ret;
+}
+
 int main(void) {
-    ll n; cin >> n; string s; cin >> s;
-    vvll a(n+1, vll(n+1));
-    rep(i, n+1) rep(j, n+1) a[i][j] = INF;
-    rep(i, n) repi(j, i+1, n+1) {
-//        cout << i << " " << j << " " << a[i][j-1] <<endl;
-        if (j == i+1) 
-            a[i][j] = s[i] - '0';
-        else 
-            a[i][j] = a[i][j-1] * 2 + (s[j-1] - '0');
-        if (a[i][j] > len-1) {
-            a[i][j] = INF;
-            break;
-        }
-    }
-
-    rep(i, n+1) {
-        dp[i][0] = 1;
-    }
-    repi(i, 0, n) {
-//        cout << i << endl;
-        for (ll k = 0; k <= i; k++) if (a[k][i+1] != INF) {
-            rep(mask, 1<<len) {
-                ll& var = dp[k][mask];
-                if (!var) continue;
-//                cout << i << " " << k << " " << mask << " " << var<<endl;
-//                (dp[i+1][mask|(1<<a[k][i+1])] += dp[k][mask])%=mo;
-                ll& ret = dp[i+1][mask|(1<<a[k][i+1])];
-                ret += var;
-                if (ret >= mo) ret -= mo;
+    constructFactorial(10000);
+    ll n = 26;
+    vll a(n); cin >> a;
+    vector<vector<Mod>> D(n+1, vector<Mod>(1000, Mod(0)));
+    sort(all(a)), reverse(all(a));
+    D[1][a[0]-1] = 1;
+    // 配るDP
+    ll l = a[0];
+    repi(i, 1, n) {
+        if (a[i] == 0) {
+            rep(j, D[i].size()) {
+                D[i+1] = D[i];
+            }
+        } else {
+            rep(j, D[i].size()) if (D[i][j]) {
+                repi(k, 1, a[i]+1) { // k個取る
+//                    cout << i << " " << j << " " << k << endl;
+                    ll x = a[i] - k;
+                    rep(h, k+1) { // h = oを取ろうとする数, k-h = vを取ろうとする数
+//                        cout << i << " " << j << " : " << h << " " << k-h << "CAND" << endl;
+                        // o = h, v = k-h個取ろうとする。
+                        // oは今l+1-j個、vはj個しかない
+                        if (l+1-j<h) continue;
+                        if (j<k-h) continue;
+                        if (j-(k-h)+x<0) continue;
+//                        cout << h << " -> " << j-(k-h)+x << " : " << nCr(a[i]-1, k-1) << " " << nCr(l+1-j, h) << " " <<  nCr(j, k-h)<<" #HIT"<<endl;
+                        D[i+1][j-(k-h)+x] += D[i][j] * nCr(a[i]-1, k-1) * nCr(l+1-j, h) * nCr(j, k-h);
+                    }
+                }
             }
         }
-    }
-    ll ret = 0;
-    rep(i, n+1) {
-        ll mask = 0;
-        rep(l, len-1) {
-            mask |= (1 << (l+1));
-            (ret += dp[i][mask]) %= mo;
-        }
-    }
-    cout << ret << endl;
 
+//        rep(j, 10) { cout << D[i+1][j] << " "; } cout << endl;
+        l += a[i];
+    }
+    cout << D[26][0] << endl;
     return 0;
 }

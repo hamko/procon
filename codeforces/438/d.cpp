@@ -16,7 +16,7 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 #define exists find_if
 #define forall all_of
 
-using ll = unsigned int; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
@@ -51,55 +51,41 @@ struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); c
 #define rand randxor
 
 static const double EPS = 1e-14;
-static const long long INF = 1e9;
+static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
-
-
-const ll len = 20;
-ll dp[76][1<<len];
-int main(void) {
-    ll n; cin >> n; string s; cin >> s;
-    vvll a(n+1, vll(n+1));
-    rep(i, n+1) rep(j, n+1) a[i][j] = INF;
-    rep(i, n) repi(j, i+1, n+1) {
-//        cout << i << " " << j << " " << a[i][j-1] <<endl;
-        if (j == i+1) 
-            a[i][j] = s[i] - '0';
-        else 
-            a[i][j] = a[i][j-1] * 2 + (s[j-1] - '0');
-        if (a[i][j] > len-1) {
-            a[i][j] = INF;
-            break;
-        }
-    }
-
-    rep(i, n+1) {
-        dp[i][0] = 1;
-    }
-    repi(i, 0, n) {
-//        cout << i << endl;
-        for (ll k = 0; k <= i; k++) if (a[k][i+1] != INF) {
-            rep(mask, 1<<len) {
-                ll& var = dp[k][mask];
-                if (!var) continue;
-//                cout << i << " " << k << " " << mask << " " << var<<endl;
-//                (dp[i+1][mask|(1<<a[k][i+1])] += dp[k][mask])%=mo;
-                ll& ret = dp[i+1][mask|(1<<a[k][i+1])];
-                ret += var;
-                if (ret >= mo) ret -= mo;
-            }
-        }
-    }
+vector<bool> calc(string& s) {
     ll ret = 0;
-    rep(i, n+1) {
-        ll mask = 0;
-        rep(l, len-1) {
-            mask |= (1 << (l+1));
-            (ret += dp[i][mask]) %= mo;
+    repi(k, 1, 1000) {
+        vector<bool> memo(1ll<<k, 0);
+        rep(i, s.size()-k+1) {
+            ll mask = 0;
+            rep(j, k) if (s[i+j] == '1') {
+                mask |= (1ll<<j);
+            }
+            memo[mask] = 1;
+        }
+        if (accumulate(all(memo), 0) == memo.size()) {
+            ret = k;
+        } else {
+            return memo;
         }
     }
-    cout << ret << endl;
+    return vector<bool>();
+}
 
+int main(void) {
+    ll n; cin>>n;
+    vector<string> s(n); cin >> s;
+    ll q; cin >> q;
+    vector<vector<bool>> memo;
+    rep(i, n) {
+        memo.pb(calc(s[i]));
+        cout << memo.back() << endl;
+    }
+    rep(_, q) {
+        ll a, b; cin >> a >> b; a--, b--;
+        
+    }
     return 0;
 }
