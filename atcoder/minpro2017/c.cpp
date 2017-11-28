@@ -16,7 +16,7 @@ template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, t
 #define exists find_if
 #define forall all_of
 
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = int32_t; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
@@ -38,7 +38,6 @@ template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.s
 string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); reverse(all(s)); return s; }
 template <typename T> ostream &operator<<(ostream &o, const priority_queue<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} o << endl; return o; }
 
-template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
 
@@ -55,41 +54,35 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
+const ll N = 100000, bsize = 400;
+ll a[N], b[N/bsize];
+ll counter[N/bsize][100000];
 int main(void) {
-    ll n, a; cin >> n >> a; 
-    ll ret = INF;
-    rep(k, 40) {
-        // s^(k+1) <= n なる最小のsを探す
-        ll s = -1;
-        if (k == 0) {
-            s = n;
-        } else if (k == 1) {
-            s = floorl(sqrtl((ld)n)-1e-9);
-        } else {
-            s = 0;
-            rep(i, 10000000) {
-                if (powl(i, k+1) < n) {
-                    s = i;
-                } else {
-                    break;
-                }
-            }
-//            while (powl(s+1, k+1) <= n) s++;
-        } 
-//        cout << k << " "<< s << endl;
-
-        ld tmp = powl(s, k+1);
-        rep(i, k+2) {
-//            cout << tmp << endl;
-            if (tmp >= n) {
-//                cout << k*a+s*(k+1)+i << ": "<<k << " " << s << " : " << i << " " << tmp << " " << endl;
-                chmin(ret, k*a+s*(k+1)+i);
-                break;
-            }
-            tmp /= (ld)s;
-            tmp *= (ld)(s+1);
-        }
+    ll n, m, q; input(n); input(m); input(q);
+    printf("%d %d %d\n");
+    rep(i, n) cin >> a[i];
+    rep(i, n) {
+        counter[i/bsize][a[i]%m]++;
     }
-    cout << ret << endl;
+
+    rep(_, q) {
+        ll l, r, d; input(l); input(r); input(d); l--, r--;
+        ll i = l;
+        ll ret = 0;
+        while (i <= r) {
+            if (i % bsize || r - i < bsize) {
+                counter[i/bsize][a[i]%m]--;
+                (a[i] += d) %= m;
+                if ((b[i/bsize] + a[i]) % m == 0) ret++;
+                counter[i/bsize][a[i]%m]++;
+                i++;
+            } else {
+                (b[i/bsize] += d) %= m;
+                ret += counter[i/bsize][(m-b[i/bsize])%m];
+                i += bsize;
+            }
+        }
+        printf("%d\n", ret);
+    }
     return 0;
 }

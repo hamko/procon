@@ -54,42 +54,44 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
+ll n, m; 
+vll ret(100010);
+vvll g;
+bool memo[100010][11];
+void paint(ll v, ll d, ll c) {
+    if (memo[v][d]) return;
+    memo[v][d] = 1;
+    if (d == 0) {
+        ret[v] = c;
+        return;
+    }
+    paint(v, d-1, c);
+    for (auto x : g[v]) {
+        paint(x, d-1, c);
+    }
+}
 
 int main(void) {
-    ll n, a; cin >> n >> a; 
-    ll ret = INF;
-    rep(k, 40) {
-        // s^(k+1) <= n なる最小のsを探す
-        ll s = -1;
-        if (k == 0) {
-            s = n;
-        } else if (k == 1) {
-            s = floorl(sqrtl((ld)n)-1e-9);
-        } else {
-            s = 0;
-            rep(i, 10000000) {
-                if (powl(i, k+1) < n) {
-                    s = i;
-                } else {
-                    break;
-                }
-            }
-//            while (powl(s+1, k+1) <= n) s++;
-        } 
-//        cout << k << " "<< s << endl;
-
-        ld tmp = powl(s, k+1);
-        rep(i, k+2) {
-//            cout << tmp << endl;
-            if (tmp >= n) {
-//                cout << k*a+s*(k+1)+i << ": "<<k << " " << s << " : " << i << " " << tmp << " " << endl;
-                chmin(ret, k*a+s*(k+1)+i);
-                break;
-            }
-            tmp /= (ld)s;
-            tmp *= (ld)(s+1);
-        }
+    cin >> n >> m;
+    g.resize(n);
+    rep(i, m) {
+        ll u, v; cin >> u >> v; u--, v--;
+        g[u].pb(v);
+        g[v].pb(u);
     }
-    cout << ret << endl;
+    ll q; cin >> q;
+    vll v(q), d(q), c(q);
+    rep(i, q) {
+        cin >> v[i] >> d[i] >> c[i];
+    }
+    reverse(all(v));
+    reverse(all(d));
+    reverse(all(c));
+    rep(i, q) {
+        paint(v[i]-1, d[i], c[i]); 
+    }
+    rep(i, n) {
+        cout << ret[i] << endl;
+    }
     return 0;
 }

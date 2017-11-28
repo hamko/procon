@@ -8,16 +8,17 @@ using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P 
 #define pb push_back
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 
-// ヤコビ記号はnot yet
-// メビウスのμ関数not ye
-// カーマイケルのλ関数 not ye
-
+// 注意！！！！！！！！！！
+//
+// numは-mo<num<moが保証されるが、マイナスにもなりえる。
+// 出力段階できちんと(x+mo)%moとすること。
+//
 static const long long mo = 1e9+7;
 class Mod {
     public:
         int num;
         Mod() : Mod(0) {}
-        Mod(long long int n) : num(n) { }
+        Mod(long long int n) : num(n) {n%=mo;}
         Mod(const string &s){ long long int tmp = 0; for(auto &c:s) tmp = (c-'0'+tmp*10) % mo; num = tmp; }
         Mod(int n) : Mod(static_cast<long long int>(n)) {}
         operator int() { return num; }

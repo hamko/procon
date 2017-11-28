@@ -54,101 +54,35 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-bool check(string s, string t) {
-    ll j = 0;
-    rep(i, s.size()) {
-        if (s[i] == t[j]) {
-            j++;
-            if (j == t.size()) {
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
-void brutal(string s) {
-    repi(_, 0, 1e6) {
-        string t; 
-        ll tmp = _;
-        do {
-            t += (char)(tmp%26) + 'a';
-            tmp /= 26;
-            tmp--;
-        } while (tmp>=0);
-        reverse(all(t));
 
-        if (!check(s, t)) {
-            cout << t << endl;
-            exit(0);
-        }
-    }
-}
-ll n;
-ll memo[200010][26];
-// iより大きい添字で、cが最初に現れる場所
-ll find(ll i, char c) {
-    ll l = i+1, r = n+1;
-    while (r - l != 1) {//       cout << r << " " << l << endl;
-        ll mid = (r + l) / 2;
-        if (memo[mid][c] > memo[i+1][c]) {
-            r = mid;
-        } else {
-            l = mid;
-        }
-    }
-    if (r == n+1) {
-        return -1;
-    }
-    return r-1;
-}
+// dp[i] = s[i:end)の部分列に含まれない最短文字列長
+ll dp[200010];
+// next[i][j] = a[i, end)に文字jが出る最短位置, なければ-1
+const int w= 26;
+int32_t post[200010][w];
 int main(void) {
     string s; cin >> s;
-    n = s.length();
-//    cout << check(s, "aa") << endl;
-//    brutal(s);
+    ll n = s.length();
 
-    rep(i, n) rep(c, 26) {
-        memo[i+1][c] = memo[i][c] + (s[i] == c + 'a');
+    rep(j, w) post[n][j] = post[n+1][j] = n;
+    for (int i = n-1; i >= 0; i--) {
+        rep(j, w) post[i][j] = post[i+1][j];
+        post[i][s[i]-'a'] = i;
     }
 
-    string al = "abcdefghijklmnopqrstuvwxyz";
-    ll j = 0;
-    rep(i, n) { 
-        if (s[i] == al[j%al.size()]) {
-            cout << i << " " << j << "#hit"<< endl;
-            j++;
-        }
-    }
-    cout << j << endl;
-    ll ret_len = j / 26 + 1;
-    cout << ret_len << endl;
-
+    // 集めるDP
+    rep(i, n) dp[i] = INF; dp[n+1] = 0; dp[n+0] = 1;
+    vll A(n+2); A[n+1] = -1; A[n+0] = 0;
+    for (int i = n-1; i >= 0; i--) rep(j, w) 
+        if (dp[i] > dp[post[i][j]+1] + 1) 
+            dp[i] = dp[post[i][j]+1] + 1, A[i] = j;
 
     string ret;
-    rep(i, n) {
-        if (!ret_len) break;
-        rep(c, 26) {
-            ll j = find(i, c);
-            if (j == -1) {
-                ret_len--;
-                ret += (char)c + 'a';
-                break;
-            }
-            // [j, end)に全部がret_len-1個以上あるか？
-            bool flag = 1;
-            rep(x, 26) {
-                flag &= (memo[n][x] - memo[j-1][x]) >= ret_len-1;
-            }
-//            cout << i << " " << (char)(c+'a') << " : " << " " << j << " " << flag << "$tet" << endl;
-            if (!flag) {
-                i = j;
-                ret_len--;
-                ret += (char)c + 'a';
-                break;
-            }
-        }
+    ll i = 0;
+    while (A[i] >= 0) {
+        ret += A[i] + 'a';
+        i = post[i][A[i]] + 1;
     }
-    cout << ret_len << endl;
     cout << ret << endl;
 
     return 0;

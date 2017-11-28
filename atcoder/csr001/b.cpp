@@ -56,40 +56,8 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n, a; cin >> n >> a; 
-    ll ret = INF;
-    rep(k, 40) {
-        // s^(k+1) <= n なる最小のsを探す
-        ll s = -1;
-        if (k == 0) {
-            s = n;
-        } else if (k == 1) {
-            s = floorl(sqrtl((ld)n)-1e-9);
-        } else {
-            s = 0;
-            rep(i, 10000000) {
-                if (powl(i, k+1) < n) {
-                    s = i;
-                } else {
-                    break;
-                }
-            }
-//            while (powl(s+1, k+1) <= n) s++;
-        } 
-//        cout << k << " "<< s << endl;
-
-        ld tmp = powl(s, k+1);
-        rep(i, k+2) {
-//            cout << tmp << endl;
-            if (tmp >= n) {
-//                cout << k*a+s*(k+1)+i << ": "<<k << " " << s << " : " << i << " " << tmp << " " << endl;
-                chmin(ret, k*a+s*(k+1)+i);
-                break;
-            }
-            tmp /= (ld)s;
-            tmp *= (ld)(s+1);
-        }
-    }
-    cout << ret << endl;
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+    cout << accumulate(all(a), 0ll) << endl;
     return 0;
 }

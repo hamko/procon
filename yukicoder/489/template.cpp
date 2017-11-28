@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include <sys/time.h>
 using namespace std;
- 
+
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
@@ -15,11 +15,11 @@ template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, t
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 #define exists find_if
 #define forall all_of
- 
+
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
- 
+
 inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
@@ -37,11 +37,11 @@ vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.b
 template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
 string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); reverse(all(s)); return s; }
 template <typename T> ostream &operator<<(ostream &o, const priority_queue<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} o << endl; return o; }
- 
+
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
- 
+
 size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 namespace myhash{ const int Bsizes[]={3,9,13,17,21,25,29,33,37,41,45,49,53,57,61,65,69,73,77,81}; const int xor_nums[]={0x100007d1,0x5ff049c9,0x14560859,0x07087fef,0x3e277d49,0x4dba1f17,0x709c5988,0x05904258,0x1aa71872,0x238819b3,0x7b002bb7,0x1cf91302,0x0012290a,0x1083576b,0x76473e49,0x3d86295b,0x20536814,0x08634f4d,0x115405e8,0x0e6359f2}; const int hash_key=xor_nums[rand()%20]; const int mod_key=xor_nums[rand()%20]; template <typename T> struct myhash{ std::size_t operator()(const T& val) const { return (hash<T>{}(val)%mod_key)^hash_key; } }; };
 template <typename T> class uset:public std::unordered_set<T,myhash::myhash<T>> { using SET=std::unordered_set<T,myhash::myhash<T>>; public: uset():SET(){SET::rehash(myhash::Bsizes[rand()%20]);} };
@@ -49,47 +49,64 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
 struct init_{init_(){ gettimeofday(&start, NULL); ios::sync_with_stdio(false); cin.tie(0); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 #define rand randxor
- 
+
 static const double EPS = 1e-14;
-static const long long INF = 1e18;
 static const long long mo = 1e9+7;
+static const long long INF = 0x3f3f3f3f3f3f3f3fLL;
 #define ldout fixed << setprecision(40) 
- 
-ll solve(vector<set<ll>>& q, ll w) {
-    vll dp(w);
-    repi(t, 1, q.size()) if (q[t].size()) {
-        for (auto x : q[t])  { 
-            chmin(dp[x], x?dp[x-1]+1:INF);
-            if (x+1 < w)
-                chmin(dp[x+1], dp[x]+1);
-        }
-        for (auto it = q[t].rbegin(); it != q[t].rend(); it++) {
-            ll x = *it;
-            chmin(dp[x], x+1<w?dp[x+1]+1:INF);
-            if (x)
-                chmin(dp[x-1], dp[x]+1);
-        }
-        for (auto x : q[t]) { 
-            dp[x] = INF;
-        }
-//        cout << dp << endl;
+
+template<typename Val, typename Cmp = less<Val> >
+struct MonotonicQueue {
+    vector<pair<Val, int>> q;
+    int head, tail;
+    Cmp cmp;
+    MonotonicQueue(int n, Cmp cmp = Cmp()) : cmp(cmp) { q.resize(n); clear(); }
+    bool empty() const { return head == tail; }
+    void clear() { head = tail = 0; }
+    // x超の末尾要素を全削除して、末尾に(i, x)を追加
+    void enque(int i, Val x) {
+        while (head < tail && cmp(x, q[tail - 1].first)) 
+            --tail;
+        q[tail++] = make_pair(x, i); 
     }
- 
-    return *min_element(all(dp));
-}
- 
-int main(void) {
-    ll w, h, q; cin >> w >> h >> q;
-    vector<set<ll>> qw(100010), qh(100010);
-    rep(i, q) {
-        ll t, d, x; cin >> t >> d >> x; x--;
-        (d ? qh : qw)[t].insert(x);
+    // 先頭の#iを全削除
+    void deque(int i) {
+        if (head < tail && q[head].second == i) 
+            ++head;
     }
-    rep(i, qw.size()) if (qw[i].size() >= w) { cout << -1 << endl; return 0; }
-    rep(i, qh.size()) if (qh[i].size() >= h) { cout << -1 << endl; return 0; }
-//    solve(qw, w);
- 
-    cout << solve(qw, w) + solve(qh, h) << endl;
+    Val get() const {
+        return q[head].first;
+    }
+    pair<Val,int> getPair() const {
+        return q[head];
+    }
+    void print(void) {
+        for (int i = head; i < tail; i++)
+            cout << q[i] << " ";
+        cout << endl;
+    }
+};
+
+int main() {
+    ll n, k, K; cin >> n >> k >> K;
+    vll a(n); cin >> a;
+    MonotonicQueue<ll> q(n);
+    q.enque(0, a[0]);
+    ll ret = 0;
+    ll reti = 0, retj = 0;
+    repi(i, 1, n) {
+        if (ret < a[i] - q.get()) {
+            ret = a[i] - q.get();
+            reti = q.getPair().se;
+            retj = i;
+        }
+        q.enque(i, a[i]);
+        q.deque(i-k);
+//        q.print();
+    }
+    cout << ret * K << endl;
+    if (ret) {
+        cout << reti << " " << retj << endl;
+    }
     return 0;
 }
-

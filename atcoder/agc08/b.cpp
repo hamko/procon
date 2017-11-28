@@ -56,40 +56,15 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n, a; cin >> n >> a; 
-    ll ret = INF;
-    rep(k, 40) {
-        // s^(k+1) <= n なる最小のsを探す
-        ll s = -1;
-        if (k == 0) {
-            s = n;
-        } else if (k == 1) {
-            s = floorl(sqrtl((ld)n)-1e-9);
-        } else {
-            s = 0;
-            rep(i, 10000000) {
-                if (powl(i, k+1) < n) {
-                    s = i;
-                } else {
-                    break;
-                }
-            }
-//            while (powl(s+1, k+1) <= n) s++;
-        } 
-//        cout << k << " "<< s << endl;
+    ll n, k; cin >> n >> k;
+    vll a(n); cin >> a;
+    vll as(n+1); rep(i, n) as[i+1] += as[i] + a[i];
+    vll as_plus(n+1); rep(i, n) as_plus[i+1] += as_plus[i] + max(0ll, a[i]);
 
-        ld tmp = powl(s, k+1);
-        rep(i, k+2) {
-//            cout << tmp << endl;
-            if (tmp >= n) {
-//                cout << k*a+s*(k+1)+i << ": "<<k << " " << s << " : " << i << " " << tmp << " " << endl;
-                chmin(ret, k*a+s*(k+1)+i);
-                break;
-            }
-            tmp /= (ld)s;
-            tmp *= (ld)(s+1);
-        }
-    }
+    ll ret = 0;
+    rep(i, n-k+1) 
+        chmax(ret, max(0ll, as[i+k] - as[i]) + as_plus[i] + as_plus[n] - as_plus[i+k]);
     cout << ret << endl;
+
     return 0;
 }
