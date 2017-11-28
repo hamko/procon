@@ -47,39 +47,6 @@ static const long long mo = 1e9+7;
 
 class OrAndSum {
     public:
-        string isPossibleA(vector<long long> pairOr, vector<long long> pairSum) {
-            int n=pairOr.size()+1;
-            bool ok = 1;
-            rep(i, n-1) {
-                if (pairSum[i] < pairOr[i]) ok = 0;
-            }
-            rep(i, 63) {
-                int R[64][2];
-                rep(i, 64) rep(j, 2) R[i][j] = 0;
-                R[1][0] = R[1][1] = 1;
-                repi(j, 1, n) {
-                    rep(b, 2) {
-                        if (R[j][b]==0) continue;
-                        bool both = ((pairSum[j-1]-pairOr[j-1])&(1LL<<i))!=0;
-                        bool any = (pairOr[j-1]&(1LL<<i)) != 0;
-                        if (both&&!any) continue;
-                        rep(b2, 2) {
-                            if (both&&(b==0||b2==0)) continue;
-                            if (!both&&(b==1||b2==1)) continue;
-                            if (any&&(b==0||b2==0)) continue;
-                            if (!any&&(b==1||b2==1)) continue;
-                            R[j+1][b2] = 1;
-                        }
-                    }
-                } 
-                if (!R[n][0]&&!R[n][1])
-                    ok=0;
-            }
-            if (ok) 
-                return "Possible";
-            else 
-                return "Impossible";
-        }
         string isPossible(vector<long long> o, vector<long long> s) {
             ll n = o.size();
             vll a(n);
@@ -93,8 +60,6 @@ class OrAndSum {
                     x.pb(!!(o[i] & (1ll<<d)));
                     y.pb(!!(a[i] & (1ll<<d)));
                 }
-//                cout << x << endl;
-//                cout << y << endl;
                 rep(i, x.size()) {
                     if (x[i] == 0 && y[i] == 1) {
                         return "Impossible";
