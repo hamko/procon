@@ -46,9 +46,9 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 #define rand randxor
 #define ldout fixed << setprecision(40) 
 
-#define EPS (double)1e-14;
-#define INF (ll)1e18;
-#define mo  (ll)(1e9+7);
+#define EPS (double)1e-14
+#define INF (ll)1e18
+#define mo  (ll)(1e9+7)
 
 int main(void) {
     ll n; cin >> n;
