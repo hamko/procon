@@ -50,9 +50,62 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 #define INF (ll)1e18;
 #define mo  (ll)(1e9+7);
 
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+ll input(ll c) {
+#if 0
+    ll x; cin >> x; return x;
+#else 
+    return rand() % c + 1;
+#endif
+}
+
+ll solve(ll n, ll q, ll c) {
+    vll a(n);
+    rep(_, q) {
+        ll x; x = input(c);
+        cout << x << "#x"<<endl;
+        ll i_org = n * (x - 1) / c;
+        ll i;
+        i = i_org;
+        for (; i < n; i++) {
+            if (a[i] > x || a[i] == 0) {
+                a[i] = x;
+                cout << i << endl;
+                goto SKIP;
+            }
+        }
+        i = i_org;
+        for (; i >= 0; i--) {
+            if (a[i] < x || a[i] == 0) {
+                a[i] = x;
+                cout << i << endl;
+                goto SKIP;
+            }
+        }
+        SKIP:;
+        ll faf = 1;
+        cout << a << endl;
+        rep(i, n) {
+            faf &= a[i] != 0;
+        }
+        if (faf) {
+            break;
+        }
+    }
+    rep(i, n) {
+        assert(a[i]);
+    }
 
     return 0;
+}
+
+int main(void) { 
+    ll n = 10;
+    ll c = 5;
+    ll m = n * (c/2);
+    solve(n, m, c);
+    /*
+    ll n, q, c; cin >> n >> q >> c;
+    solve(n, q, c);
+    return 0;
+    */
 }

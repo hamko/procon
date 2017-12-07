@@ -51,8 +51,19 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 #define mo  (ll)(1e9+7);
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll k, p; cin >> k >> p;
+    ll ret = 0;
+    repi(i, 1, k+1) {
+        string s = to_string(i);
+        string t = s; reverse(all(t));
+        s += t;
+        ll tmp = 1;
+        rep(i, s.length()) {
+            (ret += tmp * (s[i] - '0')) %= p;
+            (tmp *= 10) %= p;
+        }
+    }
+    cout << ret % p << endl;
 
     return 0;
 }
