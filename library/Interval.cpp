@@ -51,6 +51,14 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 #define mo  (ll)(1e9+7)
 
 // 閉区間なので注意！
+//
+// (0) 初めは数直線は全て白
+// (1) 数直線[l, r]を黒く塗る
+// (2) 数直線[l, r]を白く塗る
+// (3) 黒く塗られた長さを答える
+// (4) 黒く塗られた線の連結成分数を答える
+//
+// を全てO(log n)以下で行う
 template <typename T>
 class Interval {
     public:
