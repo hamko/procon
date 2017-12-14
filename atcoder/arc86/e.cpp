@@ -50,141 +50,150 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-// 閉区間なので注意！
-//
-// (0) 初めは数直線は全て白
-// (1) 数直線[l, r]を黒く塗る
-// (2) 数直線[l, r]を白く塗る
-// (3) 黒く塗られた長さを答える
-// (4) 黒く塗られた線の連結成分数を答える
-//
-// を全てO(log n)以下で行う
-template <typename T>
-class Interval {
-    public:
-        set<pair<T, T>> interval; 
-        Interval(void) {}
+template<int MOD>
+struct ModInt {
+    static const int Mod = MOD;
+    unsigned x;
+    ModInt() : x(0) {}
+    ModInt(signed sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+    ModInt(signed long long sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+    int get() const { return (int)x; }
 
-        // 区間[l, r]を追加する
-        void add(T l, T r) {
-            if (l >= r) return;
-            auto it = interval.lower_bound(pair<T, T>(l, -INF));
-            while (it != interval.end()) {
-                if (!(r < it->se || l > it->fi)) {
-                    if (it->se <= l && r <= it->fi) { // ----(--)----
-                        return;
-                    } else if (it->se <= l && l <= it->fi) { // -----(--    )
-                        auto tmp = *it;
-                        interval.erase(it);
-                        add(tmp.se, r);
-                        return;
-                    } else if (it->se <= r && r <= it->fi) { // (   --)-----
-                        auto tmp = *it; interval.erase(it); tmp.se = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        return;
-                    } else if (l <= it->se && it->fi <= r) { // (  ----  )
-                        interval.erase(it);
-                        add(l, r);
-                        return;
-                    } else {
-                        assert(0);
-                    }
-                } else {
-                    break;
-                }
-            }
-            interval.insert(pair<T, T>(r, l));
-        }
+    ModInt &operator+=(ModInt that) { if((x += that.x) >= MOD) x -= MOD; return *this; }
+    ModInt &operator-=(ModInt that) { if((x += MOD - that.x) >= MOD) x -= MOD; return *this; }
+    ModInt &operator*=(ModInt that) { x = (unsigned long long)x * that.x % MOD; return *this; }
+    ModInt &operator/=(ModInt that) { return *this *= that.inverse(); }
 
-        // 区間[l, r]を消す
-        void erase(T l, T r) {
-            if (l >= r) return;
-            auto it = interval.lower_bound(pair<T, T>(l, -INF));
-            while (it != interval.end()) {
-                if (it->fi == l) {
-                    it++;
-                    continue;
-                }
-                if (!(r < it->se || l > it->fi)) {
-                    if (it->se <= l && r <= it->fi) { // ----(--)----
-                        auto tmp = *it; T itfi = it->fi; interval.erase(it); tmp.fi = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        add(r, itfi);
-                        return;
-                    } else if (it->se <= l && l <= it->fi) { // -----(--    )
-                        auto tmp = *it; T itfi = it->fi; interval.erase(it); tmp.fi = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        erase(itfi, r);
-                        return;
-                    } else if (it->se <= r && r <= it->fi) { // (   --)-----
-                        auto tmp = *it; interval.erase(it); tmp.se = r; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        return;
-                    } else if (l <= it->se && it->fi <= r) { // (  ----  )
-                        T tmp_r = it->fi;
-                        interval.erase(it);
-                        erase(tmp_r, r);
-                        return;
-                    } else {
-                        assert(0);
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-        // 区間の長さを答える
-        T length(void) {
-            T ret = 0;
-            for (auto x : interval) {
-                ret += x.fi - x.se;
-            }
-            return ret;
-        }
-        // 区間の数を答える
-        int num(void) {
-            return interval.size();
-        }
-        // 点xが区間に含まれるかを判定
-        bool contain(T x) {
-            auto it = interval.lower_bound(pair<T, T>(x, -INF));
-            return it->se <= x && x <= it->fi;
-        }
+    ModInt operator+(ModInt that) const { return ModInt(*this) += that; }
+    ModInt operator-(ModInt that) const { return ModInt(*this) -= that; }
+    ModInt operator*(ModInt that) const { return ModInt(*this) *= that; }
+    ModInt operator/(ModInt that) const { return ModInt(*this) /= that; }
 
-        // デバッグ出力
-        void printInterval(void) {
-            for (auto x : interval) {
-                cout << "[" << x.se << ", " << x.fi << "], ";
-            }
-            cout << endl;
-            T prev = -INF-10;
-            for (auto x : interval) {
-                assert(prev < x.se);
-                assert(x.se < x.fi);
-                prev = x.fi;
-            }
+    ModInt inverse() const {
+        signed a = x, b = MOD, u = 1, v = 0;
+        while(b) {
+            signed t = a / b;
+            a -= t * b; std::swap(a, b);
+            u -= t * v; std::swap(u, v);
         }
+        if(u < 0) u += Mod;
+        ModInt res; res.x = (unsigned)u;
+        return res;
+    }
+
+    bool operator==(ModInt that) const { return x == that.x; }
+    bool operator!=(ModInt that) const { return x != that.x; }
+    ModInt operator-() const { ModInt t; t.x = x == 0 ? 0 : Mod - x; return t; }
 };
+template<int MOD> ModInt<MOD> operator^(ModInt<MOD> a, unsigned long long k) {
+    ModInt<MOD> r = 1;
+    while(k) {
+        if(k & 1) r *= a;
+        a *= a;
+        k >>= 1;
+    }
+    return r;
+}
+typedef ModInt<1000000007> mint;
+typedef vector<mint> vmint;
+ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
 
+
+ll n;
+vvll g;
+
+vll d;
+vll visited;
+void dfs(ll v, ll p, ll c) {
+    if (visited[v]) return;
+    visited[v] = 1;
+    d[c]++;
+    for (auto x : g[v]) if (x != p) {
+        dfs(x, v, c+1);
+    }
+}
+vll p2;
+mint dp[3000][3];
+ll cyc = 0;
+void dfs2(ll v, ll p, ll c) {
+    if (g[v].size() == 1) {
+        dp[v][0] = dp[v][1] = 0;
+        return;
+    }
+
+    dp[v][1] = 0;
+
+    vector<mint> t0, t1;
+    mint cnum = 0;
+    for (auto x : g[v]) if (x != p) {
+        t0.pb(dp[x][0]);
+        t1.pb(dp[x][1]);
+        cnum += dp[x][2];
+    }
+    cout << v << " " << t0 << " " << t1 << endl;
+    mint p0 = 1;
+    rep(i, t0.size()) {
+        p0 *= t0[i];
+    }
+    mint ret = 0;
+    rep(i, t1.size()) {
+        ret += p0 / t0[i] * t1[i];
+    }
+    dp[v][1] = ret;
+    dp[v][0] = (mint(p2[cnum.x]) - ret);
+    dp[v][2] = cnum + 1;
+    for (auto x : g[v]) if (x != p) {
+        dfs2(x, v, c+1);
+    }
+}
 
 int main(void) {
-    {
-        Interval<ll> in;
-        in.add(1, 9); in.printInterval();
-        in.add(1, 13); in.printInterval();
-        in.add(12, 15); in.printInterval();
-        in.add(3, 13); in.printInterval();
-        in.erase(-1, 3); in.printInterval();
-        in.erase(13, 17); in.printInterval();
-        in.erase(5, 7); in.printInterval();
+    cin >> n;
+    n++;
+    assert(n < 2010);
+    d = vll(n+10);
+    g = vvll(n);
+    vll a(n-1); cin >> a;
+    rep(i, n-1) {
+        g[i+1].pb(a[i]);
+        g[a[i]].pb(i+1);
     }
-    {
-        Interval<ll> in;
-        while (1) {
-            ll c; cin >> c;
-            ll l, r; cin >> l >> r;
-            if (c == 1) 
-                in.add(l, r);
-            else
-                in.erase(l, r);
-            in.printInterval();
+
+    p2.pb(1);
+    rep(i, 1e6) {
+        p2.pb((p2.back()*2ll)%mo);
+    }
+
+    visited = vll(n+10);
+    dfs(0, -1, 0);
+    visited = vll(n+10);
+
+    rep(i, n) {
+        dp[i][0] = 1;
+        dp[i][1] = 1;
+        dp[i][2] = 1;
+    }
+    mint ret = 0;
+    rep(i, n+1) {
+        rep(j, n) {
+            cout << dp[j][0] <<  " " <<  dp[j][1] <<  " "<< dp[j][2] <<  " "  << endl;
         }
+        dfs2(0, -1, 0);
+        cyc++;
+        ret += dp[i][1];
     }
+    cout << ret << endl;
+
+    /*
+    ll ret = 0;
+    for (auto x : d) {
+        if (x == 0) break;
+        cout << x << endl;
+        (ret += p2[n-x] * p2[x-1]) %= mo;
+    }
+    cout << ret % mo<< endl;
+    */
+
+
     return 0;
 }
