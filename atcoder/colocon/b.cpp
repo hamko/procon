@@ -41,77 +41,29 @@ string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
 size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
-struct init_{init_(){ /*ios::sync_with_stdio(false); cin.tie(0);*/ gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
+struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521288629,w=88675123; uint32_t t; t=(x^(x<<11));x=y;y=z;z=w; return( w=(w^(w>>19))^(t^(t>>8)) ); }
 #define rand randxor
 #define ldout fixed << setprecision(40) 
 
-#define EPS (double)1e-14;
-#define INF (ll)1e18;
-#define mo  (ll)(1e9+7);
-
-vector<ld> a(100010);
-string f0 = "What are you doing at the end of the world? Are you busy? Will you save us?";
-string f11 = "What are you doing while sending \"";
-string f12 = "\"? Are you busy? Will you send \"";
-string f13 = "\"?";
-
-string test = "What are you doing while sending \"What are you doing at the end of the world? Are you busy? Will you save us?\"? Are you busy? Will you send \"What are you doing at the end of the world? Are you busy? Will you save us?\"?.................";
-
-
-char calc(ll n0, ll k0) {
-    stack<P> q;
-    q.push(P(n0, k0));
-    char c = -1;
-    while (q.size()) {
-        auto x = q.top(); q.pop();
-        ll n, k; n = x.fi, k = x.se;
-        if (a[n] <= k) {
-            return '.';
-        }
-        if (n == 0) {
-            if (k < f0.length()) {
-                return f0[k];
-            } else {
-                return '.';
-            }
-        } else {
-            if (k < f11.length()) {
-                return f11[k];
-            } else if (k < f11.length() + a[n-1]) {
-                q.push(P(n-1, k-f11.length()));
-                continue;
-            } else if (k < f11.length() + a[n-1] + f12.length()) {
-                return f12[k-f11.length()-a[n-1]];
-            } else if (k < f11.length() + a[n-1] + f12.length() + a[n-1]) {
-                q.push(P(n-1, k-f11.length()-a[n-1]-f12.length()));
-                continue;
-            } else {
-                return f13[k-f11.length()-a[n-1]-f12.length()-a[n-1]];
-            }
-        }
-    }
-    return c;
-}
+#define EPS (double)1e-14
+#define INF (ll)1e18
+#define mo  (ll)(1e9+7)
 
 int main(void) {
-    a[0] = f0.length();
-    rep(i, a.size()-1) {
-        a[i+1] = f11.length() + f12.length() + f13.length() + a[i] * 2ll;
-    }
+    ll n, x;cin>>n>>x;
+    string s; cin >> s;
+    vll t(n);cin>>t;
+    ll ret = 0;
+    rep(i, n) {
+        if (s[i] == '0') {
+            ret += t[i];
+        } else {
+            ret += min(x, t[i]);
 
-    /*
-    rep(i, test.size()) {
-        cout << i << " : " << test[i] << " " << calc(1, i) << endl;
-        assert(test[i] == calc(1, i));
+        }
     }
-    */
-    ll q; cin >> q;
-    rep(_, q) {
-        ll n0, k0; cin >> n0 >> k0; k0--;
-        cout << calc(n0, k0);
-    }
-    cout << endl;
+    cout << ret << endl;
 
     return 0;
 }

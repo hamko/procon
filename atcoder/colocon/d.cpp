@@ -41,77 +41,91 @@ string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
 size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
-struct init_{init_(){ /*ios::sync_with_stdio(false); cin.tie(0);*/ gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
+struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521288629,w=88675123; uint32_t t; t=(x^(x<<11));x=y;y=z;z=w; return( w=(w^(w>>19))^(t^(t>>8)) ); }
 #define rand randxor
 #define ldout fixed << setprecision(40) 
 
-#define EPS (double)1e-14;
-#define INF (ll)1e18;
-#define mo  (ll)(1e9+7);
-
-vector<ld> a(100010);
-string f0 = "What are you doing at the end of the world? Are you busy? Will you save us?";
-string f11 = "What are you doing while sending \"";
-string f12 = "\"? Are you busy? Will you send \"";
-string f13 = "\"?";
-
-string test = "What are you doing while sending \"What are you doing at the end of the world? Are you busy? Will you save us?\"? Are you busy? Will you send \"What are you doing at the end of the world? Are you busy? Will you save us?\"?.................";
+#define EPS (double)1e-14
+#define INF (ll)1e18
+#define mo  (ll)(1e9+7)
 
 
-char calc(ll n0, ll k0) {
-    stack<P> q;
-    q.push(P(n0, k0));
-    char c = -1;
-    while (q.size()) {
-        auto x = q.top(); q.pop();
-        ll n, k; n = x.fi, k = x.se;
-        if (a[n] <= k) {
-            return '.';
-        }
-        if (n == 0) {
-            if (k < f0.length()) {
-                return f0[k];
-            } else {
-                return '.';
-            }
-        } else {
-            if (k < f11.length()) {
-                return f11[k];
-            } else if (k < f11.length() + a[n-1]) {
-                q.push(P(n-1, k-f11.length()));
-                continue;
-            } else if (k < f11.length() + a[n-1] + f12.length()) {
-                return f12[k-f11.length()-a[n-1]];
-            } else if (k < f11.length() + a[n-1] + f12.length() + a[n-1]) {
-                q.push(P(n-1, k-f11.length()-a[n-1]-f12.length()));
-                continue;
-            } else {
-                return f13[k-f11.length()-a[n-1]-f12.length()-a[n-1]];
-            }
-        }
-    }
-    return c;
+// dp[i][j] = i個分割して[0, j)を最適に分けた場合の最小コスト
+// dp[i+1][j] = min_{k<j}(dp[i][j] + cost[k][j]) 
+// dp[i][j] = min_{k<j}(dp[i-1][j] + cost[k][j]) 
+ll dp[5010][5010];
+ll n, x;
+vll t;
+// cost[i][j] = [i, j)を同じゴンドラに詰めた時のコスト
+ll cost(ll k, ll h) {
+    return -min(x, t[h]-t[k]);
 }
 
-int main(void) {
-    a[0] = f0.length();
-    rep(i, a.size()-1) {
-        a[i+1] = f11.length() + f12.length() + f13.length() + a[i] * 2ll;
+// dp[i][l, r)を更新する
+// この時、遷移kが[lo, up)に入っていることが事前にわかっているとする。
+void rec(ll i, ll l, ll r, ll lo, ll up) {
+    if (l == r) return;
+//    assert(lo < up);
+    ll j = (l + r) / 2;
+//    cout << l << " " << r << " " << j << endl;
+    ll& ret = dp[i][j];
+    ll kmin = -1;
+    // i個えらんで最後がjである　
+    repi(k, lo, up) {
+//        cout << i-1 << " " << j << " " << k << " : " << dp[i-1][k] + cost(k, j-1) << endl;
+        if (ret > dp[i-1][k] + cost(k, j)) {
+            ret = dp[i-1][k] + cost(k, j);
+            kmin = k;
+        }
     }
-
+//    cout << i << " " << j << " " << ret << " : lr" << lo << " " << up<< "##############"<< endl;
     /*
-    rep(i, test.size()) {
-        cout << i << " : " << test[i] << " " << calc(1, i) << endl;
-        assert(test[i] == calc(1, i));
+    cout << "#" <<endl;
+    cout << i << " "<< l << " " << r << " " << lo << " " << up << endl;
+    cout << j << endl;
+    cout << kmin << endl;
+    */
+    // [l, j), [j, j+1), [j+1, r)に分解
+    rec(i, l, j, lo, kmin+1);
+    rec(i, j+1, r, kmin, up);
+}
+int main(void) {
+    cin >> n >> x;
+    t.pb(-INF);
+    rep(i, n) {
+        ll tmp; cin >> tmp;
+        t.pb(tmp);
+    }
+//    cout << t << endl;
+    n = t.size();
+
+    rep(i, n+1) rep(j, n+1) {
+        dp[i][j] = INF;
+    }
+    dp[0][0] = 0;
+    repi(i, 1, n+1) 
+        rec(i, 0, n, 0, n);
+    /*
+    cout << "DP" << endl;
+    rep(i, m+1) {
+        rep(j, n+1) {
+            cout << dp[i][j] << " ";
+        }
+        cout << endl;
     }
     */
-    ll q; cin >> q;
-    rep(_, q) {
-        ll n0, k0; cin >> n0 >> k0; k0--;
-        cout << calc(n0, k0);
+
+
+    repi(i, 1, n) {
+        ll ret = INF;
+        rep(j, n+1) {
+            chmin(ret, dp[i][j]);
+        }
+        cout << -ret << endl;
     }
-    cout << endl;
+
+
 
     return 0;
 }

@@ -41,77 +41,88 @@ string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
 size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
-struct init_{init_(){ /*ios::sync_with_stdio(false); cin.tie(0);*/ gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
+struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521288629,w=88675123; uint32_t t; t=(x^(x<<11));x=y;y=z;z=w; return( w=(w^(w>>19))^(t^(t>>8)) ); }
 #define rand randxor
 #define ldout fixed << setprecision(40) 
 
-#define EPS (double)1e-14;
-#define INF (ll)1e18;
-#define mo  (ll)(1e9+7);
+#define EPS (double)1e-14
+#define INF (ll)1e18
+#define mo  (ll)(1e9+7)
 
-vector<ld> a(100010);
-string f0 = "What are you doing at the end of the world? Are you busy? Will you save us?";
-string f11 = "What are you doing while sending \"";
-string f12 = "\"? Are you busy? Will you send \"";
-string f13 = "\"?";
-
-string test = "What are you doing while sending \"What are you doing at the end of the world? Are you busy? Will you save us?\"? Are you busy? Will you send \"What are you doing at the end of the world? Are you busy? Will you save us?\"?.................";
-
-
-char calc(ll n0, ll k0) {
-    stack<P> q;
-    q.push(P(n0, k0));
-    char c = -1;
-    while (q.size()) {
-        auto x = q.top(); q.pop();
-        ll n, k; n = x.fi, k = x.se;
-        if (a[n] <= k) {
-            return '.';
-        }
-        if (n == 0) {
-            if (k < f0.length()) {
-                return f0[k];
-            } else {
-                return '.';
-            }
+ll x; 
+// s = {x_l, x_u, t_0}
+vll simulate(vll s, ll dt, ll dir) {
+    ll xl = s[0], xu = s[1], t0 = s[2];
+    if (dir == 0) { // 下がる
+        if (dt > xl) {
+            t0 = t0 + (dt - xl);
+            xl = 0;
+            xu = max(0ll, xu - dt);
         } else {
-            if (k < f11.length()) {
-                return f11[k];
-            } else if (k < f11.length() + a[n-1]) {
-                q.push(P(n-1, k-f11.length()));
-                continue;
-            } else if (k < f11.length() + a[n-1] + f12.length()) {
-                return f12[k-f11.length()-a[n-1]];
-            } else if (k < f11.length() + a[n-1] + f12.length() + a[n-1]) {
-                q.push(P(n-1, k-f11.length()-a[n-1]-f12.length()));
-                continue;
-            } else {
-                return f13[k-f11.length()-a[n-1]-f12.length()-a[n-1]];
-            }
+//            t0 = t0;
+            xl = xl - dt;
+            xu = xu - dt;
+        } 
+    } else { // 上がる
+        if (dt > x - xu) {
+//            t0 = t0;
+            xl = min(x, xl + dt);
+            xu = x;
+        } else {
+//            t0 = t0;
+            xl = xl + dt;
+            xu = xu + dt;
         }
     }
-    return c;
+    if (xu == xl) {
+        t0 = INF;
+    }
+    return {xl, xu, t0};
+}
+
+ll get(vll s, ll a) {
+    if (s[2] == INF) {
+        return s[0];
+    } else {
+        if (a <= s[2]) {
+            return s[0];
+        } else {
+            return min(s[0]+a-s[2], s[1]);
+        }
+    }
 }
 
 int main(void) {
-    a[0] = f0.length();
-    rep(i, a.size()-1) {
-        a[i+1] = f11.length() + f12.length() + f13.length() + a[i] * 2ll;
-    }
-
-    /*
-    rep(i, test.size()) {
-        cout << i << " : " << test[i] << " " << calc(1, i) << endl;
-        assert(test[i] == calc(1, i));
-    }
-    */
+    cin >> x;
+    ll k; cin >> k;
+    vll r(k); cin >> r; r.pb(INF); k++; reverse(all(r));
     ll q; cin >> q;
+
+    vll s = {0, x, 0};
+    ll now = 0;
+    ll dir = 0;
     rep(_, q) {
-        ll n0, k0; cin >> n0 >> k0; k0--;
-        cout << calc(n0, k0);
+        ll t, a; cin >> t >> a;
+//        cout << _ << " " << now << " " << s << " : " << t << " " << a << endl;
+
+        while (1) {
+            ll target = r.back();
+//            cout << _ << " " << now << " " << s << " : " << target << endl;
+            if (target <= t) {
+                s = simulate(s, target - now, dir);
+                now = target;
+                dir = !dir;
+                r.pop_back();
+            } else {
+                break;
+            }
+        }
+        s = simulate(s, t - now, dir);
+        now = t;
+//        cout << _ << " " << now << " " << s << " : " << endl;
+        cout << get(s, a) << endl;
     }
-    cout << endl;
 
     return 0;
 }

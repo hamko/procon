@@ -51,8 +51,17 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 #define mo  (ll)(1e9+7);
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll n, q; cin >> n >> q;
+    string s; cin >> s;
+    rep(_, q) {
+        ll l, r; char c, d; cin >> l >> r >> c >> d;
+        repi(i, l-1, r) {
+            if (s[i] == c) {
+                s[i] = d;
+            }
+        }
+    }
+    cout << s << endl;
 
     return 0;
 }
