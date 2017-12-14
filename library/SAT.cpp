@@ -555,6 +555,7 @@ public:
 }
 // SATソルバ
 // 何SATでも解ける
+// (x1 or x2) and (x3 or x4 or x6) and ...
 //
 // 使い方
 // togasat::Solver sat(n);
