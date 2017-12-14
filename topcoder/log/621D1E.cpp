@@ -161,31 +161,13 @@ class Interval {
 
 class RadioRange {
     public:
-        double RadiusProbability(vector <int> x_, vector <int> y_, vector <int> r_, int z_) {
-            ll n = x_.size();
-            vector<double> x, y, r; rep(i, n) x.pb(x_[i]), y.pb(y_[i]), r.pb(r_[i]);
-            double z = z_;
+        double RadiusProbability(vector <int> x, vector <int> y, vector <int> r, int z) {
             Interval<double> in;
-            rep(i, n) {
-                double d = sqrt(x[i]*1.0*x[i]+y[i]*1.0*y[i]);
-                in.add(max(0.0, d-r[i]), min(z, d+r[i]));
-                cout << max(0.0, d-r[i]) << " " <<min(z, d+r[i]) <<endl;;
-                in.printInterval();
-                /*
-                if (d < r[i]) {
-                    in.add(0, r[i] + d);
-                } else {
-                    in.add(d - r[i], d + r[i]);
-                }
-                */
+            rep(i, x.size()) {
+                double d = sqrt(x[i]*1.*x[i]+y[i]*1.*y[i]);
+                in.add(max<double>(0., d-r[i]), min<double>(z, d+r[i]));
             }
-//            in.printInterval();
-            /*
-            in.erase(-INF, 0);
-            in.erase(z, INF);
-            in.printInterval();
-            */
-            return (z - in.length()) / z;
+            return (z * 1. - in.length()) * 1. / z;
         }
 };
 
