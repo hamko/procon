@@ -50,141 +50,139 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-// 閉区間なので注意！
-//
-// (0) 初めは数直線は全て白
-// (1) 数直線[l, r]を黒く塗る
-// (2) 数直線[l, r]を白く塗る
-// (3) 黒く塗られた長さを答える
-// (4) 黒く塗られた線の連結成分数を答える
-//
-// を全てO(log n)以下で行う
-template <typename T>
-class Interval {
-    public:
-        set<pair<T, T>> interval; 
-        Interval(void) {}
+ll k, n; 
+vector<string> s;
+ll dup = 0;
 
-        // 区間[l, r]を追加する
-        void add(T l, T r) {
-            if (l >= r) return;
-            auto it = interval.lower_bound(pair<T, T>(l, -INF));
-            while (it != interval.end()) {
-                if (!(r < it->se || l > it->fi)) {
-                    if (it->se <= l && r <= it->fi) { // ----(--)----
-                        return;
-                    } else if (it->se <= l && l <= it->fi) { // -----(--    )
-                        auto tmp = *it;
-                        interval.erase(it);
-                        add(tmp.se, r);
-                        return;
-                    } else if (it->se <= r && r <= it->fi) { // (   --)-----
-                        auto tmp = *it; interval.erase(it); tmp.se = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        return;
-                    } else if (l <= it->se && it->fi <= r) { // (  ----  )
-                        interval.erase(it);
-                        add(l, r);
-                        return;
-                    } else {
-                        assert(0);
-                    }
-                } else {
-                    break;
-                }
-            }
-            interval.insert(pair<T, T>(r, l));
-        }
-
-        // 区間[l, r]を消す
-        void erase(T l, T r) {
-            if (l >= r) return;
-            auto it = interval.lower_bound(pair<T, T>(l, -INF));
-            while (it != interval.end()) {
-                if (it->fi == l) {
-                    it++;
-                    continue;
-                }
-                if (!(r < it->se || l > it->fi)) {
-                    if (it->se <= l && r <= it->fi) { // ----(--)----
-                        auto tmp = *it; T itfi = it->fi; interval.erase(it); tmp.fi = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        add(r, itfi);
-                        return;
-                    } else if (it->se <= l && l <= it->fi) { // -----(--    )
-                        auto tmp = *it; T itfi = it->fi; interval.erase(it); tmp.fi = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        erase(itfi, r);
-                        return;
-                    } else if (it->se <= r && r <= it->fi) { // (   --)-----
-                        auto tmp = *it; interval.erase(it); tmp.se = r; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        return;
-                    } else if (l <= it->se && it->fi <= r) { // (  ----  )
-                        T tmp_r = it->fi;
-                        interval.erase(it);
-                        erase(tmp_r, r);
-                        return;
-                    } else {
-                        assert(0);
-                    }
-                } else {
-                    break;
-                }
+bool check(string& t) {
+//    cout << t <<"#t"<< endl;
+    rep(i, k) {
+        vll pos;
+        rep(j, n) {
+            if (s[i][j] != t[j]) {
+                pos.pb(j);
+                if (pos.size() >= 2) break;
             }
         }
-        // 区間の長さを答える
-        T length(void) {
-            T ret = 0;
-            for (auto x : interval) {
-                ret += x.fi - x.se;
+        if (pos.size() == 0) {
+            if (dup) {
+                continue;
+            } else {
+                return 0;
             }
-            return ret;
-        }
-        // 区間の数を答える
-        int num(void) {
-            return interval.size();
-        }
-        // 点xが区間に含まれるかを判定
-        bool contain(T x) {
-            auto it = interval.lower_bound(pair<T, T>(x, -INF));
-            return it->se <= x && x <= it->fi;
-        }
-
-        // デバッグ出力
-        void printInterval(void) {
-            for (auto x : interval) {
-                cout << "[" << x.se << ", " << x.fi << "], ";
+        } else if (pos.size() == 1) {
+            return 0;
+        } else if (pos.size() == 2) {
+            if (t[pos[0]] == s[i][pos[1]] && t[pos[1]] == s[i][pos[0]]) {
+                continue;
+            } else {
+                return 0;
             }
-            cout << endl;
-            T prev = -INF-10;
-            for (auto x : interval) {
-                assert(prev < x.se);
-                assert(x.se < x.fi);
-                prev = x.fi;
-            }
+        } else {
+            return 0;
         }
-};
-
+    }
+    return 1;
+}
 
 int main(void) {
-    {
-        Interval<ll> in;
-        in.add(1, 9); in.printInterval();
-        in.add(1, 13); in.printInterval();
-        in.add(12, 15); in.printInterval();
-        in.add(3, 13); in.printInterval();
-        in.erase(-1, 3); in.printInterval();
-        in.erase(13, 17); in.printInterval();
-        in.erase(5, 7); in.printInterval();
+    cin >> k >> n;
+    s.resize(k);
+    rep(i, k) {
+        cin >> s[i];
     }
-    {
-        Interval<ll> in;
-        while (1) {
-            ll c; cin >> c;
-            ll l, r; cin >> l >> r;
-            if (c == 1) 
-                in.add(l, r);
-            else
-                in.erase(l, r);
-            in.printInterval();
+    std::sort(s.begin(), s.end());
+    s.erase(std::unique(s.begin(), s.end()), s.end());
+    k = s.size();
+    if (k == 1) {
+        swap(s[0][0], s[0][1]);
+        cout << s[0] << endl;
+        return 0;
+    }
+
+
+    vll freq0(26); 
+    rep(j, n) {
+        freq0[s[0][j]-'a']++;
+    }
+    rep(i, k) {
+        vll freq(26); 
+        rep(j, n) {
+            freq[s[i][j]-'a']++;
+        }
+        if (freq0 != freq) {
+            cout << -1 << endl;
+            return 0;
         }
     }
+    for (auto x : freq0) if (x > 1) dup = 1;
+
+    vll pos;
+    string ch;
+    ll found = 1;
+    while (1) {
+        rep(i, n) {
+            if (s[0][i] != s[1][i]) {
+                pos.pb(i);
+                ch +=s[0][i];
+            }
+        }
+        if (pos.size() > 4) {
+            cout << -1 << endl;
+            return 0;
+        } else if (pos.size() >= 3) {
+            found = 1;
+            break;
+        } else if (pos.size() == 2) {
+            ll next= 0;
+            rep(i, k-1) {
+                ll y = 0;
+                rep(j, n) {
+                    if (s[i][j] != s[i+1][j]) {
+                        y++;
+                    }
+                }
+                if (y != 2) {next=1; break;}
+            }
+            if (next) continue;
+            cout << "OK" << endl;
+            rep(i, k-1) {
+                rep(j, n) {
+                    if (s[i][j] != s[i+1][j]) {
+                        if (s[i][j] != ch[0] && s[i][j] != ch[1]) { cout << -1 << endl; return 0;}
+                        if (s[i+1][j] != ch[0] && s[i+1][j] != ch[1]) { cout << -1 << endl; return 0;}
+                    }
+                }
+            }
+            cout << "OK" << endl;
+            return 0;
+        } else if (pos.size() == 1) {
+            cout << -1 << endl;
+            return 0;
+        } else if (pos.size() == 0) {
+            continue;
+        } else {
+            cout << pos.size() << endl;
+            assert(0);
+        }
+    }
+    sort(all(pos));
+
+    vll id(pos.size()); rep(i, pos.size()) id[i] = i;
+
+    do {
+        string tmp = s[0];
+        rep(i, id.size()) {
+            tmp[pos[id[i]]] = ch[i];
+        }
+        cout << tmp << endl;
+        bool ret = check(tmp);
+        if (ret) {
+            cout << tmp << endl;
+            return 0;
+        }
+    } while (next_permutation(all(id)));
+    //    assert(0);
+    cout << -1 << endl;
     return 0;
 }

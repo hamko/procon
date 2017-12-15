@@ -50,141 +50,80 @@ uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-// 閉区間なので注意！
-//
-// (0) 初めは数直線は全て白
-// (1) 数直線[l, r]を黒く塗る
-// (2) 数直線[l, r]を白く塗る
-// (3) 黒く塗られた長さを答える
-// (4) 黒く塗られた線の連結成分数を答える
-//
-// を全てO(log n)以下で行う
-template <typename T>
-class Interval {
-    public:
-        set<pair<T, T>> interval; 
-        Interval(void) {}
-
-        // 区間[l, r]を追加する
-        void add(T l, T r) {
-            if (l >= r) return;
-            auto it = interval.lower_bound(pair<T, T>(l, -INF));
-            while (it != interval.end()) {
-                if (!(r < it->se || l > it->fi)) {
-                    if (it->se <= l && r <= it->fi) { // ----(--)----
-                        return;
-                    } else if (it->se <= l && l <= it->fi) { // -----(--    )
-                        auto tmp = *it;
-                        interval.erase(it);
-                        add(tmp.se, r);
-                        return;
-                    } else if (it->se <= r && r <= it->fi) { // (   --)-----
-                        auto tmp = *it; interval.erase(it); tmp.se = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        return;
-                    } else if (l <= it->se && it->fi <= r) { // (  ----  )
-                        interval.erase(it);
-                        add(l, r);
-                        return;
-                    } else {
-                        assert(0);
-                    }
-                } else {
-                    break;
-                }
-            }
-            interval.insert(pair<T, T>(r, l));
-        }
-
-        // 区間[l, r]を消す
-        void erase(T l, T r) {
-            if (l >= r) return;
-            auto it = interval.lower_bound(pair<T, T>(l, -INF));
-            while (it != interval.end()) {
-                if (it->fi == l) {
-                    it++;
-                    continue;
-                }
-                if (!(r < it->se || l > it->fi)) {
-                    if (it->se <= l && r <= it->fi) { // ----(--)----
-                        auto tmp = *it; T itfi = it->fi; interval.erase(it); tmp.fi = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        add(r, itfi);
-                        return;
-                    } else if (it->se <= l && l <= it->fi) { // -----(--    )
-                        auto tmp = *it; T itfi = it->fi; interval.erase(it); tmp.fi = l; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        erase(itfi, r);
-                        return;
-                    } else if (it->se <= r && r <= it->fi) { // (   --)-----
-                        auto tmp = *it; interval.erase(it); tmp.se = r; if (tmp.se < tmp.fi) interval.insert(tmp);
-                        return;
-                    } else if (l <= it->se && it->fi <= r) { // (  ----  )
-                        T tmp_r = it->fi;
-                        interval.erase(it);
-                        erase(tmp_r, r);
-                        return;
-                    } else {
-                        assert(0);
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-        // 区間の長さを答える
-        T length(void) {
-            T ret = 0;
-            for (auto x : interval) {
-                ret += x.fi - x.se;
-            }
-            return ret;
-        }
-        // 区間の数を答える
-        int num(void) {
-            return interval.size();
-        }
-        // 点xが区間に含まれるかを判定
-        bool contain(T x) {
-            auto it = interval.lower_bound(pair<T, T>(x, -INF));
-            return it->se <= x && x <= it->fi;
-        }
-
-        // デバッグ出力
-        void printInterval(void) {
-            for (auto x : interval) {
-                cout << "[" << x.se << ", " << x.fi << "], ";
-            }
-            cout << endl;
-            T prev = -INF-10;
-            for (auto x : interval) {
-                assert(prev < x.se);
-                assert(x.se < x.fi);
-                prev = x.fi;
-            }
-        }
-};
-
-
+vector<P> ret;
+#define add(i, j) (ret.pb(P(i, j)))
+vll a_org;
 int main(void) {
-    {
-        Interval<ll> in;
-        in.add(1, 9); in.printInterval();
-        in.add(1, 13); in.printInterval();
-        in.add(12, 15); in.printInterval();
-        in.add(3, 13); in.printInterval();
-        in.erase(-1, 3); in.printInterval();
-        in.erase(13, 17); in.printInterval();
-        in.erase(5, 7); in.printInterval();
-    }
-    {
-        Interval<ll> in;
-        while (1) {
-            ll c; cin >> c;
-            ll l, r; cin >> l >> r;
-            if (c == 1) 
-                in.add(l, r);
-            else
-                in.erase(l, r);
-            in.printInterval();
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+
+    a_org=a;
+    ll M = 0, m = 0;
+    ll Mi = 0, mi = 0;
+//    cout << m << " " << M << " " << endl;
+    rep(i, n) {
+        if (M < a[i]) {
+            M = a[i];
+            Mi = i;
+        }
+        if (m > a[i]) {
+            m = a[i];
+            mi = i;
         }
     }
+    ll tar = 0;
+    if (abs(M) > abs(m)) {
+        tar = Mi;
+    } else {
+        tar = mi;
+    }
+//    cout << m << " " << M << " " << endl;
+    if (abs(M) > abs(m)) {
+        rep(i, n) {
+            if (a[i] < 0) {
+                add(tar, i);
+                a[i] += M;
+            }
+        }
+    } else {
+        rep(i, n) {
+            if (a[i] > 0) {
+                add(tar, i);
+                a[i] += m;
+            }
+        }
+    }
+//    cout << a << endl;
+
+    if (abs(M) > abs(m)) {
+        rep(i, n-1) {
+            if (a[i+1] < a[i]) {
+                add(i, i+1);
+                a[i+1] += a[i];
+            }
+        }
+    } else {
+        for (ll i = n-1; i>=1; i--) {
+            if (a[i] < a[i-1]) {
+                add(i, i-1);
+                a[i-1] += a[i];
+            }
+        }
+    }
+//    cout << a << endl;
+
+    assert(ret.size() <= 2 * n);
+    rep(i, ret.size()) {
+        a_org[ret[i].se] +=a_org[ret[i].fi];
+    }
+    rep(i, n-1) {
+        assert(a[i] <= a[i+1]);
+    }
+    cout << ret.size() << endl;
+    rep(i, ret.size()) {
+        cout << ret[i].fi+1 << " " << ret[i].se + 1<< endl;
+
+    }
+
     return 0;
 }
