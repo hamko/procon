@@ -1,0 +1,3 @@
+g++ main.cpp mypng.cpp -lpng
+# ループあり40ms周期
+convert -layers optimize -loop 0 -delay 40 sort/*.png anim.gif
