@@ -48,90 +48,129 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-ll n;
-ll k;
-ll x = 0, y = 0;
-vector<P> ret = {{0, 0}};
-void addX(ll len) {
-    x += len;
-    ret.pb(P(x, y));
-}
-void addY(ll len) {
-    y += len;
-    ret.pb(P(x, y));
-}
-void print(void) {
-    cout << ret.size()-1 << endl;
-    rep(i, ret.size()-1) {
-        cout << ret[i].fi << " " << ret[i].se << endl;
+// [l, r)の値を管理している時の状態をadd, del, outputで管理する。
+// add(i)
+//      i=l-1かi=rが来る。
+//      この後、管理すべき値は[l-1, r)もしくは[l, r+1)になる
+// del(i)
+//      i=lかi=r-1が来る。
+//      この後、管理すべき値は[i+1, r)もしくは[l, r-1)になる
+// output()
+//      今の時点での管理している値を出力する。
+
+// 以下はDQUERYの実装。
+template <typename T, typename OUT>
+class MoState {
+public:
+    ll n; 
+    vector<T> a;
+    MoState(vector<T>& a_) {
+        a = a_;
+        n = a.size();
+
+        freq.resize(1e6+10);
     }
-    assert(ret.size()-1 <= 5000);
-}
-void printOnlyPoint(void) {
-    rep(i, ret.size()) {
-        cout << ret[i].fi << " " << ret[i].se << endl;
+
+    vll freq;
+    ll ret = 0;
+    void add(ll i) {
+        if (freq[a[i]] == 0) ret++;
+        freq[a[i]]++;
     }
-}
-int main(void) {
-    cin >> k;
-    if (k <= 2200) {
-        addY(-1);
-        addX(1);
-        rep(i, k-2) {
-            addY(y < 0 ? 2 : -2);
-            addX(1);
+    void del(ll i) {
+        if (freq[a[i]] == 1) ret--;
+        freq[a[i]]--;
+    }
+    OUT output(void) {
+        return ret;
+    }
+
+};
+
+template <typename T, typename OUT> 
+class Mo {
+public:
+    MoState<T, OUT>* s;
+    function<bool(ll, ll)> f = [&](ll i, ll j) -> bool {
+        ll bi = l[i] / w;
+        ll bj = l[j] / w;
+        if (bi != bj) return bi < bj;
+        if (r[i] == r[j]) return l[i] < l[j];
+        return (bi & 1) ^ (r[i] < r[j]);
+    };
+
+    ll q = 0, w = -1; // q: query size, w: query backet width
+    vll l, r; // query for [l[i], r[i]), where l.size() == q and r.size() == q
+    vll id; // the order of queries
+    void setWidth(ll w_) { w = w_; }
+
+
+    Mo(vector<T>& a_) {
+        s = new MoState<T, OUT>(a_);
+    }
+    void insert(ll li, ll ri) {
+        q++;
+        l.pb(li);
+        r.pb(ri);
+    }
+    void build(void) {
+        assert(q);
+        if (w < 0) w = sqrt(q);
+        id.resize(q);
+        iota(all(id), 0);
+        sort(all(id),f);
+    }
+    
+    ll ptr = 0; // 次にprocessが呼ばれた時に行うべきクエリ
+    ll now_i = 0, now_j = 0;
+    tuple<ll, OUT> process() {
+        if (ptr == q) return mt(-1, -1); 
+        ll target_i = l[id[ptr]], target_j = r[id[ptr]];
+        // ++, --とadd, delの順序が違うのは、半開区間の開閉区間どちらかによる
+        while (now_i > target_i) now_i--, s->add(now_i);
+        while (now_i < target_i) s->del(now_i), now_i++;
+        while (now_j > target_j) now_j--, s->del(now_j);
+        while (now_j < target_j) s->add(now_j), now_j++;
+        return mt(id[ptr++], s->output());
+    }
+    
+    void print(void) {
+        rep(i, q) {
+            cout << l[id[i]] << " " << r[id[i]] << endl;
         }
-        addY(-y);
-        addX(-x);
-        print();
-        return 0;
     }
-    n = k - 2;
-//    ll s = 4;
-    ll s = 500;
-    addY(-2);
-    rep(i, s) {
-//        addX(20);
-        addX(10000);
-        addY(-2);
-//        addX(-20);
-        addX(-10000);
-        addY(-2);
+};
+
+
+int main(int argc, char** argv) {
+    ll n; cin >> n;
+    vll a(n);
+    cin >> a;
+    ll q; cin >> q;
+
+//    Mo<ll/*vector<ll>の静的配列に関する*/,
+//       ll/*ll(ll l, ll r)のクエリを処理する*/> m(a);
+    Mo<ll, ll> m(a);
+    
+    // 幅はデフォルトではsqrt(q)
+    // 調整して設定する場合はsetWidthを使う
+    ll w = 90;
+    m.setWidth(w);
+    rep(_, q) {
+        ll l, r; cin >> l >> r; l--;
+        // 処理すべき半開区間のクエリを追加する
+        m.insert(l, r);
     }
-    addX(-2);
-    addY(4*(s+2));
-//    addX(14);
-    addX(9400);
-    addY(-4*(s+2));
+    m.build();
 
-    n -= 4 * s;
-    while (n >= 4 * s) {
-        addX(-2);
-        addY(4*(s+1));
-        addX(-2);
-        addY(-4*(s+1));
-        n -= 4*s;
+    vll ret(q);
+    rep(_, q) {
+        ll id, out; tie(id, out) = m.process();
+        ret[id] = out;
     }
-
-    addX(-2);
-    addY(2*(n/2)+1);
-    addX(-2);
-    addY(-(2*(n/2)+1));
-
-    if (n % 2 == 0) { 
-        addX(-2);
-        addY(4*s+2);
-        addX(-x);
-    } else {
-        addX(-3);
-        addY(-1);
-        addX(1);
-        addY(4*s+3);
-        addX(-x);
+    rep(_, q) {
+        cout << ret[_] << endl;
     }
-
-//    printOnlyPoint();
-    print();
 
     return 0;
 }

@@ -88,6 +88,7 @@ void constructFactorial(const long long n) {
 // constructFactorialしておけば、n, r=1e7くらいまではいけます
 mint nCr(const long long n, const long long r) {
     if (n < 0 || r < 0) return 0;
+    if (n < r) return 0;
     return fact[n] * rfact[r] * rfact[n-r];
 }
 
