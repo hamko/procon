@@ -81,13 +81,15 @@ class bit {
         int size(void) {
             int ret = 0;
             for (int i = 0; i < len; i++) {
-                ret += __builtin_popcount(a[i]);
+                ret += __builtin_popcountll(a[i]);
             }
             return ret;
         }
+        // this[i] = b
         void set(int i, bool b) {
             a[i>>6] |= (ll)b << (i & 63);
         }
+        // return this[i]
         bool get(int i) const {
             return a[i>>6] & (1ll << (i&63));
         }
@@ -198,13 +200,12 @@ class bit {
         const bool operator[](size_t i) const {
             return get(i);
         }
-        void print(void) {
-            rep(i, len) {
-                cout << bitset<64>(a[len-1-i]) << endl;
-            }
-        }
-
 };
+ostream& operator<<(ostream& os, const bit& b) {
+    for (int i = 0; i < b.len; i++) 
+        os << bitset<64>(b.a[b.len - 1 - i]) << endl;;
+    return os;
+}
 
 int main(void) {
     bit b(100);
@@ -213,7 +214,7 @@ int main(void) {
     b.set(99, 1);
     b.set(63, 1);
     b.set(64, 1);
-    b.print();
+    cout << b << endl;
 
     cout << b.get(0) << endl;
     cout << b.get(1) << endl;
@@ -227,11 +228,11 @@ int main(void) {
         ones.set(i, 1);
     }
 
-    ones.print();
+    cout << ones << endl;
 //    b.OR(ones, 10, 20);
     b.set(15, 1);
     b.flip(10, 20);
-    b.print();
+    cout << b << endl;
 
     
 
