@@ -78,7 +78,7 @@ class bit {
                 a[i] = 0;
             }
         }
-        int size(void) {
+        int count(void) {
             int ret = 0;
             for (int i = 0; i < len; i++) {
                 ret += __builtin_popcountll(a[i]);
