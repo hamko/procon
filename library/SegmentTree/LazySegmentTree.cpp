@@ -59,6 +59,8 @@ public:
     }
 };
 
+// V: 実際に格納、マージされるデータ
+// L: 遅延情報
 template<typename V, typename L> 
 class SegmentTree {
     public:
@@ -66,7 +68,11 @@ class SegmentTree {
     L unitL;
 
     int n = 1;
-    vector<node<V, L>> seg; // seg.size() == 2*n
+
+    // seg.size() == 2*n
+    // seg[0] = [0, n)
+    // seg[k] = seg[2*k+1] seg[2*k+2]
+    vector<node<V, L>> seg; 
     SegmentTree(ll n_) {
         while (n < n_) {
             n *= 2;

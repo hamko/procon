@@ -32,7 +32,7 @@ struct Edge {
     ll cap;
     ll rev; // 残余グラフの対応用
     bool rev_flag = false; // revなら1
-    Edge(int src = 0, int dst = 0, int weight = 0, Weight cap = 1): 
+    Edge(int src = 0, int dst = 0, Weight weight = 0, Weight cap = 1): 
         src(src), dst(dst), weight(weight), cap(cap){ }
 };
 bool operator < (const Edge &e, const Edge &f) {
@@ -888,6 +888,13 @@ Weight minimum_steiner_tree(const vector<ll>& T, const Matrix &g) {
     return ans;
 }
 
+/*
+// !!!!!!!!!!!!!!!!!何故かコストがでかいとバグる
+//
+// 何故かEdmonds KarpもDinicもぶっ壊れている。何でだろう…
+// https://beta.atcoder.jp/contests/arc085/submissions/1961687
+// https://beta.atcoder.jp/contests/arc085/submissions/1961557
+//
 
 // Edmonds-Karp
 // O(E^2 V)．以下の実装では内部で隣接行列を生成するため，O(V^2) の追加コスト
@@ -969,7 +976,11 @@ Weight maximumFlowDinic(const Graph &g, ll s, ll t) {
 }
 
 
+*/
 
+/*
+ * !!!!!!!!!!!!!!!!!これはそもそもセグフォる！！！！！！
+ *
 // Goldberg-Tarjan
 // O(V^2 sqrt(E))
 #undef RESIDUE
@@ -1020,6 +1031,7 @@ Weight maximumFlowGoldbergTarjan(const Graph &g, ll s, ll t) {
     return excess[t];
 }
 
+*/
 
 // Nagamochi-Ibaraki
 // O(V^3), 本当はO(VE + V log V)

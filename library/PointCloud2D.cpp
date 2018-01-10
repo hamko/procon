@@ -420,8 +420,10 @@ public:
         xy.push_back(P(x, y));
     }
     void build(void) {
-        xy.pb(P(INF, INF));
+        xy.pb(P(2ll*INF, 2ll*INF));
         n = xy.size();
+        assert(n < SIZE);
+        assert(SIZE < (1ll<<BITS));
         data = new ll[SIZE];
         sx.resize(n), ty.resize(n);
 
