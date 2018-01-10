@@ -144,11 +144,12 @@ template<int N> char FID<N>::popcount[1<<FID<N>::block];
 // Wavelet Matrix
 /*****************/
 // 長さNで、値域[0, m=2^D)の整数を管理する
-#define ENABLE_SUM
+//#define ENABLE_SUM
 template<class T, int N, int D> class wavelet {
     int n, zs[D];
     FID<N> dat[D];
 public:
+    wavelet(void) { }
 #ifdef ENABLE_SUM
     T raw_data[D+1][N] = {};
     T sum_data[D+1][N+1] = {};
@@ -382,53 +383,93 @@ public:
     // rangemaxk, rangemink, prevvalue, nextvalue, intersectを実装するのが良さそう
 };
 
+#define SIZE 200000
+#define BITS 18
+class PointCloud2D {
+    // デバッグ用
+    ll countBrutal(ll ax, ll ay, ll bx, ll by) {
+        if (ax > bx || ay > by) return 0;
+        ll ret = 0;
+        rep(i, n) { 
+            ret += (ax <= xy[i].fi && xy[i].fi <= bx && ay <= xy[i].se && xy[i].se <= by);
+        }
+        return ret;
+    }
+public:
+    ll n;
+    ll* data;
+    wavelet<ll, SIZE, BITS> w;
+    vector<P> xy;
+    vll sx, ty;
+    map<ll, ll> xs;
+    map<ll, ll> yt;
+
+    void insert(ll x, ll y) {
+        xy.push_back(P(x, y));
+    }
+    void build(void) {
+        xy.pb(P(INF, INF));
+        n = xy.size();
+        data = new ll[SIZE];
+        sx.resize(n), ty.resize(n);
+
+        sort(all(xy), [&](P& x, P& y){return x.se < y.se;});
+        rep(i, n) if (!yt.count(xy[i].se)) {
+            ll tmp = yt.size(); 
+            yt[xy[i].se] = tmp;
+            ty[tmp] = xy[i].se;
+        }
+
+        sort(all(xy));
+        rep(i, n) sx[i] = xy[i].fi;
+        rep(i, n) if (!xs.count(xy[i].fi)) xs[xy[i].fi] = i;
+
+        rep(i, n) {
+            data[i] = yt[xy[i].se];
+        }
+        w = wavelet<ll, SIZE, BITS>(n, data);
+    }
+    // 左下が[ax, ay], 右上が[bx, by]であるような閉矩形領域の点の数
+    ll count(ll ax, ll ay, ll bx, ll by) {
+        if (ax > bx || ay > by) return 0;
+        // ax以上の最小のs
+        ll as = xs.lower_bound(ax)->se;
+        // bx以上の最小のs
+        ll bs = xs.upper_bound(bx)->se;
+        // ay以上の最小のt
+        ll at = yt.lower_bound(ay)->se;
+        // by以上の最小のt
+        ll bt = yt.upper_bound(by)->se; 
+
+        ll ret = w.freq(as, bs, at, bt);
+        /*
+        if (ret != countBrutal(ax, ay, bx, by)) {
+            cout << "HIT " <<  mt(ax, ay, bx, by) << " "<<  mt(as, bs, at, bt) << endl;
+            cout << "yours : " << ret << " v.s. brutal : " << countBrutal(ax, ay, bx, by)<<endl;
+        }
+        */
+        return ret;
+    }
+    PointCloud2D(void) { }
+};
+
 
 int main(void) {
-    {
-        cout << "####FID" << endl;
-        ll n = 1050;
-        bool a[n]; rep(i, n) a[i] = i % 5;
-        FID<2000> fid(n, a);
-        rep(i, 12) cout << fid.count(1, i) << " "; cout << endl;
-
-        fid.print();
+    ll n; cin >> n;
+    PointCloud2D pc;
+    rep(i, n) {
+        ll x, y; cin >> x >> y;
+        pc.insert(x, y);
     }
-    {
-        cout << "####Wavelet" << endl;
-        const ll n = 8;
-        ll a[n] = {1, 1, 2, 1, 1, 5, 8, 5};
-        wavelet<ll, 20/*len*/, 5/*[0, 31)*/> w(n, a);
-        w.print();
-        cout << "at" << endl;
-        rep(i, n) cout << w[i] << " "; cout << endl;
-        cout << "count" << endl;
-        rep(i, n) cout << w.count(1ll, i) << " "; cout << endl;
-        cout << "select" << endl;
-        rep(i, n) cout << w.select(1ll, i) << " "; cout << endl;
-        cout << "rangemax" << endl;
-        cout << w.rangemax(0, n, 2, 7) << endl;
-        cout << "max, min" << endl;
-        cout << w.max(2, 6) << endl;
-        cout << w.min(2, 6) << endl;
-        cout << "list maximum" << endl;
-        rep(i, n+1) 
-            cout << w.list_max(0, n, i) << endl;
-        cout << "kth" << endl;
-        rep(i, n) cout << w.quantile(0, n, i) << " "; cout << endl;
-        cout << "freq" << endl;
-        cout << w.freq(0, n, 2, 8) << endl;
-        cout << "list_freq" << endl;
-        cout << w.list_freq(0, n, 2, 8) << endl;
+    pc.build();
 
-        cout << "sum" << endl; // ENABLE_SUMのdefineが必要。sumクエリはメモリをO(ND)とかなり使う。
-        cout << w.sum(0, n, 2, 7) << endl;
-        cout << w.sum(0, n, 2, 8) << endl;
-        cout << w.sum(0, n, 2, 9) << endl;
-
-        cout << "get_rect" << endl;
-        // TODO
-        
+    cout << "#"<<endl;
+    ll q; cin >> q;
+    rep(_, q) {
+//        cout << _ << endl;
+        ll ax, ay, bx, by; cin >> ax >> ay >> bx >> by;
+        pc.count(ax, ay, bx, by);
+//        cout << pc.count(ax, ay, bx, by) << "#numpoints" << endl;;
     }
-
     return 0;
 }
