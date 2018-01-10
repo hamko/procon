@@ -17,7 +17,7 @@ using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P 
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
-inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; }
+inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; } // これを使うならば、tieとかを消して！！
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -42,150 +42,96 @@ void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs
 size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
 struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
-uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521288629,w=88675123; uint32_t t; t=(x^(x<<11));x=y;y=z;z=w; return( w=(w^(w>>19))^(t^(t>>8)) ); }
-#define rand randxor
 #define ldout fixed << setprecision(40) 
 
 #define EPS (double)1e-14
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
+ll n;
 ll k;
-ll calc(ll n, ll m) {
-    if (n % 2 == 0) return INF;
-    if (m % 2 == 0) return INF;
-    ll x = k - n * m - m - 1;
-    return (x>=0?4+2*(m+n+x):INF);
+ll x = 0, y = 0;
+vector<P> ret = {{0, 0}};
+void addX(ll len) {
+    x += len;
+    ret.pb(P(x, y));
 }
-
-vector<P> traj;
-#define DISP (traj.pb(P(x, y)))
-
-void solveSmall() {
-    ll x = 0, y = 0;
-    DISP;
-    x++;
-    DISP;
-
-    ll dir = -1;
-    rep(i, k-2) {
-        y++;
-        DISP;
-        x += dir*2;
-        DISP;
-        dir *= -1;
+void addY(ll len) {
+    y += len;
+    ret.pb(P(x, y));
+}
+void print(void) {
+    cout << ret.size()-1 << endl;
+    rep(i, ret.size()-1) {
+        cout << ret[i].fi << " " << ret[i].se << endl;
     }
-    y++;
-    DISP;
-    x += dir * 1;
-    DISP;
-
-    rep(i, traj.size()-1) {
-        assert(traj[i].fi == traj[i+1].fi || traj[i].se == traj[i+1].se );
-    }
-    cout << traj.size() << endl;
-    for (auto hoge : traj) {
-        cout << hoge.fi << " " << hoge.se << endl;
+    assert(ret.size()-1 <= 5000);
+}
+void printOnlyPoint(void) {
+    rep(i, ret.size()) {
+        cout << ret[i].fi << " " << ret[i].se << endl;
     }
 }
-
 int main(void) {
     cin >> k;
-    if (k == 2) {
-        cout << 4 << endl;
-        cout << 0 << " " << 0 << endl;
-        cout << 1 << " " << 0 << endl;
-        cout << 1 << " " << 1 << endl;
-        cout << 0 << " " << 1 << endl;
-        return 0;
-    }
-    if (k < 20) {
-        solveSmall();
-        return 0;
-    }
-
-    ll good = INF;
-    ll n0 = -1, m0 = -1;
-    rep(n, 2000) rep(m, 2000) {
-        ll tmp = calc(n, m);
-//        cout << n << " " << m << " " <<  tmp << endl;
-        if (good > tmp) {
-            good = tmp;
-            n0 = n;
-            m0 = m;
+    if (k <= 2200) {
+        addY(-1);
+        addX(1);
+        rep(i, k-2) {
+            addY(y < 0 ? 2 : -2);
+            addX(1);
         }
+        addY(-y);
+        addX(-x);
+        print();
+        return 0;
     }
-//    cout << good << endl;
-    ll n = n0, m = m0;
-
-//    cout << n << " " << m << endl;
-
-    ll x = 0, y = 0;
-    ll dir = -1;
-    rep(i, n) {
-        DISP;
-        y += (m+1)*dir;
-        DISP;
-        x++;
-        dir *= -1;
+    n = k - 2;
+//    ll s = 4;
+    ll s = 500;
+    addY(-2);
+    rep(i, s) {
+//        addX(20);
+        addX(10000);
+        addY(-2);
+//        addX(-20);
+        addX(-10000);
+        addY(-2);
     }
+    addX(-2);
+    addY(4*(s+2));
+//    addX(14);
+    addX(9400);
+    addY(-4*(s+2));
 
-    DISP;
-    y+=m;
-    DISP;
-    x = -1;
-    DISP;
-    y--;
-
-    dir = 1;
-    rep(i, m-1) {
-        DISP;
-        x += dir * (n + 2);
-        DISP;
-        y--;
-        dir *= -1;
-    }
-    y++;
-
-    x--;
-    DISP;
-    y = 0;
-    DISP;
-
-    x++;
-    DISP;
-    assert(x == -1 && y == 0);
-
-
-    y++;
-    DISP; // (-1, 1)
-
-    dir = 1;
-    ll rem = k - n * m - m - 1;
-    rep(i, k - n * m - m - 1) {
-        y++;
-        DISP;
-        x+=dir*2;
-        DISP;
-        dir *= -1;
-    }
-    y++;
-    DISP;
-    x += dir * 1;
-    DISP;
-
-
-    rep(i, traj.size()-1) {
-        assert(traj[i].fi == traj[i+1].fi || traj[i].se == traj[i+1].se );
+    n -= 4 * s;
+    while (n >= 4 * s) {
+        addX(-2);
+        addY(4*(s+1));
+        addX(-2);
+        addY(-4*(s+1));
+        n -= 4*s;
     }
 
-    cout << traj.size() << endl;
-    for (auto hoge : traj) {
-        cout << hoge.fi << " " << hoge.se << endl;
+    addX(-2);
+    addY(2*(n/2)+1);
+    addX(-2);
+    addY(-(2*(n/2)+1));
+
+    if (n % 2 == 0) { 
+        addX(-2);
+        addY(4*s+2);
+        addX(-x);
+    } else {
+        addX(-3);
+        addY(-1);
+        addX(1);
+        addY(4*s+3);
+        addX(-x);
     }
 
+//    printOnlyPoint();
+    print();
 
-//    cout << rem << endl;
-//    cout << calc(n, m) << endl;
     return 0;
 }

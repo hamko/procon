@@ -103,22 +103,37 @@ void printGraphCap(Graph& g) {
 }
 
 // mode
-//
 // 0 : デフォルト。辺だけ表示
 // 1 : 重みweightだけ表示
 // 2 : フロー用。weight, capを表示。
-void vizGraph(Graph& g, int mode = 0, string filename = "out.png") {
+//
+// directed
+// 有向グラフなら1、そうでないなら0
+// 
+void vizGraph(Graph& g, int mode = 0, int directed = 1, string filename = "out.png") {
+   
     ofstream ofs("./out.dot");
-    ofs << "digraph graph_name {" << endl;
+    ofs << (directed ? "di" : "") << "graph graph_name {" << endl;
+    string arrow = (directed ? " -> " : " -- ");
+
+    set<pair<int, int>> used;
     rep(i, g.size()) {
         if (!g[i].size())
             continue;
         rep(j, g[i].size()) {
+            // 多重辺はないと前提
+            if (used.count(pair<int, int>(g[i][j].src, g[i][j].dst))) continue;
+            used.insert(pair<int, int>(g[i][j].src, g[i][j].dst));
+            if (directed == 0) used.insert(pair<int, int>(g[i][j].dst, g[i][j].src));
+
+            // 頂点に名前がついていれば名前を優先して出す
             if (name_server.size()) {
-                ofs << "    " << names[i] << " -> " << names[g[i][j].dst]; 
+                ofs << "    " << names[i] << arrow << names[g[i][j].dst]; 
             } else {
-                ofs << "    " << i << " -> " << g[i][j].dst; 
+                ofs << "    " << i << arrow << g[i][j].dst; 
             }
+
+            // 重みや容量があるならそれも出力
             if (mode == 1) {
                 ofs << " [ label = \"" << g[i][j].weight << "\"];"; 
             } else if (mode == 2) {
@@ -678,6 +693,8 @@ Weight k_shortestPath(const Graph &g, ll s, ll t, ll k) {
 
 // Prim
 // O(E log V)
+// 
+// 与えられるgは無向グラフ
 pair<Weight, Edges> minimumSpanningTree(const Graph &g, ll r = 0) {
     ll n = g.size();
     Edges T;
