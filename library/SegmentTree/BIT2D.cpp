@@ -49,9 +49,6 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define mo  (ll)(1e9+7)
 
 
-const int MAXN = 1000 + 3;
-const int MAXM = 1000 + 3;
-
 // 1-index, 閉区間！！！！
 // initしてからつかってね
 //
@@ -62,9 +59,12 @@ const int MAXM = 1000 + 3;
 // update(x, y, v) : O(log^2 n)
 //      b[x][y] = v
 //
+const int MAXN = 100 + 10;
+const int MAXM = 100 + 10;
 struct BIT{
+    using state = int;
     int n = 0, m = 0;
-    int dat[ MAXN ][ MAXM ] = {};
+    state dat[ MAXN ][ MAXM ] = {};
     void init(int n_, int m_) {
         n = n_;
         m = m_;
@@ -74,14 +74,14 @@ struct BIT{
             for(int j = y; j <= m; j += j & -j) 
                 dat[ i ][ j ] += v;
     }
-    int qsum(int x, int y){
+    state qsum(int x, int y){
         int res = 0;
         for(int i = x; i > 0; i -= i & -i)
             for(int j = y; j > 0; j -= j & -j)
                 res += dat[ i ][ j ];
         return res;
     }
-    int qsum(int x0, int y0, int x1, int y1){
+    state qsum(int x0, int y0, int x1, int y1){
         return qsum( x1, y1 ) - qsum( x0 - 1, y1 ) - qsum( x1, y0 - 1 ) + qsum( x0 - 1, y0 - 1 );
     }
     void print(void) {
