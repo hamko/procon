@@ -383,6 +383,18 @@ public:
     // rangemaxk, rangemink, prevvalue, nextvalue, intersectを実装するのが良さそう
 };
 
+
+// 二次元点群が与えられた時、
+// 閉矩形領域の点群の数え上げをO(log n)で行う。
+// 静的オンラインクエリ。
+//
+// 使い方
+// rep(i, num_of_points) 
+//     pc.insert(x[i], y[i]);
+// pc.build();
+// 
+// cout << pc.count(左下x, 左下y, 右上x, 右上y) << endl; // 閉矩形領域
+//
 #define SIZE 200000
 #define BITS 18
 class PointCloud2D {
@@ -429,7 +441,8 @@ public:
         }
         w = wavelet<ll, SIZE, BITS>(n, data);
     }
-    // 左下が[ax, ay], 右上が[bx, by]であるような閉矩形領域の点の数
+    // 左下が(ax, ay), 右上が(bx, by)であるような閉矩形領域内部の点の数
+    // O(log n)
     ll count(ll ax, ll ay, ll bx, ll by) {
         if (ax > bx || ay > by) return 0;
         // ax以上の最小のs
@@ -463,10 +476,9 @@ int main(void) {
     }
     pc.build();
 
-    cout << "#"<<endl;
+    cout << "#built"<<endl;
     ll q; cin >> q;
     rep(_, q) {
-//        cout << _ << endl;
         ll ax, ay, bx, by; cin >> ax >> ay >> bx >> by;
         pc.count(ax, ay, bx, by);
 //        cout << pc.count(ax, ay, bx, by) << "#numpoints" << endl;;
