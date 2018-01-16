@@ -17,7 +17,7 @@ using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P 
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
-inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; } // これを使うならば、tieとかを消して！！
+inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -48,80 +48,89 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-vll dp(1000, -1);
-ll grundyBrutal(ll n) {
-    if (dp[n] != -1) return dp[n];
-    set<ll> s;
-    s.insert(0); // 次で分割できない状態にできる＝必ず負け状態に到達可能
-    ll x = 0;
-    rep(i, n-1) {
-        x ^= grundyBrutal(n - i - 1);
-        s.insert(x); 
+// 1-index, 閉区間！！！！
+// initしてからつかってね
+//
+// init(n, m)
+//      b[n][m]を作成
+// qsum(x0, y0, x1, y1) : O(log^2 n)
+//      return sum b[x0:x1][y0:y1]
+// update(x, y, v) : O(log^2 n)
+//      b[x][y] = v
+//
+const int MAXN = 2000 + 10;
+const int MAXM = 2000 + 10;
+struct BIT{
+    using state = char;
+    int n = 0, m = 0;
+    state dat[ MAXN ][ MAXM ] = {};
+    void init(int n_, int m_) {
+        n = n_;
+        m = m_;
     }
-    ll mex = 0;
-    while (s.count(mex)) mex++;
-    return dp[n] = mex;
-}
-ll grundy(ll n) {
-    ll tmp = 1;
-    while (!(n & 1ll)) n >>= 1ll, tmp <<= 1ll;
-    return tmp;
-}
-
-struct Trie {
-    int value;
-    Trie *next[2];
-    Trie() { next[0] = 0, next[1] = 0; }
-};
-void add(Trie* v, string& s, ll i) {
-    assert(i<s.length());
-    Trie* next_v; 
-    rep(c, 2) {
-        if (s[i] == c) {
-            if (v->next[c]) {
-                next_v = v->next[c];
-            } else {
-                next_v = v->next[c] = new Trie();
+    void update(int x, int y, int v){
+        for(int i = x; i <= n; i += i & -i)
+            for(int j = y; j <= m; j += j & -j) 
+                dat[ i ][ j ] += v;
+    }
+    state qsum(int x, int y){
+        int res = 0;
+        for(int i = x; i > 0; i -= i & -i)
+            for(int j = y; j > 0; j -= j & -j)
+                res += dat[ i ][ j ];
+        return res;
+    }
+    state qsum(int x0, int y0, int x1, int y1){
+        return qsum( x1, y1 ) - qsum( x0 - 1, y1 ) - qsum( x1, y0 - 1 ) + qsum( x0 - 1, y0 - 1 );
+    }
+    void print(void) {
+        cout <<"####"<<endl;
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                cout << (int)qsum(i, j, i, j) << " ";
             }
+            cout << endl;
         }
     }
-    if (i != s.length()-1) {
-        add(next_v, s, i+1);
-    }
-}
-ll ret = 0;
-void dfs(Trie* v, ll d) {
-    if (!!(v->next[0]) ^ !!(v->next[1]))
-        ret ^= grundy(d);
-    rep(c, 2) if (v->next[c]) {
-        dfs(v->next[c], d-1);
-    }
-}
-void print(Trie* v, string s) {
-    rep(c, 2) if (v->next[c]) {
-        string next_s = s + (char)('0' + c);
-        cout << s << " -> " << next_s << endl;
-        print(v->next[c], next_s);
-    }
-}
+};
+
 int main(void) {
-    repi(i, 1, 100) {
-//        cout << grundyBrutal(i) << " " << grundy(i) << endl;;
-        assert(grundyBrutal(i) == grundy(i));
+    ll h, w, t, q; cin >> h >> w >> t >> q;
+    vvll qs;
+    BIT b[2];
+    b[0].init(h+5, w+5), b[1].init(h+5, w+5);
+    rep(i, q) {
+        vll x(6); cin >> x[0] >> x[1] >> x[2] >> x[3];
+        if (x[1] == 2)
+            cin >> x[4] >> x[5];
+        qs.pb(x);
+        if (x[1] == 0) {
+            vll y = {x[0] + t, 1000, x[2], x[3], 0, 0}; 
+            qs.pb(y);
+        }
     }
+    sort(all(qs));
+//    for (auto x : qs) cout << x << endl;
 
-    ll n, l; cin >> n >> l;
-    Trie* root = new Trie();
-    rep(i, n) {
-        string s; cin >> s;
-        rep(j, s.length()) s[j] -= '0';
-        add(root, s, 0);
+    for (auto x : qs) {
+        cout <<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"<<endl;
+        cout << x << endl;
+        if (x[1] == 0) {
+            // [0](2, 3)++
+            b[0].update(x[2], x[3], 1);
+        } else if (x[1] == 1) {
+            if (b[1].qsum(x[2], x[3]) >= 1) {
+                b[1].update(x[2], x[3], -1);
+            }
+        } else if (x[1] == 2) {
+            cout << (int)b[1].qsum(x[2], x[3], x[4], x[5]) << " " << (int)b[0].qsum(x[2], x[3], x[4], x[5]) << endl;
+        } else {
+            b[0].update(x[2], x[3], -1);
+            b[1].update(x[2], x[3], +1);
+        }
+        b[0].print();
+        b[1].print();
     }
-
-    dfs(root, l);
-//    print(root, "");
-    cout << (ret ? "Alice" : "Bob") << endl;
-
 
     return 0;
 }

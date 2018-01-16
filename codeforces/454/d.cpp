@@ -48,80 +48,122 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-vll dp(1000, -1);
-ll grundyBrutal(ll n) {
-    if (dp[n] != -1) return dp[n];
-    set<ll> s;
-    s.insert(0); // 次で分割できない状態にできる＝必ず負け状態に到達可能
-    ll x = 0;
-    rep(i, n-1) {
-        x ^= grundyBrutal(n - i - 1);
-        s.insert(x); 
-    }
-    ll mex = 0;
-    while (s.count(mex)) mex++;
-    return dp[n] = mex;
-}
-ll grundy(ll n) {
-    ll tmp = 1;
-    while (!(n & 1ll)) n >>= 1ll, tmp <<= 1ll;
-    return tmp;
-}
 
-struct Trie {
-    int value;
-    Trie *next[2];
-    Trie() { next[0] = 0, next[1] = 0; }
-};
-void add(Trie* v, string& s, ll i) {
-    assert(i<s.length());
-    Trie* next_v; 
-    rep(c, 2) {
-        if (s[i] == c) {
-            if (v->next[c]) {
-                next_v = v->next[c];
-            } else {
-                next_v = v->next[c] = new Trie();
+ll n, m;
+vvll org;
+vector<P> pos;
+bool check(vvll b) {
+    vll di = {1, 0, -1, 0};
+    vll dj = {0, 1, 0, -1};
+    rep(i, n) rep(j, m) {
+        ll ii, jj; auto p = pos[b[i][j]]; ii = p.fi, jj = p.se;
+        set<ll> memo;
+        rep(d, 4) {
+            if (0<=ii+di[d]&&ii+di[d]<n&&0<=jj+dj[d]&&jj+dj[d]<m)
+                memo.insert(org[ii+di[d]][jj+dj[d]]);
+        }
+        rep(d, 4) {
+            if (0<=i+di[d]&&i+di[d]<n&&0<=j+dj[d]&&j+dj[d]<m) {
+                if (memo.count(b[i+di[d]][j+dj[d]]))  {
+                    /*
+                    cout << i << " " << j << endl;
+                    cout << memo << endl;
+                    */
+                    return 0;
+                }
             }
         }
     }
-    if (i != s.length()-1) {
-        add(next_v, s, i+1);
-    }
+    return 1;
 }
-ll ret = 0;
-void dfs(Trie* v, ll d) {
-    if (!!(v->next[0]) ^ !!(v->next[1]))
-        ret ^= grundy(d);
-    rep(c, 2) if (v->next[c]) {
-        dfs(v->next[c], d-1);
-    }
-}
-void print(Trie* v, string s) {
-    rep(c, 2) if (v->next[c]) {
-        string next_s = s + (char)('0' + c);
-        cout << s << " -> " << next_s << endl;
-        print(v->next[c], next_s);
-    }
-}
+
 int main(void) {
-    repi(i, 1, 100) {
-//        cout << grundyBrutal(i) << " " << grundy(i) << endl;;
-        assert(grundyBrutal(i) == grundy(i));
+    cin >> n >> m;
+    if (n == 1 && m == 1) {
+        cout << "YES" << endl;
+        cout << 1 << endl;
+        return 0;
+    } else if (n == 3 && m == 3) {
+        cout << "YES" << endl;
+        cout << "6 1 8" << endl;
+        cout << "7 5 3" << endl;
+        cout << "2 9 4" << endl;
+        return 0;
+    } else if (n <= 3 && m <= 3) {
+        cout << "NO" << endl;
+        return 0;
+    } else if (n == 1 && m == 4) {
+        cout << "YES" << endl;
+        cout << "2 4 1 3" << endl;
+        return 0;
+    } else if (n == 4 && m == 1) {
+        cout << "YES" << endl;
+        cout << "2" << endl;
+        cout << "4" << endl;
+        cout << "1" << endl;
+        cout << "3" << endl;
+        return 0;
+    } else if (n == 1 || m == 1) {
+        vll a;
+        ll x = max(n, m);
+        for (int i = 0; i < x; i += 2) {
+            a.pb(1 + i);
+        }
+        for (int i = 1; i < x; i += 2) {
+            a.pb(1 + i);
+        }
+        cout << "YES" << endl;
+        rep(i, x) {
+            cout << a[i] << (n > m ? "\n" : " ");
+        }
+        if (m > n) cout << endl;
+
+        return 0;
+    } else {
+        org.resize(n); rep(i, n) org[i].resize(m);
+        vvll g; g.resize(n); rep(i, n) g[i].resize(m);
+        pos.resize(n*m+1);
+        rep(i, n) rep(j, m) {
+            org[i][j] = j+m*i+1;
+            pos[j+m*i+1] = P(i, j);
+            g[i][j] = j+m*i+1;
+        }
+
+        function<void(void)> rotJ = [&](void) {
+            for (int i = 0; i < n; i += 2) {
+                ll tmp = g[i][m-1];
+                rep(j, m-1) {
+                    g[i][m-j-1] = g[i][m-j-2];
+                }
+                g[i][0] = tmp;
+            }
+        };
+        function<void(void)> rotI = [&](void) {
+            for (int j = 1; j < m; j += 2) {
+                ll tmp = g[n-1][j];
+                rep(i, n-1) {
+                    g[n-i-1][j] = g[n-i-2][j];
+                }
+                g[0][j] = tmp;
+            }
+        };
+
+        if (n < m) {
+            rep(_, 2) rotJ();
+            rotI();
+        } else {
+            rep(_, 2) rotI();
+            rotJ();
+        }
+        assert(check(g));
+
+        cout << "YES" << endl;
+        rep(i, n) {
+            rep(j, m) {
+                cout << g[i][j] << " ";
+            }
+            cout << endl;
+        }
     }
-
-    ll n, l; cin >> n >> l;
-    Trie* root = new Trie();
-    rep(i, n) {
-        string s; cin >> s;
-        rep(j, s.length()) s[j] -= '0';
-        add(root, s, 0);
-    }
-
-    dfs(root, l);
-//    print(root, "");
-    cout << (ret ? "Alice" : "Bob") << endl;
-
-
     return 0;
 }
