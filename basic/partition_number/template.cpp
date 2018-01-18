@@ -57,19 +57,26 @@ int main(void) {
     // P(5, 3) = 5
     // P(5, 4) = 6
     const int N = 20;
-    ll dp[N][N] = {};
+    ll dp[N][N]; // 別に初期化しなくてもいい
 
+    // j == 0が特異点なので、これらは与えなければならない。
     dp[0][0] = 1;
+    rep(i, N) if (i) {
+        dp[i][0] = 0;
+    }
     rep(i, N) rep(j, N) {
-        if (i || j) {
+        if (j) { // j == 0は特異点なのでアクセスしてはならない
+            dp[i][j] = 0;
             if (j-1>=0)
                 dp[i][j] += dp[i][j-1];
             if (i-j>=0)
                 dp[i][j] += dp[i-j][j];
-//            cout << mt(i, j) << " " << dp[i][j] << endl;
         }
     }
 
+    assert(dp[4][2] == 3);
+    assert(dp[5][3] == 5);
+    assert(dp[5][4] == 6);
     cout << dp[n][k] << endl;
     return 0;
 }
