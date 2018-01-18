@@ -48,32 +48,29 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-// a[l, r)をソートする
-void sort(vll& a, ll l, ll r) {
-    if (r - l <= 1) return;
-    ll mid = (l + r) / 2;
-    ll v = a[mid];
-    ll x = l, y = r - 1;
-    while (1) {
-        while (x < r && !(a[x] >= v)) x++; // a[x] >= vなる場所を探す
-        while (y >= 0 && !(a[y] <= v)) y--; // a[y] <= vなる場所を探す
-        if (x >= y) break;
-        swap(a[x], a[y]);
-        x++, y--;
-    }
-    // a[l, x]がv以下、a[x, r)がv以上
-    sort(a, l, x), sort(a, x, r);
+// Quick Select
+// O(n)
+//
+// aのk番目に小さい値を求める。
+// kは0-indexed
+ll select(vll& a, ll k) {
+    if (a.size() == 1) return a[0];
+    ll mid = a.size() / 2, v = a[mid];
+    vll small, large;
+    for (auto x : a) (x < v ? small : large).pb(x);
+
+    if (!small.size()) return large[k];
+    if (k < small.size()) 
+        return select(small, k);
+    else 
+        return select(large, k - small.size());
 }
 
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
 
-    sort(a, 0, a.size());
-    rep(i, n) {
-        cout << a[i] << " ";
-    }
-    cout << endl;
+int main(void) {
+    ll n, k; cin >> n >> k;
+    vll a(n); cin >> a;
+    cout << select(a, k) << endl;
 
     return 0;
 }
