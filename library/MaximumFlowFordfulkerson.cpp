@@ -13,7 +13,7 @@ using namespace std;
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = int; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
@@ -44,84 +44,107 @@ struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL);
 struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 #define ldout fixed << setprecision(40) 
 
-#define EPS (double)1e-14
-#define INF (ll)1e18
+#define INF (ll)1e9
 #define mo  (ll)(1e9+7)
 
-vll dp(1000, -1);
-ll grundyBrutal(ll n) {
-    if (dp[n] != -1) return dp[n];
-    set<ll> s;
-    s.insert(0); // 次で分割できない状態にできる＝必ず負け状態に到達可能
-    ll x = 0;
-    rep(i, n-1) {
-        x ^= grundyBrutal(n - i - 1);
-        s.insert(x); 
-    }
-    ll mex = 0;
-    while (s.count(mex)) mex++;
-    return dp[n] = mex;
-}
-ll grundy(ll n) {
-    ll tmp = 1;
-    while (!(n & 1ll)) n >>= 1ll, tmp <<= 1ll;
-    return tmp;
-}
 
-struct Trie {
-    int value;
-    Trie *next[2];
-    Trie() { next[0] = 0, next[1] = 0; }
+#define FORR(x,arr) for(auto& x:arr)
+#define ZERO(a) memset(a,0,sizeof(a))
+template<class V> class MaxFlow_Ford {
+    public:
+        struct edge { int to,reve;V cap;};
+        static const int MV = 20002; // 頂点数
+        vector<edge> E[MV];
+        int vis[MV];
+        void add_edge(int x,int y,V cap,bool undir=false) {
+            E[x].push_back((edge){y,(int)E[y].size(),cap});
+            E[y].push_back((edge){x,(int)E[x].size()-1,undir?cap:0});
+        }
+        V dfs(int from,int to,V cf) {
+            V tf;
+            if(from==to) return cf;
+            vis[from]=1;
+            FORR(e,E[from]) if(vis[e.to]==0 && e.cap>0 && (tf = dfs(e.to,to,min(cf,e.cap)))>0) {
+                e.cap -= tf;
+                E[e.to][e.reve].cap += tf;
+                return tf;
+            }
+            return 0;
+        }
+        V maxflow(int from, int to) {
+            V fl=0,tf;
+            while(1) {
+                ZERO(vis);
+                if((tf = dfs(from,to,numeric_limits<V>::max()))==0) return fl;
+                fl+=tf;
+            }
+        }
 };
-void add(Trie* v, string& s, ll i) {
-    assert(i<s.length());
-    Trie* next_v; 
-    rep(c, 2) {
-        if (s[i] == c) {
-            if (v->next[c]) {
-                next_v = v->next[c];
-            } else {
-                next_v = v->next[c] = new Trie();
+
+#define pos(i, j) (2*((i)*W+j))
+int main(void) {
+    ll H, W; cin >> H >> W;
+    vector<string> b(H);
+    rep(i, H) cin >> b[i];
+
+    ll sx = -1, sy = -1, tx = -1, ty = -1;
+    rep(h, H) rep(w, W) {
+        if (b[h][w] == 'S') {
+            sx = h, sy = w;
+        } 
+        if (b[h][w] == 'T') {
+            tx = h, ty = w;
+        } 
+    }
+    if (sx == tx || sy == ty) {
+        cout << -1 << endl;
+        return 0;
+    }
+
+    MaxFlow_Ford<ll> ff;
+
+    ll src = 2*H*W;
+    ll dst = 2*H*W+1;
+
+    // inner edges
+    rep(h, H) rep(w, W) if (b[h][w] == 'o') {
+        ff.add_edge(pos(h, w), pos(h, w) + 1, 1);
+    }
+
+    // Outer edges
+    rep(h, H) rep(w, W) if (b[h][w] == 'o') {
+        rep(nh, H) if (b[nh][w] == 'o') {
+            ff.add_edge(pos(h, w) + 1, pos(nh, w), INF);
+        } 
+        rep(nw, W) if (b[h][nw] == 'o') {
+            ff.add_edge(pos(h, w) + 1, pos(h, nw), INF);
+        }
+    }
+
+
+    // src, dst
+    rep(h, H) rep(w, W) {
+        if (b[h][w] == 'S') {
+            rep(nh, H) if (b[nh][w] == 'o') {
+                ff.add_edge(src, pos(nh, w), INF);
+            } 
+            rep(nw, W) if (b[h][nw] == 'o') {
+                ff.add_edge(src, pos(h, nw), INF);
+            }
+        }
+        if (b[h][w] == 'T') {
+            rep(nh, H) if (b[nh][w] == 'o') {
+                ff.add_edge(pos(nh, w) + 1, dst, INF);
+            } 
+            rep(nw, W) if (b[h][nw] == 'o') {
+                ff.add_edge(pos(h, nw) + 1, dst, INF);
             }
         }
     }
-    if (i != s.length()-1) {
-        add(next_v, s, i+1);
-    }
-}
-ll ret = 0;
-void dfs(Trie* v, ll d) {
-    if (!!(v->next[0]) ^ !!(v->next[1]))
-        ret ^= grundy(d);
-    rep(c, 2) if (v->next[c]) {
-        dfs(v->next[c], d-1);
-    }
-}
-void print(Trie* v, string s) {
-    rep(c, 2) if (v->next[c]) {
-        string next_s = s + (char)('0' + c);
-        cout << s << " -> " << next_s << endl;
-        print(v->next[c], next_s);
-    }
-}
-int main(void) {
-    repi(i, 1, 100) {
-//        cout << grundyBrutal(i) << " " << grundy(i) << endl;;
-        assert(grundyBrutal(i) == grundy(i));
-    }
 
-    ll n, l; cin >> n >> l;
-    Trie* root = new Trie();
-    rep(i, n) {
-        string s; cin >> s;
-        rep(j, s.length()) s[j] -= '0';
-        add(root, s, 0);
-    }
 
-    dfs(root, l);
-//    print(root, "");
-    cout << (ret ? "Alice" : "Bob") << endl;
-
+    //    vizGraph(g, 2, 1);
+    cout << ff.maxflow(src, dst) << endl;
 
     return 0;
 }

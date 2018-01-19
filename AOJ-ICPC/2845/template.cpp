@@ -17,7 +17,7 @@ using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P 
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
-inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; } // これを使うならば、tieとかを消して！！
+inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -48,80 +48,12 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-vll dp(1000, -1);
-ll grundyBrutal(ll n) {
-    if (dp[n] != -1) return dp[n];
-    set<ll> s;
-    s.insert(0); // 次で分割できない状態にできる＝必ず負け状態に到達可能
-    ll x = 0;
-    rep(i, n-1) {
-        x ^= grundyBrutal(n - i - 1);
-        s.insert(x); 
-    }
-    ll mex = 0;
-    while (s.count(mex)) mex++;
-    return dp[n] = mex;
-}
-ll grundy(ll n) {
-    ll tmp = 1;
-    while (!(n & 1ll)) n >>= 1ll, tmp <<= 1ll;
-    return tmp;
-}
-
-struct Trie {
-    int value;
-    Trie *next[2];
-    Trie() { next[0] = 0, next[1] = 0; }
-};
-void add(Trie* v, string& s, ll i) {
-    assert(i<s.length());
-    Trie* next_v; 
-    rep(c, 2) {
-        if (s[i] == c) {
-            if (v->next[c]) {
-                next_v = v->next[c];
-            } else {
-                next_v = v->next[c] = new Trie();
-            }
-        }
-    }
-    if (i != s.length()-1) {
-        add(next_v, s, i+1);
-    }
-}
-ll ret = 0;
-void dfs(Trie* v, ll d) {
-    if (!!(v->next[0]) ^ !!(v->next[1]))
-        ret ^= grundy(d);
-    rep(c, 2) if (v->next[c]) {
-        dfs(v->next[c], d-1);
-    }
-}
-void print(Trie* v, string s) {
-    rep(c, 2) if (v->next[c]) {
-        string next_s = s + (char)('0' + c);
-        cout << s << " -> " << next_s << endl;
-        print(v->next[c], next_s);
-    }
-}
 int main(void) {
-    repi(i, 1, 100) {
-//        cout << grundyBrutal(i) << " " << grundy(i) << endl;;
-        assert(grundyBrutal(i) == grundy(i));
+    string s;cin>>s;
+    ll ret = 0;
+    for (auto x : s) {
+        if (x == '*') return cout << ret << endl, 0;
+        ret += (x == '(' ? 1 : -1); 
     }
-
-    ll n, l; cin >> n >> l;
-    Trie* root = new Trie();
-    rep(i, n) {
-        string s; cin >> s;
-        rep(j, s.length()) s[j] -= '0';
-        add(root, s, 0);
-    }
-
-    dfs(root, l);
-//    print(root, "");
-    cout << (ret ? "Alice" : "Bob") << endl;
-
-
     return 0;
 }

@@ -48,79 +48,62 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-vll dp(1000, -1);
-ll grundyBrutal(ll n) {
-    if (dp[n] != -1) return dp[n];
-    set<ll> s;
-    s.insert(0); // 次で分割できない状態にできる＝必ず負け状態に到達可能
-    ll x = 0;
-    rep(i, n-1) {
-        x ^= grundyBrutal(n - i - 1);
-        s.insert(x); 
+int main(void) {
+    ll H, W; cin >> H >> W;
+    vector<string> b(H);
+    rep(i, H) {
+        string s; cin >> s;
+        b[i] = s;
     }
-    ll mex = 0;
-    while (s.count(mex)) mex++;
-    return dp[n] = mex;
-}
-ll grundy(ll n) {
-    ll tmp = 1;
-    while (!(n & 1ll)) n >>= 1ll, tmp <<= 1ll;
-    return tmp;
-}
-
-struct Trie {
-    int value;
-    Trie *next[2];
-    Trie() { next[0] = 0, next[1] = 0; }
-};
-void add(Trie* v, string& s, ll i) {
-    assert(i<s.length());
-    Trie* next_v; 
-    rep(c, 2) {
-        if (s[i] == c) {
-            if (v->next[c]) {
-                next_v = v->next[c];
-            } else {
-                next_v = v->next[c] = new Trie();
+    ll ret = 0;
+    rep(w, W-1) {
+//        cout << w << " ########################" << endl;
+        // w, w+1
+        ll c[301][301] = {};
+        ll x = 0, y = 0;
+        rep(_, 2) {
+            rep(i, H) {
+                x = i, y = 0;
+                if (_) swap(x, y);
+                rep(j, 301) {
+                    ll xx = x + 1, yy = y + 1;
+                    if (!(xx <= H && yy <= H)) break;
+                    c[xx][yy] = c[x][y] + (b[x][w] == b[y][w+1]);
+                    x++, y++;
+                }
             }
         }
-    }
-    if (i != s.length()-1) {
-        add(next_v, s, i+1);
-    }
-}
-ll ret = 0;
-void dfs(Trie* v, ll d) {
-    if (!!(v->next[0]) ^ !!(v->next[1]))
-        ret ^= grundy(d);
-    rep(c, 2) if (v->next[c]) {
-        dfs(v->next[c], d-1);
-    }
-}
-void print(Trie* v, string s) {
-    rep(c, 2) if (v->next[c]) {
-        string next_s = s + (char)('0' + c);
-        cout << s << " -> " << next_s << endl;
-        print(v->next[c], next_s);
-    }
-}
-int main(void) {
-    repi(i, 1, 100) {
-//        cout << grundyBrutal(i) << " " << grundy(i) << endl;;
-        assert(grundyBrutal(i) == grundy(i));
-    }
 
-    ll n, l; cin >> n >> l;
-    Trie* root = new Trie();
-    rep(i, n) {
-        string s; cin >> s;
-        rep(j, s.length()) s[j] -= '0';
-        add(root, s, 0);
-    }
+        /*
+        rep(i, H+1) {
+            rep(j, H+1) {
+                cout << c[i][j] << " ";
+            }
+            cout << endl;
+        }
+        */
 
-    dfs(root, l);
-//    print(root, "");
-    cout << (ret ? "Alice" : "Bob") << endl;
+        ll dp[301][301] = {};
+        rep(i, 301) rep(j, 301) dp[i][j] = INF;
+        dp[H][H] = 0;
+        for (int i = 300; i >= 0; i--) for (int j = 300; j >= 0; j--) {
+            if (i+1<=H) 
+                chmin(dp[i][j], dp[i+1][j] + c[i+1][j]);
+            if (j+1<=H)
+                chmin(dp[i][j], dp[i][j+1] + c[i][j+1]);
+        }
+        /*
+        rep(i, H+1) {
+            rep(j, H+1) {
+                cout << dp[i][j] << " ";
+            }
+            cout << endl;
+        }
+        */
+
+        ret += dp[0][0];
+    }
+    cout << ret << endl;
 
 
     return 0;

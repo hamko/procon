@@ -48,80 +48,61 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-vll dp(1000, -1);
-ll grundyBrutal(ll n) {
-    if (dp[n] != -1) return dp[n];
-    set<ll> s;
-    s.insert(0); // 次で分割できない状態にできる＝必ず負け状態に到達可能
-    ll x = 0;
-    rep(i, n-1) {
-        x ^= grundyBrutal(n - i - 1);
-        s.insert(x); 
-    }
-    ll mex = 0;
-    while (s.count(mex)) mex++;
-    return dp[n] = mex;
-}
-ll grundy(ll n) {
-    ll tmp = 1;
-    while (!(n & 1ll)) n >>= 1ll, tmp <<= 1ll;
-    return tmp;
-}
 
-struct Trie {
-    int value;
-    Trie *next[2];
-    Trie() { next[0] = 0, next[1] = 0; }
-};
-void add(Trie* v, string& s, ll i) {
-    assert(i<s.length());
-    Trie* next_v; 
-    rep(c, 2) {
-        if (s[i] == c) {
-            if (v->next[c]) {
-                next_v = v->next[c];
-            } else {
-                next_v = v->next[c] = new Trie();
+ll e[1010][110] = {};
+ll solve(vll& a, ll bmax) {
+    ll n = a.size();
+
+    vll x;
+    map<ll, ll> freq;
+    rep(i, n) {
+        freq[a[i]]++;
+    }
+    for (auto y : freq) {
+        x.pb(y.se);
+    }
+
+    ll s = x.size();
+//    cout << x << endl;
+    ll d[110][1010] = {};
+    d[0][0] = 1;
+    repi(i, 1, s+1) {
+        rep(j, bmax+1) {
+            rep(k, j+1) {
+                if (j-k>=0)
+                    d[i][j] += d[i-1][j-k] * e[k][x[i-1]];
+                d[i][j] %= mo;
             }
         }
     }
-    if (i != s.length()-1) {
-        add(next_v, s, i+1);
-    }
-}
-ll ret = 0;
-void dfs(Trie* v, ll d) {
-    if (!!(v->next[0]) ^ !!(v->next[1]))
-        ret ^= grundy(d);
-    rep(c, 2) if (v->next[c]) {
-        dfs(v->next[c], d-1);
-    }
-}
-void print(Trie* v, string s) {
-    rep(c, 2) if (v->next[c]) {
-        string next_s = s + (char)('0' + c);
-        cout << s << " -> " << next_s << endl;
-        print(v->next[c], next_s);
-    }
+    return d[s][bmax];
 }
 int main(void) {
-    repi(i, 1, 100) {
-//        cout << grundyBrutal(i) << " " << grundy(i) << endl;;
-        assert(grundyBrutal(i) == grundy(i));
+    ll n, m; cin >> n >> m;
+    vll a(n), b(m); cin >> a >> b;
+
+    e[0][0] = 1;
+    rep(i, 1010) rep(j, 110) if (i || j) {
+        if (j-1>=0) {
+            e[i][j] += e[i][j-1];
+        }
+        if (i-j>=0) {
+            e[i][j] += e[i-j][j];
+        }
+        e[i][j] %= mo;
     }
-
-    ll n, l; cin >> n >> l;
-    Trie* root = new Trie();
-    rep(i, n) {
-        string s; cin >> s;
-        rep(j, s.length()) s[j] -= '0';
-        add(root, s, 0);
+    /*
+    rep(i, 12) repi(j, i, 12) repi(h, j, 12) {
+        if (i + j + h == 9) cout << mt(i,j,h) << endl;
     }
+    rep(i, 10) {
+        rep(j, 10) {
+            cout << mt(i,j) << e[i][j]<<endl;
+        }
+    }
+    */
 
-    dfs(root, l);
-//    print(root, "");
-    cout << (ret ? "Alice" : "Bob") << endl;
-
+    cout << solve(a, accumulate(all(b), 0ll)) * solve(b, accumulate(all(a), 0ll)) % mo << endl;
 
     return 0;
 }

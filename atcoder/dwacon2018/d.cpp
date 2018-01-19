@@ -13,7 +13,7 @@ using namespace std;
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = int; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
@@ -48,80 +48,70 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-vll dp(1000, -1);
-ll grundyBrutal(ll n) {
-    if (dp[n] != -1) return dp[n];
-    set<ll> s;
-    s.insert(0); // 次で分割できない状態にできる＝必ず負け状態に到達可能
-    ll x = 0;
-    rep(i, n-1) {
-        x ^= grundyBrutal(n - i - 1);
-        s.insert(x); 
+ll n;
+vll x, a;
+vvll g;
+vll cost;
+bitset<20> ok[1<<20];
+ll calccost(ll maski) {
+    bitset<20> mask = maski;
+    if (mask[0]) {
+        return -1;
     }
-    ll mex = 0;
-    while (s.count(mex)) mex++;
-    return dp[n] = mex;
+    ll ret = 0;
+    repi(i, 1, n) {
+        if (mask[i] ^ mask[a[i-1]]) ret += x[i];
+    }
+    return ret;
 }
-ll grundy(ll n) {
-    ll tmp = 1;
-    while (!(n & 1ll)) n >>= 1ll, tmp <<= 1ll;
-    return tmp;
-}
-
-struct Trie {
-    int value;
-    Trie *next[2];
-    Trie() { next[0] = 0, next[1] = 0; }
-};
-void add(Trie* v, string& s, ll i) {
-    assert(i<s.length());
-    Trie* next_v; 
-    rep(c, 2) {
-        if (s[i] == c) {
-            if (v->next[c]) {
-                next_v = v->next[c];
-            } else {
-                next_v = v->next[c] = new Trie();
+bool check(ll v) {
+    vector<bool> memo(1<<n);
+    queue<ll> q;
+    q.push(0);
+    while (q.size()) {
+        ll mask = q.front(); q.pop();
+        if (memo[mask]) continue;
+        memo[mask] = true;
+        if (mask == (1ll << n) - 1) return true;
+        rep(i, n) if (!(mask & (1ll << i))) {
+            // iに到達するのに必要なjが全て1か？
+            if (ok[mask][i] == 0) continue;
+            if (cost[mask] + x[i] <= v) {
+                ll next = mask | (1ll << i);
+                if (!memo[next])
+                    q.push(next);
             }
         }
     }
-    if (i != s.length()-1) {
-        add(next_v, s, i+1);
-    }
-}
-ll ret = 0;
-void dfs(Trie* v, ll d) {
-    if (!!(v->next[0]) ^ !!(v->next[1]))
-        ret ^= grundy(d);
-    rep(c, 2) if (v->next[c]) {
-        dfs(v->next[c], d-1);
-    }
-}
-void print(Trie* v, string s) {
-    rep(c, 2) if (v->next[c]) {
-        string next_s = s + (char)('0' + c);
-        cout << s << " -> " << next_s << endl;
-        print(v->next[c], next_s);
-    }
+    return false;
 }
 int main(void) {
-    repi(i, 1, 100) {
-//        cout << grundyBrutal(i) << " " << grundy(i) << endl;;
-        assert(grundyBrutal(i) == grundy(i));
+    cin >> n;
+    g.resize(n);
+    x.resize(n); cin >> x;
+    a.resize(n-1); cin >> a;
+    rep(i, n-1) a[i]--;
+    rep(i, n-1) {
+        g[a[i]].pb(i);
     }
-
-    ll n, l; cin >> n >> l;
-    Trie* root = new Trie();
-    rep(i, n) {
-        string s; cin >> s;
-        rep(j, s.length()) s[j] -= '0';
-        add(root, s, 0);
+    cost.resize(1<<n);
+    rep(i, 1<<n) {
+        cost[i] = calccost(i);
     }
-
-    dfs(root, l);
-//    print(root, "");
-    cout << (ret ? "Alice" : "Bob") << endl;
-
+    rep(m, 1<<n) {
+        ok[m] = (1<<20)-1;
+        repi(i, 1, n) if ((m & (1ll << i)) == 0) {
+            ok[m][a[i-1]] = 0;
+        }
+    }
+    // [0, INF)
+    ll ng = -1, ok = 22*1e6;
+    while (ok - ng > 1) {
+//        cout << "######################"<< endl;
+        ll mid = (ok + ng) / 2;
+        (check(mid) ? ok : ng) = mid;
+    }
+    cout << ok << endl;
 
     return 0;
 }
