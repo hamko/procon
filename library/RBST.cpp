@@ -50,54 +50,49 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 
 
 uint64_t xor128(void) { 
-  static uint64_t x = 123456789;
-  static uint64_t y = 362436069;
-  static uint64_t z = 521288629;
-  static uint64_t w = 88675123; 
-  uint64_t t;
-   
-  t = x ^ (x << 11);
-  x = y; y = z; z = w;
-  return w = (w ^ (w >> 19)) ^ (t ^ (t >> 8));
+    static uint64_t x = 123456789;
+    static uint64_t y = 362436069;
+    static uint64_t z = 521288629;
+    static uint64_t w = 88675123; 
+    uint64_t t;
+
+    t = x ^ (x << 11);
+    x = y; y = z; z = w;
+    return w = (w ^ (w >> 19)) ^ (t ^ (t >> 8));
 }
-  
+
 struct Node {
-  ll Value;
-  ll SubTreeSize;
-  Node *Lch, *Rch;
-  ll RMQ;
-  
-  Node(ll V):Value(V), SubTreeSize(1), RMQ(V) {
-    Lch = (Node *)NULL;
-    Rch = (Node *)NULL;
-  };
+    ll Value;
+    Node *Lch = NULL, *Rch = NULL;
+    ll SubTreeSize;
+
+    ll Sum, Min, Max;
+
+    Node(ll V) : Value(V), SubTreeSize(1), Sum(V), Min(V), Max(V) {};
+    inline ll size(void) { return SubTreeSize; }
+    inline ll getSum(void) { return Sum; }
+    inline ll getMin(void) { return Min; }
+    inline ll getMax(void) { return Max; }
+
+    inline Node *Update(void)
+    {
+        SubTreeSize = (Lch?Lch->size():0) + (Rch?Rch->size():0) + 1;
+        Sum = (Lch?Lch->getSum():0) + (Rch?Rch->getSum():0) + Value;
+        Min = min((Lch?Lch->getMin():+INF), min((Rch?Rch->getMin():+INF), Value));
+        Max = max((Lch?Lch->getMax():-INF), max((Rch?Rch->getMax():-INF), Value));
+        return this;
+    }
 };
-inline ll Count(Node *t)
-{
-  if(t == (Node *)NULL) return(0);
-  else return(t -> SubTreeSize);
-}
-inline ll Sum(Node *t)
-{
-  if(t == (Node *)NULL) return(INF);
-  else return(t -> RMQ);
-}
-  
-inline Node *Update(Node *t)
-{
-  t -> SubTreeSize = Count(t -> Lch) + Count(t -> Rch) + 1;
-  t -> RMQ = min(Sum(t -> Lch), min(Sum(t -> Rch), t -> Value));
-  return(t);
-}
-  
+inline int size(Node* t) { return t ? t->size() : 0; }
+
 // 機能 1ノードの木を返す
 // 引数 value: ノードの値
 // 戻り値   木の根
 inline Node *MakeRoot(ll value)
 {
-  return(new Node(value));
+    return new Node(value);
 }
-  
+
 // 機能   位置posに新しいノードを挿入(区間反転とかそういうときに使う)
 //引数  root: 木の根
 //pos: 挿入位置
@@ -105,38 +100,38 @@ inline Node *MakeRoot(ll value)
 //戻り値    新しい木の根
 Node *Merge(Node *l, Node *r)
 {
-  if(l == (Node *)NULL) return(r);
-  if(r == (Node *)NULL) return(l);
-  ll Left  = l -> SubTreeSize;
-  ll Right = r -> SubTreeSize;
-  if(xor128() % (Left + Right) < Left) {
-    l -> Rch = Merge(l -> Rch, r);
-    return(Update(l));
-  } else {
-    r -> Lch = Merge(l, r -> Lch);
-    return(Update(r));
-  }
+    if(l == (Node *)NULL) return r;
+    if(r == (Node *)NULL) return l;
+    ll Left  = l->SubTreeSize;
+    ll Right = r->SubTreeSize;
+    if(xor128() % (Left + Right) < Left) {
+        l->Rch = Merge(l->Rch, r);
+        return l->Update();
+    } else {
+        r->Lch = Merge(l, r->Lch);
+        return r->Update();
+    }
 }
-    
-// 機能 位置posに新しいノードを挿入(区間反転とかそういうときに使う)
-// 引数 root: 木の根
-// pos: 挿入位置
-// value: 挿入ノードの値
-// 戻り値   新しい木の根
+
+// pair<Node*, Node*> Split(t, k)
+// 機能 木tを [0,k)[k,n)で分割
+// 引数 t: 木の根
+// k: 分割位置
+// 戻り値   分割後の双方の木の根
 pair< Node*, Node* > Split(Node *t, ll k) // [0, k), [k, n)
 {
-  if(t == (Node *)NULL) return(make_pair((Node *)NULL, (Node *)NULL));
-  if(k <= Count(t -> Lch)) {
-    pair< Node *, Node *> s = Split(t -> Lch, k);
-    t -> Lch = s.second;
-    return(make_pair(s.first, Update(t)));
-  } else {
-    pair< Node *, Node *> s = Split(t -> Rch, k - Count(t -> Lch) - 1);
-    t -> Rch = s.first;
-    return(make_pair(Update(t), s.second));
-  }
+    if(t == (Node *)NULL) return make_pair((Node *)NULL, (Node *)NULL);
+    if(k <= size(t->Lch)) {
+        pair< Node *, Node *> s = Split(t->Lch, k);
+        t->Lch = s.second;
+        return make_pair(s.first, t->Update());
+    } else {
+        pair< Node *, Node *> s = Split(t->Rch, k - size(t->Lch) - 1);
+        t->Rch = s.first;
+        return make_pair(t->Update(), s.second);
+    }
 }
-  
+
 // 機能 位置posに新しいノードを挿入(区間反転とかそういうときに使う)
 // 引数 root: 木の根
 // pos: 挿入位置
@@ -144,30 +139,31 @@ pair< Node*, Node* > Split(Node *t, ll k) // [0, k), [k, n)
 // 戻り値   新しい木の根
 //
 // a 
-// -> a[0, root) value a[root, n)
+//->a[0, root) value a[root, n)
 Node *Insert(Node *root, ll pos, ll value)
 {
-  Node *p = MakeRoot(value);
-  pair< Node *, Node *> s = Split(root, pos);
-  return(Merge(Merge(s.first, p), s.second));
+    Node *p = MakeRoot(value);
+    pair< Node *, Node *> s = Split(root, pos);
+    return Merge(Merge(s.first, p), s.second);
 }
- 
+
 // 機能 pos番目のノードを削除
 // 引数 root: 木の根
 // pos: 削除位置
 // 戻り値   新しい木の根
 //
 // a
-// -> a[0, pos) a[pos+1, n)
+//->a[0, pos) a[pos+1, n)
 Node *Erase(Node *root, ll pos)
 {
-  pair< Node *, Node *> s = Split(root, pos);
-  pair< Node *, Node *> t = Split(s.second, 1);
-  delete t.first;
-  return(Merge(s.first, t.second));
+    pair< Node *, Node *> s = Split(root, pos);
+    pair< Node *, Node *> t = Split(s.second, 1);
+    delete t.first;
+    return Merge(s.first, t.second);
 }
- 
+
 // 機能 value 以上の最左位置を返す
+//      もしそのようなものがなかった場合、rootのサイズを返す
 // 引数 root: 木の根
 // value: 検索値
 // 戻り値   位置
@@ -175,10 +171,25 @@ Node *Erase(Node *root, ll pos)
 // 列が単調になっている必要がある
 ll Lower_Bound(Node *root, ll Value)
 {
-  if(root == (Node *)NULL) return(0);
-  if(Value < root -> Value) return(Lower_Bound(root -> Lch, Value));
-  return(Lower_Bound(root -> Rch, Value) + Count(root -> Lch) + 1);
+    if(root == (Node *)NULL) return 0;
+    if(Value <= root->Value) return Lower_Bound(root->Lch, Value);
+    return Lower_Bound(root->Rch, Value) + size(root->Lch) + 1;
 }
+
+// 機能 value より大きいものの最左位置を返す
+//      もしそのようなものがなかった場合、rootのサイズを返す
+// 引数 root: 木の根
+// value: 検索値
+// 戻り値   位置
+//
+// 列が単調になっている必要がある
+ll Upper_Bound(Node *root, ll Value)
+{
+    if(root == (Node *)NULL) return 0;
+    if(Value < root->Value) return Upper_Bound(root->Lch, Value);
+    return Upper_Bound(root->Rch, Value) + size(root->Lch) + 1;
+}
+
 
 // 機能 木に値 value のノードを挿入(setsetみたいに使いたいときに使う)
 // 引数 root: 木の根
@@ -188,36 +199,254 @@ ll Lower_Bound(Node *root, ll Value)
 // これのみを使っていると、列が単調になる
 Node *Insert(Node *root, ll Value)
 {
-  return(Insert(root, Lower_Bound(root, Value), Value));
+    return Insert(root, Lower_Bound(root, Value), Value);
 } 
- 
-void Dump(Node *root)
-{
-  if(root == (Node *)NULL) return;
-  cout << "(";
-  Dump(root -> Lch);
-  cout << "" << root -> Value << "";
-  Dump(root -> Rch);
-  cout << ")";
+
+ostream &operator<<(ostream &o, const Node* root) {
+    if(root == (Node *)NULL) return o;
+    o << "(";
+    o << root->Lch;
+    o << "" << root->Value << "";
+    o << root->Rch;
+    o << ")";
+    return o;
+}
+
+// k-th number, sumなど高級な処理ができるset
+struct Set {
+    Node* s = NULL;
+    bool isMultiset;
+    Set(bool isMultiset_ = 0) : isMultiset(isMultiset_) { }
+    int size(void) {
+        return s ? s->size() : 0;
+    }
+    // vを追加する
+    void insert(ll v) {
+        if (isMultiset == 0 && count(v)) return;
+        s = Insert(s, v);
+    }
+    // vを削除する
+    void erase(ll v) {
+        ll pos = Lower_Bound(s, v);
+        if (pos == size() || quantile(pos) != v) assert(0); // 無いものは消せない
+
+        s = Erase(s, pos);
+    }
+    // k番目に小さい値を削除する
+    void erasePos(ll k) {
+        assert(s);
+        assert(k < size());
+        s = Erase(s, k);
+    }
+    // vが何個setに入っているか？
+    int count(ll v) {
+        if (!s) return 0;
+        ll pos = Lower_Bound(s, v);
+
+        if (pos == size() || quantile(pos) != v) return 0; // vがない
+
+        ll pos_next = Lower_Bound(s, v+1);
+        if (isMultiset) {
+            return pos_next - pos;
+        } else {
+            return 1;
+        }
+    }
+    // 一番小さい値を取得
+    ll front(void) {
+        assert(s);
+        auto p = Split(s, 1);
+        ll ret = p.fi->Value;
+        s = Merge(p.fi, p.se);
+        return ret;
+    }
+    // 一番大きい値を取得
+    ll back(void) {
+        assert(s);
+        auto p = Split(s, s->size()-1);
+        ll ret = p.se->Value;
+        s = Merge(p.fi, p.se);
+        return ret;
+    }
+    // 小さい方からk番目を求める
+    // 0-indexed
+    ll quantile(ll k) { 
+        assert(s);
+        assert(k < s->size());
+        if (k == 0) return front();
+        if (k == s->size() - 1) return back();
+
+        auto left = Split(s, k+1);
+        auto right = Split(left.fi, k);
+        // right.fi     [0, k)
+        // right.se     [k, k+1)
+        // left.se      [k+1, n)
+        ll ret = right.se->Value;
+        s = Merge(right.fi, right.se);
+        s = Merge(s, left.se);
+        return ret;
+    }
+    ll operator[](int k) { return quantile(k); };
+    // 大きい方からk番目を求める
+    // 0-indexed
+    ll rquantile(ll k) { 
+        assert(s);
+        assert(k < s->size());
+        return quantile(s->size() - 1 - k);
+    }
+    // 一番小さい要素を削除
+    void pop_front(void) {
+        assert(s);
+        s = Erase(s, 0);
+    }
+    // 一番大きい要素を削除
+    void pop_back(void) {
+        assert(s);
+        s = Erase(s, s->size()-1);
+    }
+    // v以上の最小の値をもつ位置
+    ll lower_bound(ll v) { 
+        return Lower_Bound(s, v);
+    }
+    // vより大きい最小の値をもつ位置
+    ll upper_bound(ll v) { 
+        return Upper_Bound(s, v);
+    }
+    // s[l, r)の合計を求める
+    // （l番目に小さいものからr番目に小さいものまでを、半開区間で足し合わせる）
+    ll sum(ll l, ll r) { 
+        assert(0<=l&&l<=r&&r<size());
+        if (l == r) return 0;
+        auto x = Split(s, r);
+        auto y = Split(s, l);
+        ll ret = y.se->getSum();
+        s = Merge(y.fi, y.se);
+        s = Merge(s, x.se);
+        return ret;
+    }
+    // 全要素を削除する
+    void clear(void) {
+        while (size()) pop_back();
+    }
+
+
+};
+ostream &operator<<(ostream &o, Set& s) {
+    cout << "[";
+    rep(i, s.size()) {
+        cout << s[i] << (i != s.size() - 1 ? ", " : "");
+    }
+    cout << "]";
+    return o;
 }
 
 int main(void) {
-    Node* a[10];
+    // RBSTの基本操作
+    {
+        Node* a[10];
 
-    cout << "########" << endl;
-    rep(i, 10) a[i] = MakeRoot(i);
-    rep(i, 10) Dump(a[i]), cout << endl;
+        cout << "########" << endl;
+        rep(i, 10) a[i] = MakeRoot(i);
+        rep(i, 10) cout << a[i] << " "; cout << endl;
 
-    cout << "########" << endl;
-    repi(i, 1, 10) 
-        a[0] = Merge(a[0], a[i]);
-    rep(i, 10) Dump(a[i]), cout << endl;
+        cout << "########" << endl;
+        repi(i, 1, 10) 
+            a[0] = Merge(a[0], a[i]);
+        rep(i, 10) cout << a[i] << endl;
 
-    cout << "########" << endl;
-    auto x = Split(a[0], 3);
-    Dump(x.fi), cout << endl;
-    Dump(x.se), cout << endl;
-    Dump(a[0]), cout << endl;
+        cout << "######## lower bound" << endl;
+        cout << Lower_Bound(a[0], 3) << endl;
+        cout << Lower_Bound(a[0], 11) << endl;
+
+        cout << "########" << endl;
+        cout << a[0]->getSum() << " " << a[0]->getMin() << " " << a[0]->getMax() << endl;
+
+        cout << "########" << endl;
+        auto x = Split(a[0], 3);
+        cout << x.fi << endl;
+        cout << x.se << endl;
+    }
+
+    // 多機能set
+    {
+        Set s;
+
+        s.insert(1);
+        s.insert(2);
+        s.insert(-100);
+        cout << s << endl;
+
+        cout << "# front" << endl;
+        cout << s.front() << endl;
+
+        // back
+        cout << "# back" << endl;
+        cout << s.back() << endl;
+
+        // k-th number
+        cout << "# k-th" << endl;
+        cout << s.quantile(1) << endl;
+        cout << s[1] << endl; // []はquantileと同義
+
+        // pop_front
+        cout << "# pop_front" << endl;
+        s.pop_front();
+        cout << s << endl;
+
+        // pop_back
+        cout << "# pop_back" << endl;
+        s.pop_back();
+        cout << s << endl;
+        s.pop_back();
+        cout << s << endl;
+
+        cout << "# count, lower_bound, upper_bound" << endl;
+        // sを作りなおす
+        s.clear();
+        s.insert(1);
+        s.insert(3);
+        s.insert(4);
+        s.insert(10);
+        cout << s << endl;
+
+        // count, lower_bound, upper_bound
+        rep(i, s.size()) cout << s.quantile(i) << " "; cout << endl;
+        rep(i, 20) cout << s.lower_bound(i); cout << endl;
+        rep(i, 20) cout << s.upper_bound(i); cout << endl; 
+        rep(i, 20) cout << s.count(i); cout << endl;
+
+        // sum
+        cout << s.sum(1, 3) << endl; // sum(3, 4)
+
+        // clear
+        s.clear();
+        cout << s << endl;
+    }
+
+    {
+        Set s(true);  // multiset
+        rep(i, 10) {
+            s.insert(i % 4);
+        }
+        cout << s << endl;
+        cout << s.lower_bound(2) << endl;
+        cout << s.upper_bound(2) << endl;
+        cout << s.count(0) << endl;
+        cout << s.count(1) << endl;
+        cout << s.count(2) << endl;
+        cout << s.count(3) << endl;
+        cout << s.sum(4, 9) << endl;
+    }
+
+    {
+        Set s(false);  // not multiset
+        rep(i, 10) {
+            s.insert(i % 4);
+        }
+        cout << s << endl;
+        cout << s.lower_bound(2) << endl;
+        cout << s.upper_bound(2) << endl;
+    }
 
     return 0;
 }
