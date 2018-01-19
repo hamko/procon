@@ -217,15 +217,19 @@ struct Set {
     Node* s = NULL;
     bool isMultiset;
     Set(bool isMultiset_ = 0) : isMultiset(isMultiset_) { }
+    // 集合のサイズ
+    // O(1)
     int size(void) {
         return s ? s->size() : 0;
     }
     // vを追加する
+    // O(log n)
     void insert(ll v) {
         if (isMultiset == 0 && count(v)) return;
         s = Insert(s, v);
     }
     // vを削除する
+    // O(log n)
     void erase(ll v) {
         ll pos = Lower_Bound(s, v);
         if (pos == size() || quantile(pos) != v) assert(0); // 無いものは消せない
@@ -233,12 +237,14 @@ struct Set {
         s = Erase(s, pos);
     }
     // k番目に小さい値を削除する
+    // O(log n)
     void erasePos(ll k) {
         assert(s);
         assert(k < size());
         s = Erase(s, k);
     }
     // vが何個setに入っているか？
+    // O(log n)
     int count(ll v) {
         if (!s) return 0;
         ll pos = Lower_Bound(s, v);
@@ -253,6 +259,7 @@ struct Set {
         }
     }
     // 一番小さい値を取得
+    // O(log n)
     ll front(void) {
         assert(s);
         auto p = Split(s, 1);
@@ -261,6 +268,7 @@ struct Set {
         return ret;
     }
     // 一番大きい値を取得
+    // O(log n)
     ll back(void) {
         assert(s);
         auto p = Split(s, s->size()-1);
@@ -270,6 +278,7 @@ struct Set {
     }
     // 小さい方からk番目を求める
     // 0-indexed
+    // O(log n)
     ll quantile(ll k) { 
         assert(s);
         assert(k < s->size());
@@ -289,31 +298,37 @@ struct Set {
     ll operator[](int k) { return quantile(k); };
     // 大きい方からk番目を求める
     // 0-indexed
+    // O(log n)
     ll rquantile(ll k) { 
         assert(s);
         assert(k < s->size());
         return quantile(s->size() - 1 - k);
     }
     // 一番小さい要素を削除
+    // O(log n)
     void pop_front(void) {
         assert(s);
         s = Erase(s, 0);
     }
     // 一番大きい要素を削除
+    // O(log n)
     void pop_back(void) {
         assert(s);
         s = Erase(s, s->size()-1);
     }
     // v以上の最小の値をもつ位置
+    // O(log n)
     ll lower_bound(ll v) { 
         return Lower_Bound(s, v);
     }
     // vより大きい最小の値をもつ位置
+    // O(log n)
     ll upper_bound(ll v) { 
         return Upper_Bound(s, v);
     }
     // s[l, r)の合計を求める
     // （l番目に小さいものからr番目に小さいものまでを、半開区間で足し合わせる）
+    // O(log n)
     ll sum(ll l, ll r) { 
         assert(0<=l&&l<=r&&r<size());
         if (l == r) return 0;
@@ -325,6 +340,7 @@ struct Set {
         return ret;
     }
     // 全要素を削除する
+    // O(n log n)
     void clear(void) {
         while (size()) pop_back();
     }
@@ -355,6 +371,8 @@ int main(void) {
         rep(i, 10) cout << a[i] << endl;
 
         cout << "######## lower bound" << endl;
+        cout << Lower_Bound(a[0], 3) << endl;
+        cout << Lower_Bound(a[0], 11) << endl;
         cout << Lower_Bound(a[0], 3) << endl;
         cout << Lower_Bound(a[0], 11) << endl;
 
