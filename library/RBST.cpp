@@ -177,7 +177,7 @@ ll Lower_Bound(Node *root, ll Value)
 }
 
 // 機能 value より大きいものの最左位置を返す
-//      もしそのようなものがなかった場合、rootのサイズを返す
+//      もしそのようなものがなかった場合、0を返すので、あとで0以上かをチェック
 // 引数 root: 木の根
 // value: 検索値
 // 戻り値   位置
@@ -189,6 +189,33 @@ ll Upper_Bound(Node *root, ll Value)
     if(Value < root->Value) return Upper_Bound(root->Lch, Value);
     return Upper_Bound(root->Rch, Value) + size(root->Lch) + 1;
 }
+
+// 機能 value 以下の最右位置を返す
+//      もしそのようなものがなかった場合、-1を返す
+// 引数 root: 木の根
+// value: 検索値
+// 戻り値   位置
+//
+// 列が単調になっている必要がある
+ll rLower_Bound(Node *root, ll Value)
+{
+    ll ret = Upper_Bound(root, Value) - 1;
+    return ret;
+}
+
+// 機能 value より小さいものの最右位置を返す
+//      もしそのようなものがなかった場合、-1を返す
+// 引数 root: 木の根
+// value: 検索値
+// 戻り値   位置
+//
+// 列が単調になっている必要がある
+ll rUpper_Bound(Node *root, ll Value)
+{
+    ll ret = Lower_Bound(root, Value) - 1;
+    return ret;
+}
+
 
 
 // 機能 木に値 value のノードを挿入(setsetみたいに使いたいときに使う)
@@ -326,6 +353,17 @@ struct Set {
     ll upper_bound(ll v) { 
         return Upper_Bound(s, v);
     }
+    // v以下の最大の値をもつ位置
+    // O(log n)
+    ll rlower_bound(ll v) { 
+        return rLower_Bound(s, v);
+    }
+    // vより小さい最大の値をもつ位置
+    // O(log n)
+    ll rupper_bound(ll v) { 
+        return rUpper_Bound(s, v);
+    }
+
     // s[l, r)の合計を求める
     // （l番目に小さいものからr番目に小さいものまでを、半開区間で足し合わせる）
     // O(log n)
@@ -373,8 +411,9 @@ int main(void) {
         cout << "######## lower bound" << endl;
         cout << Lower_Bound(a[0], 3) << endl;
         cout << Lower_Bound(a[0], 11) << endl;
-        cout << Lower_Bound(a[0], 3) << endl;
-        cout << Lower_Bound(a[0], 11) << endl;
+        cout << rLower_Bound(a[0], 3) << endl;
+        cout << rUpper_Bound(a[0], 3) << endl;
+        cout << rUpper_Bound(a[0], -100) << endl;
 
         cout << "########" << endl;
         cout << a[0]->getSum() << " " << a[0]->getMin() << " " << a[0]->getMax() << endl;
@@ -418,7 +457,6 @@ int main(void) {
         s.pop_back();
         cout << s << endl;
 
-        cout << "# count, lower_bound, upper_bound" << endl;
         // sを作りなおす
         s.clear();
         s.insert(1);
@@ -428,10 +466,13 @@ int main(void) {
         cout << s << endl;
 
         // count, lower_bound, upper_bound
+        cout << "# count, lower_bound, upper_bound" << endl;
         rep(i, s.size()) cout << s.quantile(i) << " "; cout << endl;
         rep(i, 20) cout << s.lower_bound(i); cout << endl;
         rep(i, 20) cout << s.upper_bound(i); cout << endl; 
         rep(i, 20) cout << s.count(i); cout << endl;
+        rep(i, 20) cout << s.rlower_bound(i); cout << endl;
+        rep(i, 20) cout << s.rupper_bound(i); cout << endl; 
 
         // sum
         cout << s.sum(1, 3) << endl; // sum(3, 4)
