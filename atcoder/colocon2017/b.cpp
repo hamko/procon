@@ -48,36 +48,35 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-const int N = 2000;
-ll dp[N][N]; // 別に初期化しなくてもいい
-int main(void) {
-    ll n, k; cin >> n >> k;
-
-    // dp[i][j] = 整数iを0以上の整数でj分割する方法
-    // ex)
-    // P(4, 2) = 3
-    // P(5, 3) = 5
-    // P(5, 4) = 6
-
-    // j == 0が特異点なので、これらは与えなければならない。
-    dp[0][0] = 1;
-    rep(i, N) if (i) {
-        dp[i][0] = 0;
-    }
-    rep(i, N) rep(j, N) {
-        if (j) { // j == 0は特異点なのでアクセスしてはならない
-            dp[i][j] = 0;
-            if (j-1>=0)
-                (dp[i][j] += dp[i][j-1]) %= mo;
-            if (i-j>=0)
-                (dp[i][j] += dp[i-j][j]) %= mo;
-        }
-    }
-
-    assert(dp[4][2] == 3);
-    assert(dp[5][3] == 5);
-    assert(dp[5][4] == 6);
-    cout << dp[n][k] << endl;
+bool isOp(char c) {
+    if (c == '*') return 1;
+    if (c == '+') return 1;
+    if (c == '/') return 1;
+    if (c == '-') return 1;
     return 0;
 }
+int main(void) {
+    string s; cin >> s;
 
+    string ret;
+    vector<char> v; 
+    ll d = -1;
+    rep(i, s.size()) {
+        if (isOp(s[i])) {
+            d++;
+            v.pb(s[i]);
+        } else if (s[i] == ',') {
+            assert(d < v.size());
+            ret += v[d];
+        } else if (s[i] == ')') {
+            v.pop_back();
+            d--;
+            ret += s[i];
+        } else {
+            ret += s[i];
+        }
+    }
+    cout << ret << endl;
+
+    return 0;
+}

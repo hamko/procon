@@ -48,36 +48,172 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-const int N = 2000;
-ll dp[N][N]; // 別に初期化しなくてもいい
-int main(void) {
-    ll n, k; cin >> n >> k;
+template<int MOD>
+struct ModInt {
+	static const int Mod = MOD;
+	unsigned x;
+	ModInt() : x(0) {}
+	ModInt(signed sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	ModInt(signed long long sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	int get() const { return (int)x; }
 
-    // dp[i][j] = 整数iを0以上の整数でj分割する方法
-    // ex)
-    // P(4, 2) = 3
-    // P(5, 3) = 5
-    // P(5, 4) = 6
+	ModInt &operator+=(ModInt that) { if((x += that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator-=(ModInt that) { if((x += MOD - that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator*=(ModInt that) { x = (unsigned long long)x * that.x % MOD; return *this; }
+	ModInt &operator/=(ModInt that) { return *this *= that.inverse(); }
 
-    // j == 0が特異点なので、これらは与えなければならない。
-    dp[0][0] = 1;
-    rep(i, N) if (i) {
-        dp[i][0] = 0;
+	ModInt operator+(ModInt that) const { return ModInt(*this) += that; }
+	ModInt operator-(ModInt that) const { return ModInt(*this) -= that; }
+	ModInt operator*(ModInt that) const { return ModInt(*this) *= that; }
+	ModInt operator/(ModInt that) const { return ModInt(*this) /= that; }
+
+	ModInt inverse() const {
+		signed a = x, b = MOD, u = 1, v = 0;
+		while(b) {
+			signed t = a / b;
+			a -= t * b; std::swap(a, b);
+			u -= t * v; std::swap(u, v);
+		}
+		if(u < 0) u += Mod;
+		ModInt res; res.x = (unsigned)u;
+		return res;
+	}
+
+	bool operator==(ModInt that) const { return x == that.x; }
+	bool operator!=(ModInt that) const { return x != that.x; }
+	ModInt operator-() const { ModInt t; t.x = x == 0 ? 0 : Mod - x; return t; }
+};
+template<int MOD> ModInt<MOD> operator^(ModInt<MOD> a, unsigned long long k) {
+	ModInt<MOD> r = 1;
+	while(k) {
+		if(k & 1) r *= a;
+		a *= a;
+		k >>= 1;
+	}
+	return r;
+}
+typedef ModInt<1000000007> mint;
+typedef vector<mint> vmint;
+ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
+
+// n!と1/n!のテーブルを作る。
+// nCrを高速に計算するためのもの。
+//
+// O(n + log mo)
+vector<mint> fact, rfact;
+void constructFactorial(const long long n) {
+    fact.resize(n);
+    rfact.resize(n);
+    fact[0] = rfact[0] = 1;
+    for (int i = 0; i < n - 1; i++) {
+        fact[i+1] = fact[i] * (i+1);
     }
-    rep(i, N) rep(j, N) {
-        if (j) { // j == 0は特異点なのでアクセスしてはならない
-            dp[i][j] = 0;
-            if (j-1>=0)
-                (dp[i][j] += dp[i][j-1]) %= mo;
-            if (i-j>=0)
-                (dp[i][j] += dp[i-j][j]) %= mo;
-        }
-    }
-
-    assert(dp[4][2] == 3);
-    assert(dp[5][3] == 5);
-    assert(dp[5][4] == 6);
-    cout << dp[n][k] << endl;
-    return 0;
+    rfact[n-1] = mint(1) / fact[n-1]; 
+    for (int i = n - 1; i >= 1; i--) 
+        rfact[i-1] = rfact[i] * i; // ((n-1)!)^-1 = (n!)^-1 * n
 }
 
+// O(1)
+// constructFactorialしておけば、n, r=1e7くらいまではいけます
+mint nCr(const long long n, const long long r) {
+    if (n < 0 || r < 0) return 0;
+    if (n < r) return 0;
+    return fact[n] * rfact[r] * rfact[n-r];
+}
+
+// O(r.size())
+// sum(r)! / r[0]! / r[1]! / ...
+mint nCr(const vector<long long> r) {
+    ll sum = accumulate(r.begin(), r.end(), 0ll);
+    mint ret = fact[sum];
+    rep(i, r.size()) 
+        ret *= rfact[r[i]];
+    return ret;
+}
+
+// O(k log mo) 
+mint nCrWithoutConstruction(const long long n, const long long k) {
+    if (n < 0) return 0;
+    if (k < 0) return 0;
+    mint ret = 1;
+    for (int i = 0; i < k; i++) {
+        ret *= (mint)n - (mint)i;
+        ret /= mint(i+1);
+    }
+    return ret;
+}
+
+
+
+
+int main(void) {
+    constructFactorial(100000);
+    ll h, w; cin >> h >> w;
+    vll x(w); cin >> x;
+    sort(all(x));
+    vll a(h);
+    rep(i, h) {
+        rep(j, w) {
+            a[i] += x[j] > i;
+        }
+    }
+    sort(all(a));
+
+    mint ret = 0;
+    bool f = 0;
+
+    set<vll> memo;
+    queue<vll> q;
+    q.push(a);
+    while (q.size()) {
+        auto s = q.front(); q.pop();
+        if (memo.count(s)) continue;
+        memo.insert(s);
+        cout << s << endl;
+
+        vll b;
+        map<ll, ll> freq;
+        rep(i, s.size()) {
+            freq[s[i]]++;
+        }
+        for (auto x : freq) {
+            b.pb(x.se);
+        }
+//        cout << b << endl;
+        ret += nCr(b);
+
+
+        vll s_org = s;
+        rep(i, s.size()) repi(j, i+1, s.size()) if (s[j] - s[i] >= 2) {
+            s[j]--, s[i]++;
+            sort(all(s));
+            q.push(s);
+            s = s_org;
+        }
+    }
+    cout << ret << endl;
+
+    /*
+    while (1) {
+        cout << a << endl;
+        map<ll, ll> freq;
+        rep(i, a.size()) {
+            freq[a[i]]++;
+        }
+        vll b;
+        for (auto x : freq) {
+            b.pb(x.se);
+        }
+        cout << b << endl;
+        ret += nCr(b);
+
+        if (a.back() - a[0] <= 1) break;
+        a.back()--;
+        a[0]++;
+        sort(all(a));
+    }
+    cout << ret << endl;
+    */
+
+    return 0;
+}

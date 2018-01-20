@@ -11,7 +11,7 @@ template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o <<
 // ちょうどi個を見終えて、残りがsで、現在の配列がaである場合。
 ll c = 0;
 void f(vll& x) {
-//    cout << x << endl;
+    cout << x << endl;
 }
 void dfs(ll s, ll i, vll& a, const vll& amax, const int target_sum, vll& amaxsum) {
     if (amaxsum.back() - amaxsum[i] < s) return; // 枝刈り
@@ -19,7 +19,7 @@ void dfs(ll s, ll i, vll& a, const vll& amax, const int target_sum, vll& amaxsum
     if (!s) {
 //        assert(accumulate(a.begin(), a.end(), 0ll) == target_sum);
         c++;
-        f(x);
+        f(a);
         return;
     }
     rep(j, min(s, amax[i])+1) {
