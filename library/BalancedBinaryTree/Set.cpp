@@ -66,20 +66,16 @@ struct Node {
     Node *Lch = NULL, *Rch = NULL;
     ll SubTreeSize;
 
-    ll Sum, Min, Max;
+    ll Sum;
 
-    Node(ll V) : Value(V), SubTreeSize(1), Sum(V), Min(V), Max(V) {};
+    Node(ll V) : Value(V), SubTreeSize(1), Sum(V) {};
     inline ll size(void) { return SubTreeSize; }
     inline ll getSum(void) { return Sum; }
-    inline ll getMin(void) { return Min; }
-    inline ll getMax(void) { return Max; }
 
     inline Node *Update(void)
     {
         SubTreeSize = (Lch?Lch->size():0) + (Rch?Rch->size():0) + 1;
         Sum = (Lch?Lch->getSum():0) + (Rch?Rch->getSum():0) + Value;
-        Min = min((Lch?Lch->getMin():+INF), min((Rch?Rch->getMin():+INF), Value));
-        Max = max((Lch?Lch->getMax():-INF), max((Rch?Rch->getMax():-INF), Value));
         return this;
     }
 };
@@ -363,6 +359,20 @@ struct Set {
     ll rupper_bound(ll v) { 
         return rUpper_Bound(s, v);
     }
+    // a以上b未満の値の個数を求める
+    // O(log n)
+    ll rangefreq(ll a, ll b) { 
+        auto l = Lower_Bound(s, a);
+        auto r = Lower_Bound(s, b);
+        if (l == r) return 0;
+        auto x = Split(s, r);
+        auto y = Split(x.fi, l);
+        ll ret = ::size(y.se);
+        s = Merge(y.fi, y.se);
+        s = Merge(s, x.se);
+
+        return ret;
+    }
 
     // s[l, r)の合計を求める
     // （l番目に小さいものからr番目に小さいものまでを、半開区間で足し合わせる）
@@ -371,7 +381,7 @@ struct Set {
         assert(0<=l&&l<=r&&r<size());
         if (l == r) return 0;
         auto x = Split(s, r);
-        auto y = Split(s, l);
+        auto y = Split(x.fi, l);
         ll ret = y.se->getSum();
         s = Merge(y.fi, y.se);
         s = Merge(s, x.se);
@@ -395,35 +405,6 @@ ostream &operator<<(ostream &o, Set& s) {
 }
 
 int main(void) {
-    // RBSTの基本操作
-    {
-        Node* a[10];
-
-        cout << "########" << endl;
-        rep(i, 10) a[i] = MakeRoot(i);
-        rep(i, 10) cout << a[i] << " "; cout << endl;
-
-        cout << "########" << endl;
-        repi(i, 1, 10) 
-            a[0] = Merge(a[0], a[i]);
-        rep(i, 10) cout << a[i] << endl;
-
-        cout << "######## lower bound" << endl;
-        cout << Lower_Bound(a[0], 3) << endl;
-        cout << Lower_Bound(a[0], 11) << endl;
-        cout << rLower_Bound(a[0], 3) << endl;
-        cout << rUpper_Bound(a[0], 3) << endl;
-        cout << rUpper_Bound(a[0], -100) << endl;
-
-        cout << "########" << endl;
-        cout << a[0]->getSum() << " " << a[0]->getMin() << " " << a[0]->getMax() << endl;
-
-        cout << "########" << endl;
-        auto x = Split(a[0], 3);
-        cout << x.fi << endl;
-        cout << x.se << endl;
-    }
-
     // 多機能set
     {
         Set s;
@@ -476,6 +457,13 @@ int main(void) {
 
         // sum
         cout << s.sum(1, 3) << endl; // sum(3, 4)
+
+        // rangefreq
+        cout << "# rangefreq" << endl;
+        cout << s.rangefreq(2, 7) << endl;
+        cout << s.rangefreq(1, 7) << endl;
+        cout << s.rangefreq(3, 10) << endl;
+        cout << s.rangefreq(-1e9, 5) << endl;
 
         // clear
         s.clear();
