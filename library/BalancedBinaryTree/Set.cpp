@@ -61,21 +61,18 @@ uint64_t xor128(void) {
     return w = (w ^ (w >> 19)) ^ (t ^ (t >> 8));
 }
 
+using T = P;
 struct Node {
-    ll Value;
+    T Value;
     Node *Lch = NULL, *Rch = NULL;
     ll SubTreeSize;
 
-    ll Sum;
-
-    Node(ll V) : Value(V), SubTreeSize(1), Sum(V) {};
+    Node(T V) : Value(V), SubTreeSize(1) {};
     inline ll size(void) { return SubTreeSize; }
-    inline ll getSum(void) { return Sum; }
 
     inline Node *Update(void)
     {
         SubTreeSize = (Lch?Lch->size():0) + (Rch?Rch->size():0) + 1;
-        Sum = (Lch?Lch->getSum():0) + (Rch?Rch->getSum():0) + Value;
         return this;
     }
 };
@@ -84,7 +81,7 @@ inline int size(Node* t) { return t ? t->size() : 0; }
 // 機能 1ノードの木を返す
 // 引数 value: ノードの値
 // 戻り値   木の根
-inline Node *MakeRoot(ll value)
+inline Node *MakeRoot(T value)
 {
     return new Node(value);
 }
@@ -136,7 +133,7 @@ pair< Node*, Node* > Split(Node *t, ll k) // [0, k), [k, n)
 //
 // a 
 //->a[0, root) value a[root, n)
-Node *Insert(Node *root, ll pos, ll value)
+Node *Insert(Node *root, ll pos, T value)
 {
     Node *p = MakeRoot(value);
     pair< Node *, Node *> s = Split(root, pos);
@@ -165,7 +162,7 @@ Node *Erase(Node *root, ll pos)
 // 戻り値   位置
 //
 // 列が単調になっている必要がある
-ll Lower_Bound(Node *root, ll Value)
+ll Lower_Bound(Node *root, T Value)
 {
     if(root == (Node *)NULL) return 0;
     if(Value <= root->Value) return Lower_Bound(root->Lch, Value);
@@ -179,7 +176,7 @@ ll Lower_Bound(Node *root, ll Value)
 // 戻り値   位置
 //
 // 列が単調になっている必要がある
-ll Upper_Bound(Node *root, ll Value)
+ll Upper_Bound(Node *root, T Value)
 {
     if(root == (Node *)NULL) return 0;
     if(Value < root->Value) return Upper_Bound(root->Lch, Value);
@@ -193,7 +190,7 @@ ll Upper_Bound(Node *root, ll Value)
 // 戻り値   位置
 //
 // 列が単調になっている必要がある
-ll rLower_Bound(Node *root, ll Value)
+ll rLower_Bound(Node *root, T Value)
 {
     ll ret = Upper_Bound(root, Value) - 1;
     return ret;
@@ -206,7 +203,7 @@ ll rLower_Bound(Node *root, ll Value)
 // 戻り値   位置
 //
 // 列が単調になっている必要がある
-ll rUpper_Bound(Node *root, ll Value)
+ll rUpper_Bound(Node *root, T Value)
 {
     ll ret = Lower_Bound(root, Value) - 1;
     return ret;
@@ -220,7 +217,7 @@ ll rUpper_Bound(Node *root, ll Value)
 // 戻り値   新しい木の根
 //
 // これのみを使っていると、列が単調になる
-Node *Insert(Node *root, ll Value)
+Node *Insert(Node *root, T Value)
 {
     return Insert(root, Lower_Bound(root, Value), Value);
 } 
@@ -235,7 +232,7 @@ ostream &operator<<(ostream &o, const Node* root) {
     return o;
 }
 
-// k-th number, sumなど高級な処理ができるset
+// k-th numberなど高級な処理ができるset
 struct Set {
     Node* s = NULL;
     bool isMultiset;
@@ -247,13 +244,13 @@ struct Set {
     }
     // vを追加する
     // O(log n)
-    void insert(ll v) {
+    void insert(T v) {
         if (isMultiset == 0 && count(v)) return;
         s = Insert(s, v);
     }
     // vを削除する
     // O(log n)
-    void erase(ll v) {
+    void erase(T v) {
         ll pos = Lower_Bound(s, v);
         if (pos == size() || quantile(pos) != v) assert(0); // 無いものは消せない
 
@@ -268,13 +265,13 @@ struct Set {
     }
     // vが何個setに入っているか？
     // O(log n)
-    int count(ll v) {
+    int count(T v) {
         if (!s) return 0;
         ll pos = Lower_Bound(s, v);
 
         if (pos == size() || quantile(pos) != v) return 0; // vがない
 
-        ll pos_next = Lower_Bound(s, v+1);
+        ll pos_next = Upper_Bound(s, v);
         if (isMultiset) {
             return pos_next - pos;
         } else {
@@ -283,26 +280,26 @@ struct Set {
     }
     // 一番小さい値を取得
     // O(log n)
-    ll front(void) {
+    T front(void) {
         assert(s);
         auto p = Split(s, 1);
-        ll ret = p.fi->Value;
+        T ret = p.fi->Value;
         s = Merge(p.fi, p.se);
         return ret;
     }
     // 一番大きい値を取得
     // O(log n)
-    ll back(void) {
+    T back(void) {
         assert(s);
         auto p = Split(s, s->size()-1);
-        ll ret = p.se->Value;
+        T ret = p.se->Value;
         s = Merge(p.fi, p.se);
         return ret;
     }
     // 小さい方からk番目を求める
     // 0-indexed
     // O(log n)
-    ll quantile(ll k) { 
+    T quantile(ll k) { 
         assert(s);
         assert(k < s->size());
         if (k == 0) return front();
@@ -313,16 +310,16 @@ struct Set {
         // right.fi     [0, k)
         // right.se     [k, k+1)
         // left.se      [k+1, n)
-        ll ret = right.se->Value;
+        T ret = right.se->Value;
         s = Merge(right.fi, right.se);
         s = Merge(s, left.se);
         return ret;
     }
-    ll operator[](int k) { return quantile(k); };
+    T operator[](int k) { return quantile(k); };
     // 大きい方からk番目を求める
     // 0-indexed
     // O(log n)
-    ll rquantile(ll k) { 
+    T rquantile(ll k) { 
         assert(s);
         assert(k < s->size());
         return quantile(s->size() - 1 - k);
@@ -341,27 +338,27 @@ struct Set {
     }
     // v以上の最小の値をもつ位置
     // O(log n)
-    ll lower_bound(ll v) { 
+    ll lower_bound(T v) { 
         return Lower_Bound(s, v);
     }
     // vより大きい最小の値をもつ位置
     // O(log n)
-    ll upper_bound(ll v) { 
+    ll upper_bound(T v) { 
         return Upper_Bound(s, v);
     }
     // v以下の最大の値をもつ位置
     // O(log n)
-    ll rlower_bound(ll v) { 
+    ll rlower_bound(T v) { 
         return rLower_Bound(s, v);
     }
     // vより小さい最大の値をもつ位置
     // O(log n)
-    ll rupper_bound(ll v) { 
+    ll rupper_bound(T v) { 
         return rUpper_Bound(s, v);
     }
     // a以上b未満の値の個数を求める
     // O(log n)
-    ll rangefreq(ll a, ll b) { 
+    ll rangefreq(T a, T b) { 
         auto l = Lower_Bound(s, a);
         auto r = Lower_Bound(s, b);
         if (l == r) return 0;
@@ -374,26 +371,11 @@ struct Set {
         return ret;
     }
 
-    // s[l, r)の合計を求める
-    // （l番目に小さいものからr番目に小さいものまでを、半開区間で足し合わせる）
-    // O(log n)
-    ll sum(ll l, ll r) { 
-        assert(0<=l&&l<=r&&r<size());
-        if (l == r) return 0;
-        auto x = Split(s, r);
-        auto y = Split(x.fi, l);
-        ll ret = y.se->getSum();
-        s = Merge(y.fi, y.se);
-        s = Merge(s, x.se);
-        return ret;
-    }
     // 全要素を削除する
     // O(n log n)
     void clear(void) {
         while (size()) pop_back();
     }
-
-
 };
 ostream &operator<<(ostream &o, Set& s) {
     cout << "[";
@@ -404,95 +386,20 @@ ostream &operator<<(ostream &o, Set& s) {
     return o;
 }
 
+
+// 完全動的quantile, rangefreq, rangesum
+// O(log^2 n)
+
 int main(void) {
-    // 多機能set
+    // 雑抽象化平衡二分木
     {
         Set s;
-
-        s.insert(1);
-        s.insert(2);
-        s.insert(-100);
+        s.insert(P(1, 2));
+        s.insert(P(3, -2));
+        s.insert(P(5, 8));
+        s.insert(P(2, 9));
+        s.insert(P(1, 3));
         cout << s << endl;
-
-        cout << "# front" << endl;
-        cout << s.front() << endl;
-
-        // back
-        cout << "# back" << endl;
-        cout << s.back() << endl;
-
-        // k-th number
-        cout << "# k-th" << endl;
-        cout << s.quantile(1) << endl;
-        cout << s[1] << endl; // []はquantileと同義
-
-        // pop_front
-        cout << "# pop_front" << endl;
-        s.pop_front();
-        cout << s << endl;
-
-        // pop_back
-        cout << "# pop_back" << endl;
-        s.pop_back();
-        cout << s << endl;
-        s.pop_back();
-        cout << s << endl;
-
-        // sを作りなおす
-        s.clear();
-        s.insert(1);
-        s.insert(3);
-        s.insert(4);
-        s.insert(10);
-        cout << s << endl;
-
-        // count, lower_bound, upper_bound
-        cout << "# count, lower_bound, upper_bound" << endl;
-        rep(i, s.size()) cout << s.quantile(i) << " "; cout << endl;
-        rep(i, 20) cout << s.lower_bound(i); cout << endl;
-        rep(i, 20) cout << s.upper_bound(i); cout << endl; 
-        rep(i, 20) cout << s.count(i); cout << endl;
-        rep(i, 20) cout << s.rlower_bound(i); cout << endl;
-        rep(i, 20) cout << s.rupper_bound(i); cout << endl; 
-
-        // sum
-        cout << s.sum(1, 3) << endl; // sum(3, 4)
-
-        // rangefreq
-        cout << "# rangefreq" << endl;
-        cout << s.rangefreq(2, 7) << endl;
-        cout << s.rangefreq(1, 7) << endl;
-        cout << s.rangefreq(3, 10) << endl;
-        cout << s.rangefreq(-1e9, 5) << endl;
-
-        // clear
-        s.clear();
-        cout << s << endl;
-    }
-
-    {
-        Set s(true);  // multiset
-        rep(i, 10) {
-            s.insert(i % 4);
-        }
-        cout << s << endl;
-        cout << s.lower_bound(2) << endl;
-        cout << s.upper_bound(2) << endl;
-        cout << s.count(0) << endl;
-        cout << s.count(1) << endl;
-        cout << s.count(2) << endl;
-        cout << s.count(3) << endl;
-        cout << s.sum(4, 9) << endl;
-    }
-
-    {
-        Set s(false);  // not multiset
-        rep(i, 10) {
-            s.insert(i % 4);
-        }
-        cout << s << endl;
-        cout << s.lower_bound(2) << endl;
-        cout << s.upper_bound(2) << endl;
     }
 
     return 0;
