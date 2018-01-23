@@ -58,68 +58,57 @@ static const long long mo = 1e9+7;
 int main(void) {
     ll n; cin >> n;
     vector<string> s(n); cin >> s;
-    vll cs(256);
+    vector<set<ll>> g(256);
+    set<ll> notStart;
+    vll freq(256); 
     rep(i, n) {
-        vll freq(256);
+        rep(j, s[i].length()-1) {
+            g[(ll)s[i][j]].insert((ll)s[i][j+1]);
+//            cout << s[i][j+1] << endl;
+            notStart.insert(s[i][j+1]);
+        }
         rep(j, s[i].length()) {
-            cs[s[i][j]]++;
             freq[s[i][j]]++;
         }
-        for (auto c : freq) {
-            if (c > 1) {
+    }
+    /*
+    rep(i, 256) {
+        if (freq[i] && !notStart.count(i)) {
+            cout << (char)i << endl;
+        }
+    }
+    */
+    vll memo(256);
+    string ret;
+    repi(ci, 'a', 'z'+1) if (freq[ci] && !notStart.count(ci)) {
+        ll c = ci;
+        while (1) {
+            if (memo[c]) {
                 cout << "NO" << endl;
                 return 0;
             }
+            memo[c] = 1;
+            if (g[c].size() >= 2) {
+                cout << "NO" << endl;
+                return 0;
+            }
+            ret += c;
+            if (g[c].size() == 0)  {
+                break;
+            }
+            c = *g[c].begin();
         }
     }
-//    cout << cs << endl;
-
-    vvll g(26, vll(26));
-    rep(i, n) {
-        rep(j, s[i].length()-1) {
-            g[s[i][j]-'a'][s[i][j+1]-'a'] = 1;
-        }
-    }
-    rep(i, 26) {
-        if (accumulate(all(g[i]), 0ll) > 1) {
-            cout << "NO" << endl;
+    rep(i, 256) {
+        if (freq[i] && !memo[i]) {
+                cout << "NO" << endl;
+                return 0;
             return 0;
         }
     }
-//    cout << g << endl;
 
-    vector<string> memo;
-    rep(c, 26) {
-        if (!cs['a'+c]) continue;
-        string s;
-        function<void(ll, ll)> dfs = [&](ll u, ll d) {
-            if (d > 100) {
-                cout << "NO" << endl;
-                exit(0);
-            }
-            s += 'a' + u;
-            rep(next_u, 26) if (g[u][next_u]) {
-                dfs(next_u, d + 1);
-            }
-        };
-        dfs(c, 0);
-        memo.pb(s);
-    }
-    vector<string> ret;
-    rep(i, memo.size()) {
-        ll faf = 1;
-        // iを含むものがひとつもなければ
-        rep(j, memo.size()) if (i != j) {
-            faf &= (memo[j].find(memo[i]) == string::npos);
-        }
-        if (faf) {
-            ret.pb(memo[i]);
-        }
-    }
-    sort(all(ret));
-    rep(i, ret.size()) {
-        cout << ret[i];
-    }
-    cout << endl;
+    cout << ret << endl;
+
+
     return 0;
 }

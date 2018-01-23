@@ -414,34 +414,98 @@ struct Set {
 
 
 };
+ostream &operator<<(ostream &o, Set& s) {
+    cout << "[";
+    rep(i, s.size()) {
+        cout << s[i] << (i != s.size() - 1 ? ", " : "");
+    }
+    cout << "]";
+    return o;
+}
+
+// rangefreq 
+// O(log^2 n)
+//
+// rangesum
+// O(log^2 n)
+struct DynamicRangefreq {
+    int n;
+    vector<Set> dat;
+    DynamicRangefreq(int n_ = 0) : n(n_){
+        for(n = 1; n < n_; n <<= 1);
+        dat.resize(2*n);
+        rep(i, 2*n) {
+            dat[i] = Set(1);
+        }
+    }
+    // 頂点番号vは長さwである。
+    // 頂点番号vの区間と区間[l, r)が重複する区間reductionを行う。
+    // reductionはrangefreqの総和
+    ll rangefreq(int v, int w, int l, int r, ll a, ll b){
+        if(r <= l || w == 0) return 0;
+        if(r - l == w) return dat[v].rangefreq(a, b); // assert(l == 0 && r == w);
+        int m = w/2;
+        return rangefreq(v*2, m, l, min(r,m), a, b) + rangefreq(v*2+1, m, max(0,l-m), r-m, a, b);
+    }
+    ll rangefreq(int l, int r, ll a, ll b){ return rangefreq(1,n,l,r,a,b); }
+
+    // 頂点番号vは長さwである。
+    // 頂点番号vの区間と区間[l, r)が重複する区間reductionを行う。
+    // reductionはrangesumの総和
+    ll rangesum(int v, int w, int l, int r, ll a, ll b){
+        if(r <= l || w == 0) return 0;
+        if(r - l == w) return dat[v].rangesum(a, b); // assert(l == 0 && r == w);
+        int m = w/2;
+        return rangesum(v*2, m, l, min(r,m), a, b) + rangesum(v*2+1, m, max(0,l-m), r-m, a, b);
+    }
+    ll rangesum(int l, int r, ll a, ll b){ return rangesum(1,n,l,r,a,b); }
+
+
+    void update(int i, const ll &x){
+        i += n;
+        bool doErase = !!dat[i].size();
+        ll v = doErase ? dat[i].s->Value : 0;
+        if (doErase) {
+            dat[i].erase(v);
+        }
+        dat[i].insert(x);
+        for(; i!=1; i/=2) {
+            if (doErase) {
+                dat[i/2].erase(v);
+            }
+            dat[i/2].insert(x);
+        }
+    } 
+    size_t size() const { return n; }
+    ll operator [] (const int &i) { return dat[i+n].size() ? dat[i+n].s->Value : 0; }
+};
+ostream &operator<<(ostream &o, DynamicRangefreq& s) {
+    cout << "[";
+    rep(i, s.n) {
+        cout << s[i] << (i != s.n - 1 ? ", " : "");
+    }
+    cout << "]";
+    return o;
+}
+
 int main(void) {
-    // RBSTの基本操作
     {
-        Node* a[10];
+        DynamicRangefreq st(10);
 
-        cout << "########" << endl;
-        rep(i, 10) a[i] = MakeRoot(i);
-        rep(i, 10) cout << a[i] << " "; cout << endl;
+        st.update(0, 1);
+        st.update(1, 2);
+        st.update(2, 3);
+        st.update(3, 4);
+        st.update(4, 5);
+        cout << st << endl;
+        st.update(0, 12);
+        cout << st << endl;
+        rep(i, st.dat.size()) cout << st.dat[i] << " "; cout << endl;
 
-        cout << "########" << endl;
-        repi(i, 1, 10) 
-            a[0] = Merge(a[0], a[i]);
-        rep(i, 10) cout << a[i] << endl;
-
-        cout << "######## lower bound" << endl;
-        cout << Lower_Bound(a[0], 3) << endl;
-        cout << Lower_Bound(a[0], 11) << endl;
-        cout << rLower_Bound(a[0], 3) << endl;
-        cout << rUpper_Bound(a[0], 3) << endl;
-        cout << rUpper_Bound(a[0], -100) << endl;
-
-        cout << "########" << endl;
-        cout << a[0]->getSum() << " " << a[0]->getMin() << " " << a[0]->getMax() << endl;
-
-        cout << "########" << endl;
-        auto x = Split(a[0], 3);
-        cout << x.fi << endl;
-        cout << x.se << endl;
+        cout << st.rangefreq(0, 8, 3, 14) << endl;
+        cout << st.rangefreq(0, 8, 3, 12) << endl;
+        cout << st.rangesum(0, 8, 3, 14) << endl;
+        cout << st.rangesum(0, 8, 3, 12) << endl;
     }
     return 0;
 }

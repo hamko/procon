@@ -47,28 +47,26 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define EPS (double)1e-14
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
-ll n;
-bool check(ll i) {
-    ll ret = i;
-    while (i) {
-        ret+=i%10;
-        i/=10;
-    }
-    return ret==n;
-}
 
 int main(void) {
-    cin >> n;
+    ll n;cin >> n;
     vll ret;
-    repi(i, max(0ll,n-1000), n+1000) {
-        if (check(i)) {
-            ret.pb(i);
+
+    repi(m, 1, 100) {
+        string ns = to_string(n - m);
+        ll tmp = 0;
+        for (auto c : ns) {
+            tmp += c - '0';
+        }
+        if (tmp == m) {
+            ret.pb(n - m);
         }
     }
-    cout << ret.size()<<endl;
-    for(auto x:ret){
-        cout << x<<endl;
-       }
+    cout << ret.size() << endl;
+    sort(all(ret));
+    rep(i, ret.size()) {
+        cout << ret[i] << endl;
+    }
 
     return 0;
 }
