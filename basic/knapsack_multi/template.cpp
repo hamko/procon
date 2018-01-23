@@ -50,9 +50,10 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 
 #define I 1010
 #define J 1010
+#if 0
 ll dp[I][J];
 int main(void) {
-    rep(i, 1010) rep(j, 1010) {
+    rep(i, I) rep(j, J) {
         dp[i][j] = -INF;
     }
     dp[0][0] = 0;
@@ -68,8 +69,27 @@ int main(void) {
             chmax(dp[i][j], dp[i][j-w[i-1]] + v[i-1]);
         }
     }
+    rep(i, n+1) rep(j, W+1)  if (mt(i, j) != mt(0, 0)) {
+        if (i>=1 && dp[i-1][j]!=-INF) {
+            chmax(dp[i][j], dp[i-1][j]);
+        }
+        if (i>=1 && j-w[i-1]>=0 && dp[i][j-w[i-1]] !=-INF) {
+            chmax(dp[i][j], dp[i][j-w[i-1]] + v[i-1]);
+        }
+    }
 
     cout << dp[n][W] << endl;
 
     return 0;
 }
+#else
+ll dp[J];
+int main(void) {
+    rep(j, J) dp[j] = -INF; dp[0] = 0;
+    ll n, W; cin >> n >> W; vll w(n), v(n); cin >> w >> v;
+    repi(i, 1, n+1) rep(j, W+1) if (j-w[i-1]>=0 && dp[j-w[i-1]] != -INF) chmax(dp[j], dp[j-w[i-1]] + v[i-1]);
+    cout << dp[W] << endl;
+
+    return 0;
+}
+#endif
