@@ -30,7 +30,7 @@ template<class Ch, class Tr, class... Args>
 auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
-template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
@@ -45,58 +45,102 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-class OnlySanta {
+class Halving {
     public:
-        // OKで1
-        bool check(string s) {
-            ll mode = 0;
-            rep(i, s.length()) {
-//                cout << s[i] << " " << mode<< endl;
-                if (mode == 0 && s[i] == 'S') mode = 1;
-                else if (mode == 1 && s[i] == 'A') mode = 2;
-                else if (mode == 2 && s[i] == 'T') mode = 3;
-                else if (mode == 3 && s[i] == 'A') mode = 4;
-                else if (mode == 4 && s[i] == 'N') return 0;
+        unordered_map<ll, ll> en(ll n) {
+            unordered_map<ll, ll> ret;
+            vector<ll> q;
+            q.pb(n);
+            ll cyc = 0;
+            while (q.size()) {
+                vll q_next;
+                for (auto x : q) {
+                    if (ret.count(x)) continue;
+                    ret[x] = cyc;
+                    if (x % 2) {
+                        q_next.pb(x / 2);
+                        q_next.pb(x / 2 + 1);
+                    } else {
+                        q_next.pb(x / 2);
+                    }
+                }
+                swap(q, q_next);
+                cyc++;
             }
-            return 1;
+            return ret;
         }
-        bool haveSanta(string s) {
-            ll mode = 0;
-            rep(i, s.length()) {
-//                cout << s[i] << " " << mode<< endl;
-                if (mode == 0 && s[i] == 'S') mode = 1;
-                else if (mode == 1 && s[i] == 'A') mode = 2;
-                else if (mode == 2 && s[i] == 'N') mode = 3;
-                else if (mode == 3 && s[i] == 'T') mode = 4;
-                else if (mode == 4 && s[i] == 'A') return 1;
+        int minSteps(vector <int> a_) {
+            vll a = conv(a_);
+            ll n = a.size();
+            vector<unordered_map<ll, ll>> t(n);
+            set<ll> cands;
+
+            rep(i, n) {
+                t[i] = en(a[i]);
+                for (auto x : t[i]) {
+                    cands.insert(x.fi);
+                }
+            }
+            ll ret = INF;
+            for (auto x : cands) {
+                ll faf = 1;
+                ll tmp = 0;
+                rep(i, n) {
+                    if (t[i].count(x) == 0) {
+                        faf = 0;
+                        break;
+                    }
+                    tmp += t[i][x];
+                }
+                if (faf) 
+                    chmin(ret, tmp);
+            }
+            return ret;
+        }
+        bool solved(const multiset<P>& s) {
+            int a =begin(s)->fi;
+            int b =begin(s)->se ;
+            for (int t : {a,b}) {
+                int cnt = 0;
+                for (auto p : s) {
+                    cnt+=p.fi==t||p.se==t;
+                }
+                if(cnt==s.size()){
+                    return 1;
+                }
             }
             return 0;
         }
- 
-        void sl(void) {
-            rep(_, 10000) {
-                string s;
-                string t= "SANT";
-                rep(i, 5) {
-                    s += (t[rand()%4]);
-                }
-                if (check(s)) {
-                    string tmp = solve(s);
-                    assert(check(s) == 1);
-                }
+        void devide(const int k, vll& res) {
+            res.pb(k/2);
+            res.pb((k+1)/2);
+        }
+        int compare(vector <int> A) {
+            const int N = A.size();
+            multiset<P> s;
+            priority_queue<P> que;
+            for (auto a : A) {
+                s.insert(P(a,a));
+                que.push(P(a,a));
             }
+            int res = 0;
+            while (!solved(s)){
+                const P p = que.top();
+                que.pop();
+                s.erase(s.find(p));
+                vll nums;
+                devide(p.fi,nums);
+                devide(p.se,nums);
+                sort(all(nums));
+                nums.erase(unique(all(nums)),end(nums));
+                const P q(nums[0],nums[1]);
+                s.insert(q);
+                que.push(q);
+                res++;
+            }
+            return res;
         }
-        string solve(string S) {
-            string s="SAT";
-            int Len=S.length();
-            int p=0;
-            for(int i=0;i<3;i++)
-                while(p<Len&&S[p]!=s[i])p++;
-            if(p==Len)return S+"SANTA";
 
-
-            return S;
-        }
 };
 
 // BEGIN KAWIGIEDIT TESTING
@@ -107,152 +151,133 @@ class OnlySanta {
 #include <ctime>
 #include <cmath>
 using namespace std;
-bool KawigiEdit_RunTest(int testNum, string p0, bool hasAnswer, string p1) {
-    cout << "Test " << testNum << ": [" << "\"" << p0 << "\"";
-    cout << "]" << endl;
-    OnlySanta *obj;
-    string answer;
-    obj = new OnlySanta();
-    clock_t startTime = clock();
-    answer = obj->solve(p0);
-    obj->sl();
-    clock_t endTime = clock();
-    delete obj;
-    bool res;
-    res = true;
-    cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
-    if (hasAnswer) {
-        cout << "Desired answer:" << endl;
-        cout << "\t" << "\"" << p1 << "\"" << endl;
-    }
-    cout << "Your answer:" << endl;
-    cout << "\t" << "\"" << answer << "\"" << endl;
-    if (hasAnswer) {
-        res = answer == p1;
-    }
-    if (!res) {
-        cout << "DOESN'T MATCH!!!!" << endl;
-    } else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
-        cout << "FAIL the timeout" << endl;
-        res = false;
-    } else if (hasAnswer) {
-        cout << "Match :-)" << endl;
-    } else {
-        cout << "OK, but is it right?" << endl;
-    }
-    cout << "" << endl;
-    return res;
+bool KawigiEdit_RunTest(int testNum, vector <int> p0, bool hasAnswer, int p1) {
+	cout << "Test " << testNum << ": [" << "{";
+	for (int i = 0; int(p0.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p0[i];
+	}
+	cout << "}";
+	cout << "]" << endl;
+	Halving *obj;
+	int answer;
+	obj = new Halving();
+	clock_t startTime = clock();
+//	answer = obj->minSteps(p0);
+	answer = obj->compare(p0);
+	clock_t endTime = clock();
+	delete obj;
+	bool res;
+	res = true;
+	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
+	if (hasAnswer) {
+		cout << "Desired answer:" << endl;
+		cout << "\t" << p1 << endl;
+	}
+	cout << "Your answer:" << endl;
+	cout << "\t" << answer << endl;
+	if (hasAnswer) {
+		res = answer == p1;
+	}
+	if (!res) {
+		cout << "DOESN'T MATCH!!!!" << endl;
+	} else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
+		cout << "FAIL the timeout" << endl;
+		res = false;
+	} else if (hasAnswer) {
+		cout << "Match :-)" << endl;
+	} else {
+		cout << "OK, but is it right?" << endl;
+	}
+	cout << "" << endl;
+	return res;
 }
 int main() {
-    bool all_right;
-    bool disabled;
-    bool tests_disabled;
-    all_right = true;
-    tests_disabled = false;
+	bool all_right;
+	bool disabled;
+	bool tests_disabled;
+	all_right = true;
+	tests_disabled = false;
+	
+	vector <int> p0;
+	int p1;
+	
+	// ----- test 0 -----
+	disabled = false;
+	p0 = {11,4};
+	p1 = 3;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 1 -----
+	disabled = false;
+	p0 = {1000000000,1000000000,1000000000,1000000000};
+	p1 = 0;
+	all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 2 -----
+	disabled = false;
+	p0 = {1,2,3,4,5,6,7};
+	p1 = 10;
+	all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
 
-    string p0;
-    string p1;
-
-    // ----- test 0 -----
-    disabled = false;
-    p0 = "STANA";
-    p1 = "STANTA";
-    all_right = (disabled || KawigiEdit_RunTest(0, p0, true, p1) ) && all_right;
-    tests_disabled = tests_disabled || disabled;
-    // ------------------
-
-    // ----- test 1 -----
-    disabled = false;
-    p0 = "STN";
-    p1 = "SANTNA";
-    all_right = (disabled || KawigiEdit_RunTest(1, p0, true, p1) ) && all_right;
-    tests_disabled = tests_disabled || disabled;
-    // ------------------
-
-    // ----- test 2 -----
-    disabled = false;
-    p0 = "RATSNOOOA";
-    p1 = "DEARATSNOOOSANTA";
-    all_right = (disabled || KawigiEdit_RunTest(2, p0, true, p1) ) && all_right;
-    tests_disabled = tests_disabled || disabled;
-    // ------------------
-
-    // ----- test 3 -----
-    disabled = false;
-    p0 = "SXAYNTA";
-	p1 = "OOOOSOXAYNTOOOOAOOO";
+	// ----- test 3 -----
+	disabled = false;
+	p0 = {13,13,7,11,13,11};
+	p1 = 11;
+	all_right = (disabled || KawigiEdit_RunTest(3, p0, true, p1) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+    //
+		// ----- test 3 -----
+	disabled = false;
+	p0 = {
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+        13,13,7,11,13,11,
+    };
+	p1 = 11*10;
 	all_right = (disabled || KawigiEdit_RunTest(3, p0, true, p1) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
 	// ----- test 4 -----
 	disabled = false;
-	p0 = "SNTA";
-	p1 = "SANTA";
+	p0 = {1,1};
+	p1 = 0;
 	all_right = (disabled || KawigiEdit_RunTest(4, p0, true, p1) ) && all_right;
 	tests_disabled = tests_disabled || disabled;
 	// ------------------
 	
-	// ----- test 5 -----
-	disabled = false;
-	p0 = "ASNTA";
-	p1 = "SASNTAS";
-	all_right = (disabled || KawigiEdit_RunTest(5, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 6 -----
-	disabled = false;
-	p0 = "NIELATA";
-	p1 = "SANIELATAJA";
-	all_right = (disabled || KawigiEdit_RunTest(6, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	// ----- test 7 -----
-	disabled = false;
-	p0 = "X";
-	p1 = "SSAAXNNTTAA";
-	all_right = (disabled || KawigiEdit_RunTest(7, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-		// ----- test 7 -----
-	disabled = false;
-	p0 = "X";
-	p1 = "SSAAXNNTTAA";
-	all_right = (disabled || KawigiEdit_RunTest(7, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-			// ----- test 7 -----
-	disabled = false;
-	p0 = "SATNTA";
-	p1 = "";
-	all_right = (disabled || KawigiEdit_RunTest(7, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-				// ----- test 7 -----
-	disabled = false;
-	p0 = "SANTA";
-	p1 = "";
-	all_right = (disabled || KawigiEdit_RunTest(7, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-					// ----- test 7 -----
-	disabled = false;
-	p0 = "ANTA";
-	p1 = "";
-	all_right = (disabled || KawigiEdit_RunTest(7, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-						// ----- test 7 -----
-	disabled = false;
-	p0 = "ASN";
-	p1 = "";
-	all_right = (disabled || KawigiEdit_RunTest(7, p0, true, p1) ) && all_right;
-	tests_disabled = tests_disabled || disabled;
-	// ------------------
-	
-	
+
+	auto obj = new Halving();
+    vector<int> p;
+    rep(_, 10000) {
+        cout << _ << endl;
+        p.clear();
+        rep(i, 2) {
+            p.pb(rand()%(ll)(1e9) +1);
+            if (obj->compare(p) != obj->minSteps(p)) {
+                cout <<"HIT" << endl;
+                cout << p << endl;
+            }
+        }
+    }
 	if (all_right) {
 		if (tests_disabled) {
 			cout << "You're a stud (but some test cases were disabled)!" << endl;
@@ -265,104 +290,80 @@ int main() {
 	return 0;
 }
 // PROBLEM STATEMENT
-// Definition: for two strings X and Y, we say that a string X has a subsequence Y if and only if it's possible to remove 0 or more characters in X so that the remaining characters form the string Y.
-// For example, "ABCDEFFF" has subsequences "B", "ABFF" and "ABCDEFFF", but doesn't have subsequences "XSFJ", "BA" and "CCDD".
 // 
-// Kids often want to write a letter to Santa but they make a typo and send them to Satan instead.
-// We say that the address written on an envelope is good if and only if it has the subsequence "SANTA" but it doesn't have the subsequence "SATAN" - otherwise the letter can be sent to the wrong place!
-// 
-// Limak already wrote a string S as the address.
-// It's guaranteed that S doesn't have the subsequence "SATAN", but possibly it doesn't have the subsequence "SANTA" either.
-// Your task is to add some (0 or more) characters anywhere into S, including its beginning and end, so that it is a good address, as defined above.
-// 
-// You are given the string S of length up to 1000 consisting of uppercase English letters, representing the currently written address.
-// Formally, return any string X that satisifes the following conditions:
+// You have a collection of sticks.
+// The length of each stick is a positive integer.
 // 
 // 
-// X has a subsequence S.
-// X has the subsequence "SANTA".
-// X doesn't have the subsequence "SATAN".
-// X has at most 1050 characters.
-// Each character in X must be an uppercase English letter 'A' - 'Z'.
+// You want to have a collection of sticks in which all the sticks have the same length.
+// You may alter your current collection by performing zero or more steps.
+// Each step must look as follows:
+// 
+// You choose one of your sticks. The chosen stick must have length at least 2.
+// Let L be the length of the chosen stick.
+// If L is even, cut the stick into two sticks of length L/2 each. Otherwise, cut it into sticks of lengths (L-1)/2 and (L+1)/2.
+// Keep one of the two new sticks and throw away the other one.
+// 
+// 
+// 
+// It can be proved that any collection of sticks can be turned into a collection of sticks that all have the same length.
+// You are given the current lengths of your sticks in the vector <int> a.
+// Compute and return the smallest number of steps needed to reach your goal.
 // 
 // 
 // DEFINITION
-// Class:OnlySanta
-// Method:solve
-// Parameters:string
-// Returns:string
-// Method signature:string solve(string S)
-// 
-// 
-// NOTES
-// -It can be proved that a valid answer exists for any valid input.
+// Class:Halving
+// Method:minSteps
+// Parameters:vector <int>
+// Returns:int
+// Method signature:int minSteps(vector <int> a)
 // 
 // 
 // CONSTRAINTS
-// -S will contain between 1 and 1000 characters, inclusive.
-// -Each character in S will be an uppercase English letter: 'A' - 'Z'.
-// -S will not have the subsequence "SATAN".
+// -a will contain between 2 and 50 elements, inclusive.
+// -Each element of a will be between 1 and 109, inclusive.
 // 
 // 
 // EXAMPLES
 // 
 // 0)
-// "STANA"
+// {11, 4}
 // 
-// Returns: "STANTA"
+// Returns: 3
 // 
-// Limak already wrote "STANA".
-// He can add a single character 'T' to obtain "STANTA".
-// This string has the subsequence "SANTA" and doesn't have the subsequence "SATAN".
+// One optimal solution is:
+// 
+//  Pick the stick of length 11, cut it into sticks of lengths 5 and 6 and keep the part of length 5. 
+//  Pick the stick of length 4, cut it into two sticks of length 2 and keep the part of length 2. 
+//  Pick the stick of length 5, cut it into sticks of lengths 2 and 3 and keep the part of length 2. 
+// 
+// In the end, you'll have two sticks of length 2.
 // 
 // 1)
-// "STN"
+// {1000000000, 1000000000, 1000000000, 1000000000}
 // 
-// Returns: "SANTNA"
+// Returns: 0
 // 
-// Here, one correct solution is to add "AN" between 'S' and 'T' and also add 'A' at the end of the string.
-// The returned string is: "S(A)(N)TN(A)", where brackets represent added characters.
+// All your sticks have the same length, no steps are needed.
 // 
 // 2)
-// "RATSNOOOA"
+// {1, 2, 3, 4, 5, 6, 7}
 // 
-// Returns: "DEARATSNOOOSANTA"
+// Returns: 10
 // 
 // 
 // 
 // 3)
-// "SXAYNTA"
+// {13, 13, 7, 11, 13, 11}
 // 
-// Returns: "OOOOSOXAYNTOOOOAOOO"
+// Returns: 11
 // 
-// One correct answer is simply "SXAYNTA" because this given string already has the subsequence "SANTA".
-// You don't have to minimize the number of added characters though.
+// 
 // 
 // 4)
-// "SNTA"
+// {1, 1}
 // 
-// Returns: "SANTA"
-// 
-// 
-// 
-// 5)
-// "ASNTA"
-// 
-// Returns: "SASNTAS"
-// 
-// 
-// 
-// 6)
-// "NIELATA"
-// 
-// Returns: "SANIELATAJA"
-// 
-// 
-// 
-// 7)
-// "X"
-// 
-// Returns: "SSAAXNNTTAA"
+// Returns: 0
 // 
 // 
 // 
