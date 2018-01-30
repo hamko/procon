@@ -3,10 +3,9 @@
 #include <vector>
 using namespace std;
 
-#define iter(type,i,n) for(type i{0}; i.index < n; i++)
-
 // 意図的にint型として読めるが、
 // int型を代入できないようにしている
+#define iter(type,it,n) for(type it{0}; it.index < n; it++)
 template < size_t Tag >
 struct index_t {
     int index;
@@ -64,7 +63,6 @@ int main() {
         //std::cout << b[i1] << std::endl; // error
     }
 
-
     {
         using vll_a = TypedIndexContainer<1, std::vector<int>>;
         using iter_a = index_t<1>;
@@ -85,9 +83,10 @@ int main() {
         iter(iter_a, it, n) cout << a[it] * a[it] << " "; cout << endl;
 
         vll_b b(n);
+         iter(iter_b, it, n) b[it] = it.index; 
 //         iter(iter_b, i, n) a[i] = i; // Error, no viable overloaded operator[]
 //         iter(iter_b, i, n) cout << a[i] << " "; cout << endl; // Error, no viable overloaded operator[]
-         iter(iter_b, i, n) b[i] = i.index; 
+//         b[0] = 10; // Error, expression is not assignable
     }
     return 0;
 }
