@@ -58,7 +58,6 @@ int main() {
         cout << a[index_t<1>{0}] << endl;
         cout << a[0] << endl;
 
-
         const TypedIndexContainer<2, std::vector<int>> b{1, 2, 3, 4, 5};
         //std::cout << b[i1] << std::endl; // error
     }
