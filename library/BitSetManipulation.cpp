@@ -49,50 +49,38 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define mo  (ll)(1e9+7)
 
 int main(void) {
-    ll n; cin >> n;
-    vll b(n);
-    vll c(16);
-    rep(i, n-1) {
-        ll x, y, a; cin >> x >> y >> a;
-        b[x] ^= a;
-        b[y] ^= a;
-    }
-    rep(i, n) {
-        c[b[i]]++;
-    }
-//    cout << c << endl;
-    ll ret = 0; c[0] = 0;
-    rep(i, 16) {
-        ret += c[i] / 2;
-        c[i] %= 2;
-    }
-//    cout << c << endl;
-//    cout << ret << endl;
-    ll state = 0;
-    rep(i, 15) {
-        if (c[i+1]) 
-            state |= 1ll << i;
-    }
-//    cout << bitset<15>(state) <<endl;
-    ll maskn = 1<<15;
-    ll dp[maskn];
-    repi(mask, 1, maskn) {
-//        cout << mask << endl;
-        ll tmp = 0;
-        rep(i, 15) if (mask & (1ll << i)) {
-            tmp ^= (i+1);
+    // 空集合以外の部分集合を全列挙
+    {
+        ll mask = 13;
+        cout << "###########"<< endl;
+        cout << bitset<4>(mask) << "#org" << endl;
+        for (ll i = mask; i > 0; i=(i-1)&mask) {
+            cout << bitset<4>(i) << endl;
         }
-        dp[mask] = tmp == 0;
+    }
 
-    }
-    rep(i, maskn) {
-//        cout << i << endl;
-        for(int j=i;j>0;j=(j-1)&i) {
-            if (j != i && j != 0)
-                chmax(dp[i], dp[j] + dp[i^j]);
+    // 部分集合を全列挙
+    {
+        cout << "###########"<< endl;
+        ll mask = 13;
+        cout << bitset<4>(mask) << "#org" << endl;
+        for (ll i = mask; i >= 0; i=(i-1)&mask) {
+            cout << bitset<4>(i) << endl;
+            if (!i) break;
         }
     }
-    cout << ret + __builtin_popcountll(state) - dp[state] << endl;
+
+    // 部分集合に自分含む集合を全列挙
+    {
+        ll n = 4;
+        ll mask = 13;
+        cout << "###########"<< endl;
+        cout << bitset<4>(mask) << "#org" << endl;
+        for(int i=mask; i<(1<<n); i=(i+1)|mask) {
+            cout << bitset<4>(i) << endl;
+        }
+    }
+
 
     return 0;
 }

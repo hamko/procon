@@ -48,51 +48,154 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-int main(void) {
-    ll n; cin >> n;
-    vll b(n);
-    vll c(16);
-    rep(i, n-1) {
-        ll x, y, a; cin >> x >> y >> a;
-        b[x] ^= a;
-        b[y] ^= a;
-    }
-    rep(i, n) {
-        c[b[i]]++;
-    }
-//    cout << c << endl;
-    ll ret = 0; c[0] = 0;
-    rep(i, 16) {
-        ret += c[i] / 2;
-        c[i] %= 2;
-    }
-//    cout << c << endl;
-//    cout << ret << endl;
-    ll state = 0;
-    rep(i, 15) {
-        if (c[i+1]) 
-            state |= 1ll << i;
-    }
-//    cout << bitset<15>(state) <<endl;
-    ll maskn = 1<<15;
-    ll dp[maskn];
-    repi(mask, 1, maskn) {
-//        cout << mask << endl;
-        ll tmp = 0;
-        rep(i, 15) if (mask & (1ll << i)) {
-            tmp ^= (i+1);
-        }
-        dp[mask] = tmp == 0;
+vll args;
+void init(int argc, char** argv) { repi(i, 1, argc) { args.pb(atoll(argv[i])); } }
 
+// [i, j]のランダムな整数
+ll rint(ll i, ll j) { if (i > j) return i; else return (ll)rand() % (j - i + 1) + i; }
+// [i, j]のランダムな小数
+ld rdouble(ld i, ld j) { return ((ld)rand() / RAND_MAX) * (j - i) + i; }
+// ランダムな整数l, r in [i, j]の区間P(l, r)
+// l == rを許容する
+P rinterval(ll i, ll j) { ll a = rint(i, j), b = rint(i, j); if (a > b) swap(a, b); return P(a, b); }
+// ランダムな整数l, r in [i, j]の区間P(l, r)
+// l == rを許容しない
+P rinterval_strict(ll i, ll j) { ll a = rint(i, j), b = rint(i, j); if (a == b) return rinterval_strict(i, j); else { swap(a, b); return P(a, b); } }
+// ランダムな長さnのvll aであって、a_i in [x, y]なるものを出力
+vll rvector(ll n, ll x, ll y) { vll a(n); rep(i, n) a[i] = rint(x, y); return a; }
+// ランダムな長さnのvll aであって、a_i in [x, y]なる広義単調増加数列を出力
+vll rvector_increasing(ll n, ll x, ll y) { auto ret = rvector(n, x, y); sort(all(ret)); return ret; }
+
+struct UnionFind {
+    vector<int> data;
+    UnionFind(int size) : data(size, -1) { }
+    // x, yをマージ, O(A^-1)
+    bool unite(int x, int y) {
+        x = root(x); y = root(y);
+        if (x != y) {
+            if (data[y] < data[x]) swap(x, y);
+            data[x] += data[y]; data[y] = x;
+        }
+        return x != y;
     }
-    rep(i, maskn) {
-//        cout << i << endl;
-        for(int j=i;j>0;j=(j-1)&i) {
-            if (j != i && j != 0)
-                chmax(dp[i], dp[j] + dp[i^j]);
+    // x, yが同じ集合なら1, O(A^-1)
+    bool find(int x, int y) {
+        return root(x) == root(y);
+    }
+    // xの根を探す。同じ集合なら同じ根が帰る, O(A^-1)
+    int root(int x) {
+        return data[x] < 0 ? x : data[x] = root(data[x]);
+    }
+    // xが含まれる集合の大きさを返す, O(A^-1)
+    int size(int x) {
+        return -data[root(x)];
+    }
+    // 分離されている集合の数を返す, O(n)
+    int getSetNum(void) {
+        unordered_map<int, int> c;
+        rep(i, data.size()) {
+            c[root(i)]++;
+        }
+        return c.size();
+    }
+    // 頂点vと連結な集合を返す, O(n)
+    vector<int> getContainingSet(int v) {
+        vector<int> ret;
+        for (int i = 0; i < data.size(); i++) 
+            if (root(i) == root(v))
+                ret.push_back(i);
+        return ret;
+    }
+
+    // 集合ごとに全部の要素を出力, O(n)
+    vector<vector<int>> getUnionList(void) {
+        map<int, vector<int>> c;
+        for (int i = 0; i < data.size(); i++) 
+            c[root(i)].push_back(i);
+        vector<vector<int>> v;
+        for (auto x : c) 
+            v.push_back(x.second);
+        return v;
+    }
+};
+
+void printRandomConnectedGraph(ll n, ll edges)
+{
+    const bool isOneIndexed = 0;
+
+    assert(n-1 <= edges); // should be connected
+    assert(edges <= (n-1)*n/2); // should be connected
+    cout << n << " " << edges << endl;
+
+    ll m = min(n - 1, edges);
+    edges -= m;
+    UnionFind uf(n);
+    unordered_set<P> memo;
+    while (m) {
+        ll u = rint(0, n-1);
+        ll v = rint(0, n-1); 
+        if (uf.find(u, v) == 0) {
+            memo.insert(P(u, v));
+            memo.insert(P(v, u));
+            cout << u+isOneIndexed << " "<< v+isOneIndexed << endl;
+            uf.unite(u, v);
+            m--;
         }
     }
-    cout << ret + __builtin_popcountll(state) - dp[state] << endl;
+
+    while (edges) {
+        ll u = rint(0, n-1);
+        ll v = rint(0, n-1); 
+        if (u == v) continue;
+        if (memo.count(P(u, v))) continue;
+        memo.insert(P(u, v));
+        memo.insert(P(v, u));
+        cout << u+isOneIndexed << " "<< v+isOneIndexed << endl;
+        edges--;
+    }
+}
+
+void printRandomForest(ll n, ll m)
+{
+    assert(n > m);
+    const bool isOneIndexed = 0;
+
+    cout << n << " " << m << endl;
+    UnionFind uf(n);
+    while (m) {
+        ll u = rint(0, n-1), v = rint(0, n-1); 
+        if (uf.find(u, v) == 0) {
+            cout << u+isOneIndexed << " "<< v+isOneIndexed << endl;
+            uf.unite(u, v);
+            m--;
+        }
+    }
+}
+
+
+void printRandomTree(ll n)
+{
+    const bool isOneIndexed = 0;
+
+    ll m = n - 1;
+    cout << n << endl;
+    UnionFind uf(n);
+    while (m) {
+        ll u = rint(0, n-1), v = rint(0, n-1); 
+        if (uf.find(u, v) == 0) {
+            cout << u+isOneIndexed << " "<< v+isOneIndexed << " "<< rint(0, 15)<< endl;
+            uf.unite(u, v);
+            m--;
+        }
+    }
+}
+
+int main(int argc, char** argv)
+{
+    init(argc, argv);
+    printRandomTree(args[0]);
+
 
     return 0;
 }
+
