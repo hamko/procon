@@ -48,198 +48,57 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-vll args(100);
-void init(int argc, char** argv) { repi(i, 1, argc) { args[i-1] = atoll(argv[i]); } }
-
-// [i, j]のランダムな整数
-ll rint(ll i, ll j) { if (i > j) return i; else return (ll)rand() % (j - i + 1) + i; }
-// [i, j]のランダムな小数
-ld rdouble(ld i, ld j) { return ((ld)rand() / RAND_MAX) * (j - i) + i; }
-// ランダムな整数l, r in [i, j]の区間P(l, r)
-// l == rを許容する
-P rinterval(ll i, ll j) { ll a = rint(i, j), b = rint(i, j); if (a > b) swap(a, b); return P(a, b); }
-// ランダムな整数l, r in [i, j]の区間P(l, r)
-// l == rを許容しない
-P rinterval_strict(ll i, ll j) { ll a = rint(i, j), b = rint(i, j); if (a == b) return rinterval_strict(i, j); else { swap(a, b); return P(a, b); } }
-// ランダムな長さnのvll aであって、a_i in [x, y]なるものを出力
-vll rvector(ll n, ll x, ll y) { vll a(n); rep(i, n) a[i] = rint(x, y); return a; }
-// ランダムな長さnのvll aであって、a_i in [x, y]なる広義単調増加数列を出力
-vll rvector_increasing(ll n, ll x, ll y) { auto ret = rvector(n, x, y); sort(all(ret)); return ret; }
-
-struct UnionFind {
-    vector<int> data;
-    UnionFind(int size) : data(size, -1) { }
-    // x, yをマージ, O(A^-1)
-    bool unite(int x, int y) {
-        x = root(x); y = root(y);
-        if (x != y) {
-            if (data[y] < data[x]) swap(x, y);
-            data[x] += data[y]; data[y] = x;
-        }
-        return x != y;
-    }
-    // x, yが同じ集合なら1, O(A^-1)
-    bool find(int x, int y) {
-        return root(x) == root(y);
-    }
-    // xの根を探す。同じ集合なら同じ根が帰る, O(A^-1)
-    int root(int x) {
-        return data[x] < 0 ? x : data[x] = root(data[x]);
-    }
-    // xが含まれる集合の大きさを返す, O(A^-1)
-    int size(int x) {
-        return -data[root(x)];
-    }
-    // 分離されている集合の数を返す, O(n)
-    int getSetNum(void) {
-        unordered_map<int, int> c;
-        rep(i, data.size()) {
-            c[root(i)]++;
-        }
-        return c.size();
-    }
-    // 頂点vと連結な集合を返す, O(n)
-    vector<int> getContainingSet(int v) {
-        vector<int> ret;
-        for (int i = 0; i < data.size(); i++) 
-            if (root(i) == root(v))
-                ret.push_back(i);
-        return ret;
+vvll g;
+ll n;
+vll a;
+vll dp;
+void dfs(ll u) {
+    if (g[u].size() == 0) {
+        dp[u] = 0;
+        return;
     }
 
-    // 集合ごとに全部の要素を出力, O(n)
-    vector<vector<int>> getUnionList(void) {
-        map<int, vector<int>> c;
-        for (int i = 0; i < data.size(); i++) 
-            c[root(i)].push_back(i);
-        vector<vector<int>> v;
-        for (auto x : c) 
-            v.push_back(x.second);
-        return v;
+    vector<P> memo;
+    for (auto x : g[u]) {
+        dfs(x);
+        memo.pb(P(a[x], dp[x]));
     }
-};
-
-void printRandomConnectedGraph(ll n, ll edges)
-{
-    const bool isOneIndexed = 0;
-
-    assert(n-1 <= edges); // should be connected
-    assert(edges <= (n-1)*n/2); // should be connected
-    cout << n << " " << edges << endl;
-
-    ll m = min(n - 1, edges);
-    edges -= m;
-    UnionFind uf(n);
-    unordered_set<P> memo;
-    while (m) {
-        ll u = rint(0, n-1);
-        ll v = rint(0, n-1); 
-        if (uf.find(u, v) == 0) {
-            memo.insert(P(u, v));
-            memo.insert(P(v, u));
-            cout << u+isOneIndexed << " "<< v+isOneIndexed << endl;
-            uf.unite(u, v);
-            m--;
+    vll ep(a[u]+1, INF);
+    ep[0] = 0;
+    repi(i, 1, memo.size()+1) {
+        rep(jrev, ep.size()) {
+            ll j = ep.size() - jrev - 1;
+            ll ret = INF;
+            if (j-memo[i-1].fi>=0&&j-memo[i-1].fi<ep.size()&&ep[j-memo[i-1].fi]!=INF) 
+                chmin(ret, ep[j-memo[i-1].fi]+memo[i-1].se);
+            if (j-memo[i-1].se>=0&&j-memo[i-1].se<ep.size()&&ep[j-memo[i-1].se]!=INF) 
+                chmin(ret, ep[j-memo[i-1].se]+memo[i-1].fi);
+            ep[j] = ret;
         }
     }
-
-    while (edges) {
-        ll u = rint(0, n-1);
-        ll v = rint(0, n-1); 
-        if (u == v) continue;
-        if (memo.count(P(u, v))) continue;
-        memo.insert(P(u, v));
-        memo.insert(P(v, u));
-        cout << u+isOneIndexed << " "<< v+isOneIndexed << endl;
-        edges--;
+    ll ret = INF;
+    rep(j, a[u]+1) {
+        chmin(ret, ep[j]);
+    }
+    if (ret == INF) {
+        cout << "IMPOSSIBLE" << endl;
+        exit(0);
+    } else {
+        dp[u] = ret;
     }
 }
-
-void printRandomForest(ll n, ll m)
-{
-    assert(n > m);
-    const bool isOneIndexed = 0;
-
-    cout << n << " " << m << endl;
-    UnionFind uf(n);
-    while (m) {
-        ll u = rint(0, n-1), v = rint(0, n-1); 
-        if (uf.find(u, v) == 0) {
-            cout << u+isOneIndexed << " "<< v+isOneIndexed << endl;
-            uf.unite(u, v);
-            m--;
-        }
-    }
-}
-
-
-void printRandomTree(ll n)
-{
-    const bool isOneIndexed = 0;
-
-    ll m = n - 1;
-    cout << n << endl;
-    UnionFind uf(n);
-    while (m) {
-        ll u = rint(0, n-1), v = rint(0, n-1); 
-        if (uf.find(u, v) == 0) {
-            cout << u+isOneIndexed << " "<< v+isOneIndexed << endl;
-            uf.unite(u, v);
-            m--;
-        }
-    }
-}
-
-// rootが根である木を、
-//      p[i] = 頂点iの親の頂点番号
-// の形式で出力
-void printRandomTreeParentStyle(ll n, ll root = 0)
-{
-    const bool isOneIndexed = 0;
-
-    ll m = n - 1;
-    cout << n << endl;
-    vvll g(n);
-    UnionFind uf(n);
-    while (m) {
-        ll u = rint(0, n-1), v = rint(0, n-1); 
-        if (uf.find(u, v) == 0) {
-            g[u].pb(v);
-            g[v].pb(u);
-            uf.unite(u, v);
-            m--;
-        }
-    }
-    vll ret(n-1);
-    function<void(ll, ll)> dfs = [&](ll u, ll p) {
-        for (auto x : g[u]) if (x != p) {
-            ret[x-1] = u;
-            dfs(x, u);
-        }
-    };
-    dfs(root, -1);
+int main(void) {
+    cin >> n;
+    g.resize(n);
+    dp.resize(n);
     rep(i, n-1) {
-        cout << ret[i] + isOneIndexed << " ";
+        ll p; cin >> p; p--;
+        g[p].pb(i+1);
     }
-    cout << endl;
-
-}
-
-
-int main(int argc, char** argv)
-{
-    init(argc, argv);
-    ll n = args[0];
-//    printRandomTree(n);
-//    printRandomForest(n, args[1]);
-//    printRandomConnectedGraph(n, args[1]);
-//    printRandomTreeParentStyle(n);
-
-    vll a = rvector(n, args[1], args[2]); 
-    ll n = a.size();
-    cout << n << endl;
-    rep(i, n) cout << a[i] << " "; cout << endl;
+    vizGraph(g);
+    a.resize(n); cin >> a;
+    dfs(0);
+    cout << "POSSIBLE" << endl;
 
     return 0;
 }
-
