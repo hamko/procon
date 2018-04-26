@@ -586,7 +586,9 @@ public:
     //
     // 1 <= |t1| <= n
     // 1 <= |t2| <= n
+    vector<pair<int, int>> cond;
     void addClause(int t1, int t2) {
+        cond.pb(pair<int, int>(t1, t2));
         assert(1 <= abs(t1) && abs(t1) <= n);
         assert(1 <= abs(t2) && abs(t2) <= n);
         g[node(-t1)].pb(node(t2));
@@ -627,6 +629,26 @@ public:
         rep(v, n) if (color[v] == color[v+n]) return 0;
         ret.resize(n);
         rep(i, n) ret[i] = color[i] > color[i+n];
+
+        /*
+           // 復元のチェック
+        for (auto x : cond) {
+            int t1 = x.fi;
+            int t2 = x.se;
+            bool r1 = ret[abs(t1)-1];
+            bool r2 = ret[abs(t2)-1];
+            if (t1 < 0) r1 = !r1;
+            if (t2 < 0) r2 = !r2;
+            cout << mt(x, r1, r2) << endl;
+            if (!(r1&&r2)) {
+                cout << ret << endl;
+                cout << cond << endl;
+                cout << "!" << endl;
+                assert(0);
+            }
+        }
+        */
+
         return 1;
     }
 
@@ -662,8 +684,8 @@ public:
 
 int main(void) {
     // 3-SATでも、2000くらいまでなら2秒くらいで終わる
-    ll nmax = 100;
-    ll mmax = 100;
+    ll nmax = 5;
+    ll mmax = 5;
     while (1) {
         ll n = 2+rand()%nmax;
         ll m = 2+rand()%mmax;
