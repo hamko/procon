@@ -65,7 +65,7 @@ int main(void) {
         vll a(n); cin >> a;
 
         Solution s;
-        s.findIntegers(n);
+        cout << s.findIntegers(n) << endl;
     }
     return 0;
 }
