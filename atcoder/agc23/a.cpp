@@ -17,7 +17,7 @@ using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P 
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
-inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; }
+inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; } // これを使うならば、tieとかを消して！！
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -42,120 +42,28 @@ void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs
 size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
 struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
-uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521288629,w=88675123; uint32_t t; t=(x^(x<<11));x=y;y=z;z=w; return( w=(w^(w>>19))^(t^(t>>8)) ); }
-#define rand randxor
 #define ldout fixed << setprecision(40) 
 
 #define EPS (double)1e-14
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-template<class T>
-struct SegmentTreeMin {
-    int n;
-    T inf;
-    vector<T> dat;
-    SegmentTreeMin(int n_ = 0) : n(n_){
-        inf = numeric_limits<T>::max();
-        for(n = 1; n < n_; n <<= 1);
-        dat.resize(n*2, inf);
-    }
-    T query(int v, int w, int l, int r){
-        if(r <= l || w == 0) return inf;
-        if(r - l == w) return dat[v]; // assert(l == 0 && r == w);
-        int m = w/2;
-        return min(query(v*2, m, l, min(r,m)), query(v*2+1, m, max(0,l-m), r-m));
-    }
-    void update(int i, const T &x){
-        dat[i+=n] = x;
-        for(; i!=1; i/=2) dat[i/2] = min(dat[i], dat[i^1]);
-    }
-    T query(int l, int r){ return query(1,n,l,r); }
-    size_t size() const { return n; }
-    T operator [] (const int &idx) { return query(idx, idx + 1); }
-};
-
-template<class T>
-struct SegmentTreeMax {
-    int n;
-    T inf;
-    vector<T> dat;
-    SegmentTreeMax(int n_ = 0) : n(n_){
-        inf = numeric_limits<T>::min();
-        for(n = 1; n < n_; n <<= 1);
-        dat.resize(n*2, inf);
-    }
-    T query(int v, int w, int l, int r){
-        if(r <= l || w == 0) return inf;
-        if(r - l == w) return dat[v]; // assert(l == 0 && r == w);
-        int m = w/2;
-        return max(query(v*2, m, l, min(r,m)), query(v*2+1, m, max(0,l-m), r-m));
-    }
-    void update(int i, const T &x){
-        dat[i+=n] = x;
-        for(; i!=1; i/=2) dat[i/2] = max(dat[i], dat[i^1]);
-    }
-    T query(int l, int r){ return query(1,n,l,r); }
-    size_t size() const { return n; }
-    T operator [] (const int &idx) { return query(idx, idx + 1); }
-};
-
-
 int main(void) {
     ll n; cin >> n;
-    vll x(n),y(n);rep(i,n){
-        cin>>x[i]>>y[i];
-        if(x[i]>y[i])swap(x[i],y[i]);
+    vll a(n); cin >> a;
+    map<ll, ll> m;
+    ll s = 0;
+    m[0]=1;
+    rep(i, n) {
+        s+=a[i];
+        m[s]++;
     }
-    ll ret = INF;
-
-    {
-        ll rmin=INF,rmax=-INF,bmin=INF,bmax=-INF;
-        rep(i,n){
-            chmin(rmin,x[i]);
-            chmin(bmin,y[i]);
-            chmax(rmax,x[i]);
-            chmax(bmax,y[i]);
-        }
-        chmin(ret,(rmax-rmin)*(bmax-bmin));
-    }
-
-    {
-        vector<P> rb;
-        rep(i, n) {
-            rb.pb(P(x[i],y[i]));
-        }
-        sort(all(rb));
-        vll r, b;
-        rep(i, n) {
-            r.pb(rb[i].fi);
-        }
-        rep(i, n) {
-            b.pb(rb[i].se);
-        }
-
-        SegmentTreeMin<ll> rmin(n);
-        rep(i, n) rmin.update(i, r[i]);
-        SegmentTreeMin<ll> bmin(n);
-        rep(i, n) bmin.update(i, b[i]);
-        SegmentTreeMax<ll> rmax(n);
-        rep(i, n) rmax.update(i, r[i]);
-        SegmentTreeMax<ll> bmax(n);
-        rep(i, n) bmax.update(i, b[i]);
-
-        chmin(ret, (rmax.query(0, n) - rmin.query(0, n)) * (bmax.query(0, n) - bmin.query(0, n)));
-        rep(i, n) {
-            swap(r[i], b[i]);
-            rmin.update(i, r[i]);
-            rmax.update(i, r[i]);
-            bmin.update(i, b[i]);
-            bmax.update(i, b[i]);
-            chmin(ret, (rmax.query(0, n) - rmin.query(0, n)) * (bmax.query(0, n) - bmin.query(0, n)));
-        }
+    ll ret = 0;
+    for (auto x : m) {
+        ret += (x.se-1ll)*x.se/2;
     }
     cout << ret << endl;
-
-
+    
 
     return 0;
 }

@@ -17,7 +17,7 @@ using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P 
 using ld = long double;  using vld = vector<ld>; 
 using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
 
-inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; }
+inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; } // これを使うならば、tieとかを消して！！
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -42,120 +42,172 @@ void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs
 size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
 struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
-uint32_t randxor() { static uint32_t x=1+(uint32_t)random_seed,y=362436069,z=521288629,w=88675123; uint32_t t; t=(x^(x<<11));x=y;y=z;z=w; return( w=(w^(w>>19))^(t^(t>>8)) ); }
-#define rand randxor
 #define ldout fixed << setprecision(40) 
 
 #define EPS (double)1e-14
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-template<class T>
-struct SegmentTreeMin {
-    int n;
-    T inf;
-    vector<T> dat;
-    SegmentTreeMin(int n_ = 0) : n(n_){
-        inf = numeric_limits<T>::max();
-        for(n = 1; n < n_; n <<= 1);
-        dat.resize(n*2, inf);
+// Strict LIS
+ll LISa(vector<ll> a) {
+    // dp[i][len] = [0, i]のから取れる長さlenのLISを想定した時、その最後の要素として考えられる最小の値
+    // iはdpテーブルを使い回している
+    vll dp; dp.reserve(100000);
+    rep(i, a.size()) {
+        auto it = lower_bound(all(dp), a[i]);
+        if (it == dp.end()) 
+            dp.pb(a[i]);
+        else
+            *it = a[i];
     }
-    T query(int v, int w, int l, int r){
-        if(r <= l || w == 0) return inf;
-        if(r - l == w) return dat[v]; // assert(l == 0 && r == w);
-        int m = w/2;
-        return min(query(v*2, m, l, min(r,m)), query(v*2+1, m, max(0,l-m), r-m));
+    return dp.size();
+}
+// Strict LIS
+ll LISd(vector<ll> b) {
+    vector<ll> a = b;
+    rep(i, a.size()) {
+        a[i] *= -1;
     }
-    void update(int i, const T &x){
-        dat[i+=n] = x;
-        for(; i!=1; i/=2) dat[i/2] = min(dat[i], dat[i^1]);
+    // dp[i][len] = [0, i]のから取れる長さlenのLISを想定した時、その最後の要素として考えられる最小の値
+    // iはdpテーブルを使い回している
+    vll dp; dp.reserve(100000);
+    rep(i, a.size()) {
+        auto it = lower_bound(all(dp), a[i]);
+        if (it == dp.end()) 
+            dp.pb(a[i]);
+        else
+            *it = a[i];
     }
-    T query(int l, int r){ return query(1,n,l,r); }
-    size_t size() const { return n; }
-    T operator [] (const int &idx) { return query(idx, idx + 1); }
-};
+    return dp.size();
+}
 
-template<class T>
-struct SegmentTreeMax {
-    int n;
-    T inf;
-    vector<T> dat;
-    SegmentTreeMax(int n_ = 0) : n(n_){
-        inf = numeric_limits<T>::min();
-        for(n = 1; n < n_; n <<= 1);
-        dat.resize(n*2, inf);
+vvll used;
+void brutal(ll n) {
+    used=vvll(n+1,vll(n+1));
+    vll id(n);
+    map<P, vll> memo;
+    rep(i, n) {
+        id[i] = 1+i;
     }
-    T query(int v, int w, int l, int r){
-        if(r <= l || w == 0) return inf;
-        if(r - l == w) return dat[v]; // assert(l == 0 && r == w);
-        int m = w/2;
-        return max(query(v*2, m, l, min(r,m)), query(v*2+1, m, max(0,l-m), r-m));
+    do {
+        chmax(memo[P(LISa(id),LISd(id))], id);
+    } while (next_permutation(all(id)));
+    for (auto x : memo) {
+        used[x.fi.fi][x.fi.se] = 1;
+        if (x.fi.fi >= x.fi.se)
+            cout << x.fi << " " << x.se << endl;
     }
-    void update(int i, const T &x){
-        dat[i+=n] = x;
-        for(; i!=1; i/=2) dat[i/2] = max(dat[i], dat[i^1]);
+    rep(i, n+1) {
+        rep(j,n+1){
+            cout << used[i][j];
+        }
+        cout << endl;
     }
-    T query(int l, int r){ return query(1,n,l,r); }
-    size_t size() const { return n; }
-    T operator [] (const int &idx) { return query(idx, idx + 1); }
-};
 
+}
+
+vll solve(ll n, ll a, ll b) {
+    if (a+b>n+1) {
+        return {-1};
+    }
+    bool swapped = 0;
+    if (b > a) swap(a, b), swapped = 1;
+
+    ll b0 = (n + a - 1) / a;
+    ll rem = (n % a == 0 ? a : n % a);
+    vll r;
+    for (ll i = n; rem; i--, rem--) {
+        r.pb(i);
+    }
+    reverse(all(r));
+    if (b - b0 < 0) {
+        return {-1};
+    }
+    if (b-b0+1 > r.size()) {
+        return {-1};
+    }
+    reverse(r.begin(), r.begin()+b-b0+1);
+    vll ret;
+    rep(i, r.size()) {
+        ret.pb(r[i]);
+    }
+    rep(i, b0-1) {
+        rep(j, a) {
+            ret.pb((b0-2-i)*a+j+1);
+        }
+    }
+
+    if (swapped) {
+        rep(i, ret.size()) {
+            ret[i] = n+1-ret[i];
+        }
+        swap(a, b);
+    }
+
+    if (LISa(ret) != a || LISd(ret) != b) {
+        cout << "##########################################" << endl;
+        cout << n << " " << a << " " << b << endl;
+    }
+    return ret;
+}
 
 int main(void) {
-    ll n; cin >> n;
-    vll x(n),y(n);rep(i,n){
-        cin>>x[i]>>y[i];
-        if(x[i]>y[i])swap(x[i],y[i]);
+    ll n,a,b;cin>>n>>a>>b;
+    if (a+b>n+1) return cout << -1 << endl, 0;
+    if (a*b<n) return cout << -1 << endl, 0;
+    vll ret; 
+    vll tmp;
+    rep(j, b) {
+        tmp.pb(1+j);
     }
-    ll ret = INF;
+    rep(j, tmp.size()) ret.pb(tmp[tmp.size()-1-j]);
 
-    {
-        ll rmin=INF,rmax=-INF,bmin=INF,bmax=-INF;
-        rep(i,n){
-            chmin(rmin,x[i]);
-            chmin(bmin,y[i]);
-            chmax(rmax,x[i]);
-            chmax(bmax,y[i]);
+
+    n -= a + b - 1;
+    rep(i, a-1) {
+        vll tmp;
+        tmp.pb(1+b*(i+1));
+        if (n) {
+            rep(j, b-1) {
+                if (n) {
+                    tmp.pb(1+b*(i+1)+(j+1));
+                    n--;
+                }
+            }
         }
-        chmin(ret,(rmax-rmin)*(bmax-bmin));
+        rep(j, tmp.size()) ret.pb(tmp[tmp.size()-1-j]);
+    }
+//    cout << ret << endl;
+    vll t = ret;
+    sort(all(t));
+    map<ll, ll> memo;
+    rep(i, t.size()) {
+        memo[t[i]] = i;
+    }
+    rep(i, ret.size()) {
+        cout << memo[ret[i]] + 1<< " ";
+    }
+    cout << endl;
+
+    if (LISa(ret)  != a || LISd(ret) != b) {
+        cout << "#HIT "<< endl;
+        cout << a << " " << b << endl;
+        cout << ret << endl;
     }
 
-    {
-        vector<P> rb;
-        rep(i, n) {
-            rb.pb(P(x[i],y[i]));
-        }
-        sort(all(rb));
-        vll r, b;
-        rep(i, n) {
-            r.pb(rb[i].fi);
-        }
-        rep(i, n) {
-            b.pb(rb[i].se);
-        }
 
-        SegmentTreeMin<ll> rmin(n);
-        rep(i, n) rmin.update(i, r[i]);
-        SegmentTreeMin<ll> bmin(n);
-        rep(i, n) bmin.update(i, b[i]);
-        SegmentTreeMax<ll> rmax(n);
-        rep(i, n) rmax.update(i, r[i]);
-        SegmentTreeMax<ll> bmax(n);
-        rep(i, n) bmax.update(i, b[i]);
+    /*
+       auto ret = solve(n, a, b);
+       cout << ret << endl;
+       brutal(n);
+       repi(i, 1, n+1)repi(j,1,n+1) {
+       if ((used[i][j] == 0) ^ (solve(n, i, j)[0] == -1)) {
+       cout << "#HIT" << endl;
+       cout << n << " " << i << " " << j << endl;
+       cout << used[i][j] << " " << solve(n, i, j)<< "#exists" << endl;
 
-        chmin(ret, (rmax.query(0, n) - rmin.query(0, n)) * (bmax.query(0, n) - bmin.query(0, n)));
-        rep(i, n) {
-            swap(r[i], b[i]);
-            rmin.update(i, r[i]);
-            rmax.update(i, r[i]);
-            bmin.update(i, b[i]);
-            bmax.update(i, b[i]);
-            chmin(ret, (rmax.query(0, n) - rmin.query(0, n)) * (bmax.query(0, n) - bmin.query(0, n)));
-        }
-    }
-    cout << ret << endl;
-
-
-
+       }
+       }
+       */
     return 0;
 }

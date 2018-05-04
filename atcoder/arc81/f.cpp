@@ -28,6 +28,7 @@ void print_tuple(basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){ using s 
 template<class Ch, class Tr, class... Args> 
 auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
+template <typename T> ostream &operator<<(ostream &o, const stack<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
@@ -55,7 +56,71 @@ static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll n, m; cin >> n >> m;
+    vector<string> bb(n);
+    rep(i, n) cin >> bb[i];
+    vector<string> org = bb;
+    vvll b(n,vll(m));
+    rep(i,n)rep(j,m)b[i][j]=(bb[i][j]=='#'?1:0);
+//    cout << b << endl;
+
+    vvll a(n,vll(m));
+    rep(j, m) a[0][j] = 1;
+    rep(j,m-1)repi(i,1,n) {
+        if ((b[i][j]+b[i-1][j]+b[i][j+1]+b[i-1][j+1]) % 2 == 1) {
+            a[i][j] = 1;
+        }
+    }
+    rep(i,n)a[i][m-1]=-1;
+//    cout <<  a << endl;
+
+    rep(j,m-1)rep(i,n) {
+        if (a[i][j] == 0) a[i][j] = a[i-1][j] + 1;
+    }
+//    cout <<  a << endl;
+
+    ll ans = max(n,m);
+    repi(i, 0, n) {
+        ll ret = 0;
+        stack<P> s;
+        rep(j, m) {
+            chmax(ret, a[i][j]*2);
+            ll next_j = j;
+            while (s.size() && s.top().fi >= a[i][j]) {
+                ll tmp = (j-s.top().se+1)*(s.top().fi);
+//                cout << j << " " << s.top() << " " << a[i][j] << " " << tmp <<" ###"  << endl;
+                chmax(ret, tmp);
+                next_j = s.top().se;
+                s.pop();
+            }
+            s.push(P(a[i][j], next_j));
+        }
+        chmax(ans, ret);
+    }
+    cout << ans << endl;
+
+    /*
+    ll br = 0;
+    rep(i, n) rep(j, m) repi(ii,i+1,n+1) repi(jj,j+1,m+1) {
+//        cout << "########" << endl;
+        repi(x,i,ii-1)repi(y,j,jj-1) {
+//            cout << b[x][y];
+//            if (y==jj-1-1) cout << endl;
+            if ((b[x][y] + b[x+1][y] + b[x][y+1] + b[x+1][y+1])%2==1) {
+                goto SKIP;
+            }
+        }
+        chmax(br, (ii-i)*(jj-j));
+
+        SKIP:;
+    }
+    cout << br << endl;
+    if (br != ans) {
+        cout <<"HIT"<<endl;
+        rep(i,n)
+        cout << org[i] << endl;
+    }
+    */
+
     return 0;
 }
