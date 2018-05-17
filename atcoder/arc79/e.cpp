@@ -53,56 +53,47 @@ static const long long INF = 1e18;
 static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-ll n;
-vll a;
-ll k = 0;
-
-void calc(void) {
-    while (1) {
-        ll i = max_element(all(a)) - a.begin();
-        if (a[i] < n) break;
-//        cout << "$$$" << endl;
-//        cout << i << " " << a[i] << endl;
-
-        ll d = (a[i] - *min_element(all(a))) / n;
-        k += d;
-        a[i] -= d * n;
-        rep(j, n) if (j != i) {
-            a[j] += d;
-        }
-
-//        cout << a << endl;
-        if (*max_element(all(a)) - *min_element(all(a)) < n) {
-            break;
-//            cout << "HIT" << endl;
-        }
-    }
-}
-void sim(void) {
-    while (1) {
-        ll i = max_element(all(a)) - a.begin();
-        if (a[i] < n) break;
-
-        a[i] -= n;
-        rep(j, n) if (i != j) {
-            a[j]++;
-        }
-        k++;
-    }
-}
 int main(void) {
-    cin >> n;
-    a.resize(n); cin >> a;
-
-    calc();
-
-    ll M = *max_element(all(a));
-    ll x = max(0ll, M - 100);
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+    vll as = a; sort(all(as));
+    vll b(n);
+    map<ll, ll> id;
     rep(i, n) {
-        a[i]-=x;
+        id[a[i]] = i;
+        b[i] = n - (lower_bound(all(as), a[i]) - as.begin());
     }
-    k += x * n;
-    sim();
-    cout << k << endl;
+
+    set<P> si_, si; 
+    set<ll> s; 
+    rep(i, n) {
+        if (!s.count(a[i])) {
+            s.insert(a[i]);
+            si_.insert(P(a[i], i));
+        }
+    }
+
+    ll m = INF;
+    for (auto it = si_.rbegin(); it != si_.rend(); it++) {
+        chmin(m, it->se);
+        si.insert(P(it->fi, m));
+    }
+
+    map<ll, ll> memo;
+    ll prev = 0;
+    for (auto x : s) {
+        memo[x] = prev;
+        prev = x;
+    }
+
+    vll ret(n);
+    for (auto it = si.rbegin(); it != si.rend(); it++) {
+        ret[it->se] += b[id[it->fi]] * (it->fi - memo[a[id[it->fi]]]);
+    }
+    rep(i, n) {
+        cout << ret[i] << endl;
+    }
+
+
     return 0;
 }

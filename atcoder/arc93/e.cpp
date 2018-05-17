@@ -48,9 +48,152 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
+template<int MOD>
+struct ModInt {
+	static const int Mod = MOD;
+	unsigned x;
+	ModInt() : x(0) {}
+	ModInt(signed sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	ModInt(signed long long sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	int get() const { return (int)x; }
+
+	ModInt &operator+=(ModInt that) { if((x += that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator-=(ModInt that) { if((x += MOD - that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator*=(ModInt that) { x = (unsigned long long)x * that.x % MOD; return *this; }
+	ModInt &operator/=(ModInt that) { return *this *= that.inverse(); }
+
+	ModInt operator+(ModInt that) const { return ModInt(*this) += that; }
+	ModInt operator-(ModInt that) const { return ModInt(*this) -= that; }
+	ModInt operator*(ModInt that) const { return ModInt(*this) *= that; }
+	ModInt operator/(ModInt that) const { return ModInt(*this) /= that; }
+
+	ModInt inverse() const {
+		signed a = x, b = MOD, u = 1, v = 0;
+		while(b) {
+			signed t = a / b;
+			a -= t * b; std::swap(a, b);
+			u -= t * v; std::swap(u, v);
+		}
+		if(u < 0) u += Mod;
+		ModInt res; res.x = (unsigned)u;
+		return res;
+	}
+
+	bool operator==(ModInt that) const { return x == that.x; }
+	bool operator!=(ModInt that) const { return x != that.x; }
+	ModInt operator-() const { ModInt t; t.x = x == 0 ? 0 : Mod - x; return t; }
+};
+template<int MOD> ModInt<MOD> operator^(ModInt<MOD> a, unsigned long long k) {
+	ModInt<MOD> r = 1;
+	while(k) {
+		if(k & 1) r *= a;
+		a *= a;
+		k >>= 1;
+	}
+	return r;
+}
+typedef ModInt<1000000007> mint;
+typedef vector<mint> vmint;
+ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
+
+struct UnionFind {
+    vector<int> data;
+    UnionFind(int size) : data(size, -1) { }
+    // x, yをマージ, O(A^-1)
+    bool unite(int x, int y) {
+        x = root(x); y = root(y);
+        if (x != y) {
+            if (data[y] < data[x]) swap(x, y);
+            data[x] += data[y]; data[y] = x;
+        }
+        return x != y;
+    }
+    // x, yが同じ集合なら1, O(A^-1)
+    bool find(int x, int y) {
+        return root(x) == root(y);
+    }
+    // xの根を探す。同じ集合なら同じ根が帰る, O(A^-1)
+    int root(int x) {
+        return data[x] < 0 ? x : data[x] = root(data[x]);
+    }
+    // xが含まれる集合の大きさを返す, O(A^-1)
+    int size(int x) {
+        return -data[root(x)];
+    }
+    // 分離されている集合の数を返す, O(n)
+    int getSetNum(void) {
+        unordered_map<int, int> c;
+        rep(i, data.size()) {
+            c[root(i)]++;
+        }
+        return c.size();
+    }
+    // 頂点vと連結な集合を返す, O(n)
+    vector<int> getContainingSet(int v) {
+        vector<int> ret;
+        for (int i = 0; i < data.size(); i++) 
+            if (root(i) == root(v))
+                ret.push_back(i);
+        return ret;
+    }
+
+    // 集合ごとに全部の要素を出力, O(n)
+    vector<vector<int>> getUnionList(void) {
+        map<int, vector<int>> c;
+        for (int i = 0; i < data.size(); i++) 
+            c[root(i)].pb(i);
+        vector<vector<int>> v;
+        for (auto x : c) 
+            v.push_back(x.second);
+        return v;
+    }
+};
+ostream &operator<<(ostream &o, struct UnionFind v) {  v.getUnionList(); int i = 0; for (auto x : v.getUnionList()) { o << i << "\t"; for (auto y : x) o << y << " "; o << endl; i++;} return o; }
+
+
+
 int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
+    ll n,m,X; cin >> n>>m>>X;
+    vector<vector<P>> g(n);
+    vvll g_forviz(n);
+    priority_queue<vll, vvll, greater<vll>> q;
+    vector<vll> edges(m);
+    rep(i, m) {
+        ll u, v, w; cin >> u >> v >> w; u--, v--;
+        edges[i] = {w, u, v};
+        g[u].pb(P(v, w));
+        g[v].pb(P(u, w));
+        g_forviz[u].pb(v);
+        g_forviz[v].pb(u);
+        q.push((vll){w, u, v});
+    }
+    vizGraph(g_forviz,1);
+
+    vll mst(m);
+    rep(i, m) {
+        UnionFind uf(n);
+        uf.unite(edges[i][1], edges[i][2]);
+        mst[i] += edges[i][0];
+        auto es = q;
+        while (es.size()) {
+            auto x = es.top(); es.pop();
+            if (!uf.find(x[1], x[2])) {
+                uf.unite(x[1], x[2]);
+                mst[i] += x[0];
+            }
+        }
+    }
+
+    function<mint(ll)> f = [&](ll x) {
+        ll k = 0;
+        rep(i, m) 
+            k += mst[i] < x;
+        if (k == 0) 
+            return (mint(2)^m)-mint(2);
+        else
+            return ((mint(2)^(m-k))-mint(1))*mint(2);
+    };
+    cout << f(X) - f(X+1) << endl;
 
     return 0;
 }
