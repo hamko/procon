@@ -34,8 +34,8 @@ digraph graph_name {
     問題 -> "約数, gcd";
     問題 -> 共通;
 
-    week_samples [label = "ARC99D", shape = box, color = 7];
-    共通 -> サンプルが弱い -> week_samples;
+    weak_samples [label = "ARC99D", shape = box, color = 7];
+    共通 -> サンプルが弱い -> weak_samples;
     グラフ -> クリーク;
 
     complement_graph [label = "ARC99E", shape = box, color = 7]; 
