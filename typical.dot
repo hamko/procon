@@ -34,6 +34,14 @@ digraph graph_name {
     問題 -> "約数, gcd";
     問題 -> 共通;
 
+    week_samples [label = "ARC99D", shape = box, color = 7];
+    共通 -> サンプルが弱い -> week_samples;
+    グラフ -> クリーク;
+
+    complement_graph [label = "ARC99E", shape = box, color = 7]; 
+    クリーク -> 補グラフ -> complement_graph;
+
+
     k番目 -> "i番目が満たすかを二分探索";
 
     列 -> 累積和を折れ線として見る;
@@ -49,11 +57,19 @@ digraph graph_name {
     共通 -> 操作を逆順に見る;
     共通 -> コスト;
     共通 -> "ちょうど1回操作";
+    共通 -> 探索範囲に拘束条件がある;
+
+    search_constraint [label = "ARC85C", shape = box, color = 7];
+    探索範囲に拘束条件がある -> 本質的なループの自由度は低い -> search_constraint;
 
     "ちょうど1回操作" -> "2回以上の任意のループを作れる"
 
     コスト -> 線形コスト -> 独立;
     コスト -> 指数コスト -> 貪欲;
+
+
+    try_left_right_both [label = "ARC99C", shape = box, color = 7];
+    貪欲 -> 左右両方試す -> try_left_right_both;
 
     対象 -> 平均値と中央値が一致;
 
