@@ -193,6 +193,8 @@ vector<mint> pow(vector<vector<mint>> A, vector<mint> x, long long k) {
 
 
 // Black box liner algebra
+//
+// TODO 何かランタイムエラーを起こす！！！！！！！！！！！！！！
 struct RandomModInt {
     default_random_engine re;
     uniform_int_distribution<int> dist;
