@@ -2,17 +2,25 @@
 using namespace std;
 
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
+#define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
 #define pb push_back
 #define all(x) (x).begin(), (x).end()
 #define fi first
 #define se second
 #define mt make_tuple
+#define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
+#define exists find_if
+#define forall all_of
 
-using ll = long long; using ld = long double; using vll = vector<ll>; using vvll = vector<vll>; using vld = vector<ld>; 
-using vi = vector<int>; using vvi = vector<vi>;
-using P = pair<ll, ll>;
+using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ld = long double;  using vld = vector<ld>; 
+using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
+using Pos = complex<double>;
+
+namespace std{ namespace { template <class T> inline void hash_combine(size_t& seed, T const& v) { seed ^= hash<T>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2); } template <class Tuple, size_t Index = tuple_size<Tuple>::value - 1> struct HashValueImpl { static void apply(size_t& seed, Tuple const& tuple) { HashValueImpl<Tuple, Index-1>::apply(seed, tuple); hash_combine(seed, get<Index>(tuple)); } }; template <class Tuple> struct HashValueImpl<Tuple,0> { static void apply(size_t& seed, Tuple const& tuple) { hash_combine(seed, get<0>(tuple)); } }; } template <typename ... TT> struct hash<tuple<TT...>> { size_t operator()(tuple<TT...> const& tt) const { size_t seed = 0; HashValueImpl<tuple<TT...> >::apply(seed, tt); return seed; } }; } 
+namespace std { template<typename U, typename V> struct hash<pair<U, V>> { size_t operator()(pair<U, V> const& v) const { return v.first ^ v.second; } }; } struct pairhash { public: template <typename T, typename U> size_t operator()(const pair<T, U> &x) const { return hash<T>()(x.first) ^ hash<U>()(x.second); } };
 
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
@@ -20,87 +28,69 @@ template<class Ch, class Tr, class Tuple, size_t... Is>
 void print_tuple(basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){ using s = int[]; (void)s{0, (void(os << (Is == 0? "" : ", ") << get<Is>(t)), 0)...}; }
 template<class Ch, class Tr, class... Args> 
 auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
-ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; cout << endl; } return o; }
+ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
+template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
+string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
+template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
+string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
+struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
-
-struct UnionFind {
-    vector<int> data;
-    UnionFind(int size) : data(size, -1) { }
-    // x, yをマージ
-    bool unionSet(int x, int y) {
-        x = root(x); y = root(y);
-        if (x != y) {
-            if (data[y] < data[x]) swap(x, y);
-            data[x] += data[y]; data[y] = x;
-        }
-        return x != y;
-    }
-    // x, yが同じ集合なら1
-    bool findSet(int x, int y) {
-        return root(x) == root(y);
-    }
-    // xの根を探す。同じ集合なら同じ根が帰る
-    int root(int x) {
-        return data[x] < 0 ? x : data[x] = root(data[x]);
-    }
-    // xが含まれる集合の大きさを返す
-    int size(int x) {
-        return -data[root(x)];
-    }
-    // 分離されている集合の数を返す
-    int setNum(void) {
-        map<int, int> c;
-        rep(i, data.size()) {
-            c[root(i)]++;
-        }
-        return c.size();
-    }
-};
+#define ldout fixed << setprecision(40) 
 
 class Sunnygraphs {
     public:
-        long long count(vector <int> a) {
-            ll n = a.size();
-            UnionFind uf(n);
-            rep(i, n) 
-                uf.unionSet(i, a[i]);
-            if (uf.findSet(0, 1)) {
-                return 1ll << (n - uf.size(0));
+        vvll g;
+        void dfs(ll u, vll& vis) {
+            if (vis[u]) return;
+            vis[u] = 1;
+            for (auto next_u : g[u]) {
+                dfs(next_u, vis);
             }
-            ll allconnected = (uf.setNum() == 1);
-            ll ret = 1;
-            vector<ll> s;
+        }
+        long long count(vector <int> v) {
+            ll n = v.size();
+            g.resize(n);
             rep(i, n) {
-                bool f = 1;
-                for (auto x : s) {
-                    if (uf.findSet(i, x)) {
-                        f = 0;
-                        break;
-                    }
-                }
-                if (f) { // hajimete
-                    vll loop;
-                    ll tmp = i;
-                    while (find(all(loop), tmp) == loop.end()) {
-                        loop.pb(tmp);
-                        tmp = a[tmp];
-                    }
-                    ll loopnum = (ll)(loop.end() - find(all(loop), tmp));
-                    ret *= (pow(2ll, loopnum) - 1ll) * pow(2ll, uf.size(i)-loopnum); 
-                    s.pb(i);
-                }
+                g[i].pb(v[i]);
             }
 
-
-            return ret + allconnected;
-           
+            vll from0(n), from1(n);
+            dfs(0, from0);
+            dfs(1, from1);
+            cout << from0 << endl;
+            cout << from1 << endl;
+            ll a = 0, b = 0, ab = 0, c = 0;
+            rep(i, n) {
+                if (from0[i] && from1[i]) {
+                    ab++;
+                } else if (from0[i] && !from1[i]) {
+                    a++;
+                } else if (!from0[i] && from1[i]) {
+                    b++;
+                } else if (!from0[i] && !from1[i]) {
+                    c++;
+                }
+            }
+            cout << mt(a, b, c, ab) << endl;
+            if (!ab) {
+                ll ret = ((1ll << a) - 1ll) * ((1ll << b) - 1ll);
+                return ret << c;
+            } else {
+                ll ret = 0;
+                ret += ((1ll << a) - 1) * ((1ll << b) - 1) * ((1ll << ab) - 0);
+                ret += 1ll              * ((1ll << b) - 1) * ((1ll << ab) - 1);
+                ret += ((1ll << a) - 1) * 1ll              * ((1ll << ab) - 1);
+                ret += 1ll              * 1ll              * ((1ll << ab) - 0);
+                return ret << c;
+            }
         }
 };
 
