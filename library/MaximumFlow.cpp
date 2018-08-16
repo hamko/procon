@@ -188,9 +188,7 @@ void vizGraph(Graph& g, ll mode = 0, ll directed = 1, string filename = "out.png
 // 共通部分おわり
 /***********************/
 // 逆辺のグラフを得る
-void reverseGraph(Graph& g_dst, Graph& g_src) { /*g_dstは空graphを渡す*/
-    g_dst = Graph(g_src.size());
-    rep(i, g_src.size()) {
+void reverseGraph(Graph& g_dst, Graph& g_src) { /*g_dstは空graphを渡す*/ g_dst = Graph(g_src.size()); rep(i, g_src.size()) {
         rep(j, g_src[i].size()) {
             addDirected(g_dst, g_src[i][j].dst, g_src[i][j].src, g_src[i][j].weight);
         }
