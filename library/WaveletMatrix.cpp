@@ -149,52 +149,6 @@ template<class T, int N, int D> class wavelet {
     int n, zs[D];
     FID<N> dat[D];
 public:
-#ifdef ENABLE_SUM
-    T raw_data[D+1][N] = {};
-    T sum_data[D+1][N+1] = {};
-    wavelet(int n, T seq[]) : n(n) {
-        T l[N] = {}, r[N] = {};
-        bool b[N] = {};
-        memcpy(raw_data[0], seq, sizeof(T)*n);
-        for (int d = 0; d < D; d++) {
-            int lh = 0, rh = 0;
-            for (int i = 0; i < n; i++) {
-                b[i] = (raw_data[d][i]>>(D-d-1))&1;
-                if(b[i]) r[rh++] = raw_data[d][i];
-                else l[lh++] = raw_data[d][i];
-            }
-            dat[d] = FID<N>(n,b);
-            zs[d] = lh;
-            swap(l,raw_data[d+1]);
-            memcpy(raw_data[d+1]+lh, r, rh*sizeof(T));
-        }
-        rep(d, D+1) rep(i, N) sum_data[d][i+1] = sum_data[d][i] + raw_data[d][i];
-    }
-    // 深さdでの列の[l, r)での累積和を求める
-    T getSum(int d, int l, int r) {
-        return sum_data[d][r] - sum_data[d][l];
-    }
-     // get sum of elements in [l,r) in [a,b)
-    // O(log m)
-    T sum_dfs(int d, int l, int r, T val, T a, T b) {
-        // Wavelet Matrixの深さdで、
-        // [l, r)が[val, nv) = [val, val+(1ll<<(D-d)))の値域を表現している時、
-        // [a, b)の値域のものの和は？
-
-        if(l == r) return 0; // valは無いので0を返す
-        if(d == D) return (a <= val and val < b)? (r-l)*val: 0; // 深さDでは全部の値が同じなので、そのままかけて返す
-
-        T nv = 1ULL<<(D-d-1)|val, nnv = ((1ULL<<(D-d-1))-1)|nv;
-        if(nnv < a or b <= val) // どんなに1を選んでもaに満たなかったり、すでに最大を超えていたら0
-            return 0; 
-        if (a <= val and nnv < b) // これからどう選んでも a <= [l, r) < bの場合、累積和を返す
-            return getSum(d, l, r); 
-
-        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-        return sum_dfs(d+1,l-lc,r-rc,val,a,b)+ sum_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b);
-    }
-    T sum(int l, int r, T a, T b) { return sum_dfs(0,l,r,0,a,b); }
-#else 
     wavelet(int n, T seq[]) : n(n) {
         T f[N], l[N], r[N];
         bool b[N];
@@ -213,16 +167,9 @@ public:
             memcpy(f+lh, r, rh*sizeof(T));
         }
     }
-#endif
    void print(void) {
         rep(i, D) cout << zs[i] << " "; cout << endl;
         rep(i, D) dat[i].print();
-        /*
-        cout << "Raw" << endl;
-        rep(d, D+1) { rep(i, N) cout << raw_data[d][i] << " "; cout << endl; }
-        cout << "Sum" << endl;
-        rep(d, D+1) { rep(i, N+1) cout << sum_data[d][i] << " "; cout << endl; }
-        */
     }
 
     // get, []: i番目の要素

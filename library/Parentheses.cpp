@@ -15,27 +15,31 @@ static const double EPS = 1e-14;
 static const long long INF = 1e18;
 #define MAX_N 100005
 
-// 対応する括弧列を出力する。対応する閉括弧が異常なら-1, 開括弧が異常なら-2
-// O(n^2)
-// もう少しどうにかなると思うけど…しかも、できれば深さも知りたい
-//  ) ) ( ) (
-// -1-1 3 2-2
+// 正しい括弧列について、開き括弧に対応する閉じ括弧の位置を出力する。
+// O(n)
 vector<ll> correspondingParentheses(string& s) {
-    vector<ll> ret(s.length(), -1);
-    rep(i, s.length()) {
-        if (ret[i] >= 0) continue;
-        ll j;
-        ll sum = 0;
-        for (j = i; j < s.length(); j++) {
-            sum += (s[j] == '(' ? 1 : -1);
-            if (sum < 0) { ret[i] = -1; break; }
-            if (sum == 0) { ret[i] = j, ret[j] = i; break; }
+    ll n = s.length();
+    ll h = 0;
+    unordered_map<ll, ll> m;
+    vll ret(n, -1);
+    rep(i, n) {
+        if (s[i] == '(') {
+            m[h] = i;
+            h++;
+        } else {
+            h--;
+            if (m.count(h)) {
+                ret[m[h]] = i;
+                m.erase(h);
+            }
         }
-        if (j == s.length()) 
-            ret[i] = -2;
+    }
+    rep(i, n) if (ret[i] != -1) {
+        ret[ret[i]] = i;
     }
     return ret;
 }
+
 // sが正しい括弧列かを判別する
 // O(n)
 bool isValidParentheses(string& s) {
@@ -94,15 +98,15 @@ P getNeededParentheseNum(string& t) {
 
 int main(void) {
     string s = "))()())(()";
-    vector<ll> ret = correspondingParentheses(s); 
     cout << s << endl;
-    cout << ret << endl;
     cout << countOpenParentheses(s) << endl;
-    cout << countCloseParentheses(s) << endl;
+    cout << countClosingParentheses(s) << endl;
     cout << isValidParentheses(s) << endl;
 
     s = "((())()())";
+    cout << s << endl;
     cout << isValidParentheses(s) << endl;
+    cout << correspondingParentheses(s) << endl;
 
     rep(i, 20) {
         vector<ll> p;
