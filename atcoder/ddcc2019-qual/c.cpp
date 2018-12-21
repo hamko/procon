@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <sys/time.h>
 using namespace std;
 
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
@@ -11,14 +12,10 @@ using namespace std;
 #define mp make_pair
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
-#define exists find_if
-#define forall all_of
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
-using ld = long double;  using vld = vector<ld>; 
-using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
-using Pos = complex<double>;
-
+ll ugauss(ll a, ll b) { if (!a) return 0; if (a>0^b>0) return a/b; else return (a+(a>0?-1:1))/b+1; }
+ll lgauss(ll a, ll b) { if (!a) return 0; if (a>0^b>0) return (a+(a>0?-1:1))/b-1; else return a/b; }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -27,20 +24,120 @@ template<class Ch, class Tr, class... Args>
 auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
 ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
 template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
+template <typename T> ostream &operator<<(ostream &o, const deque<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
 template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
+template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
 template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-template <typename T, typename U>  ostream &operator<<(ostream &o, const unordered_map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
+template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
 vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
 template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
-string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(input & (1ll << i)); return s; }
+template <typename T, typename S, typename U> ostream &operator<<(ostream &o, const priority_queue<T, S, U> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} return o; }
+template <typename T> ostream &operator<<(ostream &o, const queue<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.front(); tmp.pop(); o << x << " ";} return o; }
+template <typename T> ostream &operator<<(ostream &o, const stack<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} return o; }
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
-string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
-struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
-
-static const double EPS = 1e-14;
-static const long long INF = 1e18;
-static const long long mo = 1e9+7;
+void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
+struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
+size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 #define ldout fixed << setprecision(40) 
+
+#define EPS (double)1e-14
+#define INF (ll)1e18
+#define mo  (ll)(1e9+7)
+
+template<int MOD>
+struct ModInt {
+	static const int Mod = MOD;
+	unsigned x;
+	ModInt() : x(0) {}
+	ModInt(signed sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	ModInt(signed long long sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	int get() const { return (int)x; }
+
+	ModInt &operator+=(ModInt that) { if((x += that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator-=(ModInt that) { if((x += MOD - that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator*=(ModInt that) { x = (unsigned long long)x * that.x % MOD; return *this; }
+	ModInt &operator/=(ModInt that) { return *this *= that.inverse(); }
+
+	ModInt operator+(ModInt that) const { return ModInt(*this) += that; }
+	ModInt operator-(ModInt that) const { return ModInt(*this) -= that; }
+	ModInt operator*(ModInt that) const { return ModInt(*this) *= that; }
+	ModInt operator/(ModInt that) const { return ModInt(*this) /= that; }
+
+	ModInt inverse() const {
+		signed a = x, b = MOD, u = 1, v = 0;
+		while(b) {
+			signed t = a / b;
+			a -= t * b; std::swap(a, b);
+			u -= t * v; std::swap(u, v);
+		}
+		if(u < 0) u += Mod;
+		ModInt res; res.x = (unsigned)u;
+		return res;
+	}
+
+	bool operator==(ModInt that) const { return x == that.x; }
+	bool operator!=(ModInt that) const { return x != that.x; }
+	ModInt operator-() const { ModInt t; t.x = x == 0 ? 0 : Mod - x; return t; }
+};
+template<int MOD> ModInt<MOD> operator^(ModInt<MOD> a, unsigned long long k) {
+	ModInt<MOD> r = 1;
+	while(k) {
+		if(k & 1) r *= a;
+		a *= a;
+		k >>= 1;
+	}
+	return r;
+}
+typedef ModInt<1000000007> mint;
+typedef vector<mint> vmint;
+ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
+
+// n!と1/n!のテーブルを作る。
+// nCrを高速に計算するためのもの。
+//
+// O(n + log mo)
+vector<mint> fact, rfact;
+void constructFactorial(const long long n) {
+    fact.resize(n);
+    rfact.resize(n);
+    fact[0] = rfact[0] = 1;
+    for (int i = 0; i < n - 1; i++) {
+        fact[i+1] = fact[i] * (i+1);
+    }
+    rfact[n-1] = mint(1) / fact[n-1]; 
+    for (int i = n - 1; i >= 1; i--) 
+        rfact[i-1] = rfact[i] * i; // ((n-1)!)^-1 = (n!)^-1 * n
+}
+
+// O(1)
+// constructFactorialしておけば、n, r=1e7くらいまではいけます
+mint nCr(const long long n, const long long r) {
+    if (n < 0 || r < 0) return 0;
+    if (n < r) return 0;
+    return fact[n] * rfact[r] * rfact[n-r];
+}
+
+// O(r.size())
+// sum(r)! / r[0]! / r[1]! / ...
+mint nCr(const vector<long long> r) {
+    ll sum = accumulate(r.begin(), r.end(), 0ll);
+    mint ret = fact[sum];
+    rep(i, r.size()) 
+        ret *= rfact[r[i]];
+    return ret;
+}
+
+// O(k log mo) 
+mint nCrWithoutConstruction(const long long n, const long long k) {
+    if (n < 0) return 0;
+    if (k < 0) return 0;
+    mint ret = 1;
+    for (int i = 0; i < k; i++) {
+        ret *= (mint)n - (mint)i;
+        ret /= mint(i+1);
+    }
+    return ret;
+}
 
 // 素数の個数はO(n / log n)
 
@@ -229,147 +326,34 @@ ll getDivisorsNum(ll n) {
 }
 
 
-/**********************************************************/
-// 前処理なしの素数判定
-/**********************************************************/
-using u64 = uint32_t;
-using u128 = uint64_t;
-u128 mul(u64 a, u64 b, u64 m) { return u128(a) * b % m; };
-bool isPrime(unsigned long long n) {
-    if (n <= 1) return false;
-    if (n == 2) return true;
-    static mt19937 mt(time(NULL));
-    u64 s = n - 1;
-    int e = 0;
-    for (; s % 2 == 0; s /= 2) e++;
-    for (int ii = 0; ii < 8; ii++) {
-        u64 x = std::uniform_int_distribution<u64>(2, n - 1)(mt);
-        u64 r = 1;
-        for (u64 i = s; i > 0; i >>= 1, x = mul(x, x, n)) {
-            if (i & 1) r = mul(r, x, n);
-        }
-        if (r == 1) continue;
-        for (int i = 1; i < e && r != n - 1; i++) {
-            r = mul(r, r, n);
-        }
-        if (r != n - 1) return false;
-    }
-    return true;
-}
 
-
-// O(n^0.25)
-// ローのアルゴリズム
-// 計算結果はrho_retに保存される
-using ull = unsigned long long;
-map<ull,int> rho_ret; // {p, k}, pの素因数がk個存在
-ull find_factor(ull z) {
-    if (!(z&1)) return 2;
-    ull c = rand() % z, x = 2, y = 2, d = 1;
-    while (d == 1) {
-        ull tp = (mul(y,y,z) + c) % z;
-        y = (mul(tp,tp,z) + c) % z;
-        x = (mul(x,x,z) + c) % z;
-        d = __gcd(x>y ? x-y : y-x, z);
-    }
-    return d;
-}
-void rhofact_rec(ull z) {
-    if (z==1) return;
-    if (isPrime(z)) { rho_ret[z]++; return; }
-    while(1) {
-        ull f = find_factor(z);
-        if (f != z) {
-            rhofact_rec(f);
-            rhofact_rec(z/f);
-            break;
-        }
-    }
-}
-void rho(ull z) {
-    rho_ret.clear();
-    rhofact_rec(z);
-}
-
-// ガウス素数＝複素数の素数判定
-bool isGaussianPrime(ll a, ll b) {
-    if (a < 0) a = -a;
-    if (b < 0) b = -b;
-    if (a == 0) return b % 4 == 3 && is_prime[b];
-    if (b == 0) return a % 4 == 3 && is_prime[a];
-    return is_prime[a*a+b*b];
-}
-
-// 区間篩
-// O( n log n )．
-const ll N = 100000000; // MAXPRIME 
-const ll M = 10000;     // SQRT(N)
-const ll K = 6000000;   // NUMBER OF PRIMES, CHOOSE 9/8 * N / LOG(N)
-vector<ll> iterativeSieve() {
-    static ll p[K], table[M];
-    for (ll i = 2; i < M; ++i) p[i] = i;
-    for (ll i = 2; i*i < M; ++i)
-        if (p[i])
-            for (ll j = i*i; j < M; j += i)
-                p[j] = 0;
-    p[0] = p[1] = 0;
-    ll num = remove(p, p+M, 0) - p;
-    for (ll m = M; m < N; m += M) {
-        for (ll x = m; x < m+M; ++x)
-            table[x-m] = x;
-        for (ll i = 0, j; p[i]*p[i] < m+M; ++i) {
-            if (p[i] >= m)          j = p[i] * p[i];
-            else if (m % p[i] == 0) j = m;
-            else                    j = m - (m % p[i]) + p[i];
-            for (; j < m+M; j += p[i]) table[j-m] = 0;
-        }
-        num = remove_copy(table, table+M, p+num, 0) - p;
-    }
-    return vector<ll>(p, p+num);
-}
-
-ll n = 1000000;
 int main(void) {
-    // 構築O(n log n), 参照O(log n)
-    constructPrime(n);
+    constructFactorial(1e6);
+    constructPrime(1e6);
+    ll n; cin >> n;
 
-    // Millar Rubin Testのチェック
-    rep(i, n) 
-        assert(is_prime[i] == isPrime(i));
-
-    // [0, 30)の素数
-    rep(i, 30) 
-        if (is_prime[i]) 
-            cout << i << " ";
-    cout << endl;
-
-    // 素因数分解
-    vll cands = {1, 2, 4, 8, 3, 120, 1000000007};
-    for (auto x : cands) 
-        cout << factorize(x) << endl;
-
-    // 約数
-    auto d = divisors(120);
-    rep(i, d.size()) 
-        cout << d[i] << " ";
-    cout << "# num = " << getDivisorsNum(120) << " ";
-    cout << endl;
-
-    // 範囲素因数分解
-    auto fact = factorizeRange(10);
-    rep(i, fact.size()) 
-        cout << fact[i] << endl;
-
-    // 範囲LCM
-    set<ll> a = {2, 3, 4, 6, 8, 10};
-    cout << lcmSmall(a) << endl;
-    
-    // 大きい数字の素因数分解
-    repi(i, 1e12, 1e12+10) {
-        rho(i);
-        cout << rho_ret << endl;
+    vector<P> d;
+    repi(i, 1, n+1) {
+        auto tmp =  divisors(i);
+        for (auto x : tmp) {
+            d.pb(P(x, i / x));
+        }
     }
-    
+
+    mint ret = 0;
+    for (auto lr : d) {
+        mint l = lr.fi;
+        mint r = lr.se;
+        
+        mint lsum = 0;
+        repi(k, 1, 10+1) lsum += nCr(10, k) * ((l - mint(1)) ^ (10 - k));
+        mint rsum = 0;
+        repi(k, 1, 10+1) rsum += nCr(10, k) * ((r - mint(1)) ^ (10 - k));
+
+        ret += lsum * rsum;
+    }
+    cout << ret << endl;
+
+
     return 0;
 }
-
