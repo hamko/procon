@@ -116,6 +116,7 @@ public:
         cout << i << " " << j+n<<endl;
         cout << j << " " << i+n<<endl;
     }
+    // 二部グラフ判定 O(n) 
     bool isBipartite(void) {
         for (int i = 0; i < n; i++) {
             if (uf.find(i, i+n)) {
@@ -124,7 +125,7 @@ public:
         }
         return true;
     }
-    // 二部彩色の一例を挙げる
+    // 二部彩色の一例を挙げる O(n)
     vector<bool> getColoring(void) {
         vector<bool> ret(n);
         vector<bool> used(n);
@@ -143,7 +144,7 @@ public:
         }
         return ret;
     }
-    // 非連結グラフの二部彩色の一例を挙げる
+    // 非連結グラフの二部彩色の一例を挙げる O(n)
     vector<vector<P>> getColoringForDisconnectedGraph(void) {
         vector<bool> used(n);
         vector<vector<int>> l = uf.getUnionList();
