@@ -142,6 +142,23 @@ unordered_map<ll, ll> factorize(ll n) {
     return divisors_list;
 }
 
+// constructPrimeが不要な素因数分解
+// O(sqrt(n))
+unordered_map<ll, ll> factorizeWithoutConstruction(ll n) {
+    unordered_map<ll, ll> divisors_list;
+    for (ll p = 2; p * p <= n; p++) {
+        while (n % p == 0) {
+            divisors_list[p]++;
+            n /= p;
+        }
+    }
+    if (n > 1) {
+        divisors_list[n]++;
+    }
+    return divisors_list;
+}
+
+
 // [0, n]の範囲を全て素因数分解する。「飛び飛びの」高速化。結構速い。
 // n < 1,000,000で150ms
 // n < 10,000,000で1000ms 
@@ -219,11 +236,8 @@ vector<ll> divisors(ll n) {
 
 ll getDivisorsNum(ll n) {
     unordered_map<ll, ll> divisors_list = factorize(n);
-    map<ll, ll> num;
-    rep(i, divisors_list.size()) 
-        num[divisors_list[i]]++;
     ll p = 1;
-    for (auto x : num) 
+    for (auto x : divisors_list) 
         p *= x.second + 1;
     return p;
 }
@@ -232,36 +246,123 @@ ll getDivisorsNum(ll n) {
 /**********************************************************/
 // 前処理なしの素数判定
 /**********************************************************/
-using u64 = uint32_t;
-using u128 = uint64_t;
-u128 mul(u64 a, u64 b, u64 m) { return u128(a) * b % m; };
-bool isPrime(unsigned long long n) {
-    if (n <= 1) return false;
-    if (n == 2) return true;
-    static mt19937 mt(time(NULL));
-    u64 s = n - 1;
-    int e = 0;
-    for (; s % 2 == 0; s /= 2) e++;
-    for (int ii = 0; ii < 8; ii++) {
-        u64 x = std::uniform_int_distribution<u64>(2, n - 1)(mt);
-        u64 r = 1;
-        for (u64 i = s; i > 0; i >>= 1, x = mul(x, x, n)) {
-            if (i & 1) r = mul(r, x, n);
-        }
-        if (r == 1) continue;
-        for (int i = 1; i < e && r != n - 1; i++) {
-            r = mul(r, r, n);
-        }
-        if (r != n - 1) return false;
+#define UINT128ENV
+static inline uint32_t modpow32(uint32_t a, uint32_t k, uint32_t n){
+    uint32_t r;
+    for(r=1;k;k/=2){
+        if(k&1) r = (uint64_t)r*a%n;
+        a = (uint64_t) a*a%n;
     }
-    return true;
+    return r;
 }
 
+int is_prime32(uint32_t n){
+    static const uint32_t as32[] = {2, 7, 61};
+    int i, j, r;
+    uint32_t d;
+    if(n <= 1) return 0;
+    if(n <= 3) return 1;
+    if(!(n & 1)) return 0;
+    r = __builtin_ctz(n-1);
+    d = (n-1) >> r;
+    for(i=0;i<3;i++){
+        uint32_t a = as32[i] % n;
+        if(a == 0) return 1;
+        uint32_t t = modpow32(a, d, n);
+        if(t == 1) continue;
+        for(j=0;t!=n-1;j++){
+            if(j == r-1) return 0;
+            t = (uint64_t) t * t % n;
+            if(t == 1) return 0;
+        }
+    }
+    return 1;
+}
+#ifdef UINT128ENV
+typedef __int128 int128_t;
+typedef unsigned __int128 uint128_t;
+static inline uint64_t ex_gcd(uint64_t y){
+    int i;
+    uint64_t u, v;
+    u = 1; v = 0;
+    uint64_t x = 1LL<<63;
+
+    for(i=0;i<64;i++){
+        if(u&1){
+            u = (u + y) / 2;
+            v = v/2 + x;
+        }
+        else {
+            u >>= 1; v >>= 1;
+        }
+    }
+
+    return v;
+} 
+
+static inline uint64_t MR(uint128_t x, uint64_t m, uint64_t n){
+    uint64_t z = ((uint128_t) ((uint64_t) x * m) * n + x) >> 64;
+    return z < n ? z : z - n;
+}
+
+static inline uint64_t RM(uint64_t x, uint64_t r2, uint64_t m, uint64_t n){
+    return MR((uint128_t) r2 * x, m, n);
+}
+
+
+static inline uint64_t modpow64(uint64_t a, uint64_t k, uint64_t m, uint64_t n){
+    uint64_t r;
+    for(r=a,--k;k;k/=2){
+        if(k&1) r = MR((uint128_t)r*a, m, n);
+        a = MR((uint128_t) a*a, m, n);
+    }
+    return r;
+}
+
+int is_prime64(uint64_t n){
+    static const uint64_t as64[] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
+    int i, j, r;
+    uint64_t d, one, mone, r2, m;
+    if(n <= 1) return 0;
+    if(n <= 3) return 1;
+    if(!(n & 1)) return 0;
+    if(n < (1LL << 32)) return is_prime32(n);
+    r = __builtin_ctzll(n-1);
+    d = (n-1) >> r;
+    m = ex_gcd(n);
+    one = -1ULL % n + 1;
+    mone = n - one;
+    r2 = (uint128_t) (int128_t) -1 % n + 1;
+    for(i=0;i<7;i++){
+        uint64_t a = RM(as64[i], r2, m, n);
+        if(a == 0) return 1;
+        uint64_t t = modpow64(a, d, m, n);
+        if(t == one) continue;
+        for(j=0;t!=mone;j++){
+            if(j == r-1) return 0;
+            t = MR((uint128_t) t * t, m, n);
+            //      if(t == one) return 0;
+        }
+    }
+    return 1;
+}
+#endif
+
+int isPrime(uint64_t n){
+#ifdef UINT128ENV
+    return is_prime64(n);
+#else
+    return is_prime32(n);
+#endif
+}
 
 // O(n^0.25)
 // ローのアルゴリズム
 // 計算結果はrho_retに保存される
-using ull = unsigned long long;
+using ull = uint64_t;
+using u64 = uint32_t;
+using u128 = uint64_t;
+uint64_t mul(uint64_t a, uint64_t b, uint64_t m) { return u128(a) * b % m; };
 map<ull,int> rho_ret; // {p, k}, pの素因数がk個存在
 ull find_factor(ull z) {
     if (!(z&1)) return 2;
@@ -363,13 +464,13 @@ int main(void) {
     // 範囲LCM
     set<ll> a = {2, 3, 4, 6, 8, 10};
     cout << lcmSmall(a) << endl;
-    
+
     // 大きい数字の素因数分解
     repi(i, 1e12, 1e12+10) {
         rho(i);
         cout << rho_ret << endl;
     }
-    
+
     return 0;
 }
 

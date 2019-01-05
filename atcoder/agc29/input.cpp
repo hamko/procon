@@ -229,8 +229,14 @@ void printRandomTreeParentStyle(ll n, ll root = 0)
 int main(int argc, char** argv)
 {
     init(argc, argv);
-    ll n = atoi(argv[1]);
-    vll a = rvector(n, 1, 20);
+    ll n = args[0];
+//    printRandomTree(n);
+//    printRandomForest(n, args[1]);
+//    printRandomConnectedGraph(n, args[1]);
+//    printRandomTreeParentStyle(n);
+
+    vll a = rvector(n, args[1], args[2]); 
+    ll n = a.size();
     cout << n << endl;
     rep(i, n) cout << a[i] << " "; cout << endl;
 

@@ -44,9 +44,70 @@ size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
+ll brutal(vector<P> ab) {
+    sort(all(ab));
+    ll ret = INF;
+    ll n = ab.size();
+    do {
+        ll tmp = 0;
+        rep(i, n) {
+            tmp += min(ab[i].fi, ab[(i+1)%n].se);
+        }
+        chmin(ret, tmp);
+    } while(next_permutation(all(ab)));
+    return ret;
+}
+
 int main(void) {
     ll n; cin >> n;
-    vll a(n); cin >> a;
+    vvll abs;
+    ll asum = 0;
+    ll bsum = 0;
+    ll ret = INF;
+    vector<P> ab;
+    vector<P> x;
+    rep(i, n) {
+        ll a, b; cin >> a >> b;
+        x.pb(P(a, b));
+        asum += a;
+        bsum += b;
+        abs.pb({a + b, a, b});
+        ab.pb(P(a, i));
+        ab.pb(P(b, i));
+    }
+    chmin(ret, asum);
+    chmin(ret, bsum);
+
+    sort(all(ab));
+
+    vll d = {0, 0, 1, 1};
+    do {
+        set<ll> s;
+        ll tmp = 0;
+        rep(i, n-2) {
+            s.insert(ab[i].se);
+            tmp += ab[i].fi;
+        }
+//        cout << d << endl;
+        repi(i, n-2, n+2) if (d[i-(n-2)]) {
+            s.insert(ab[i].se);
+            tmp += ab[i].fi;
+        }
+//        cout << s << endl;
+        if (s.size() != n) {
+            chmin(ret, tmp);
+        }
+    } while (next_permutation(all(d)));
+
+
+    /*
+    ll b = brutal(x);
+    if (ret != b) {
+        cout << x << endl;
+        cout << ret << " " << b << endl;
+    }
+    */
+    cout << ret << endl;
 
     return 0;
 }

@@ -44,6 +44,7 @@ size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
+
 /*****************/
 // Dictionary
 /*****************/
@@ -126,7 +127,6 @@ public:
 };
 template<int N> char FID<N>::popcount[1<<FID<N>::block];
 
-
 /*****************/
 // Wavelet Matrix
 /*****************/
@@ -136,52 +136,6 @@ template<class T, int N, int D> class wavelet {
     int n, zs[D];
     FID<N> dat[D];
 public:
-#ifdef ENABLE_SUM
-    T raw_data[D+1][N] = {};
-    T sum_data[D+1][N+1] = {};
-    wavelet(int n, T seq[]) : n(n) {
-        T l[N] = {}, r[N] = {};
-        bool b[N] = {};
-        memcpy(raw_data[0], seq, sizeof(T)*n);
-        for (int d = 0; d < D; d++) {
-            int lh = 0, rh = 0;
-            for (int i = 0; i < n; i++) {
-                b[i] = (raw_data[d][i]>>(D-d-1))&1;
-                if(b[i]) r[rh++] = raw_data[d][i];
-                else l[lh++] = raw_data[d][i];
-            }
-            dat[d] = FID<N>(n,b);
-            zs[d] = lh;
-            swap(l,raw_data[d+1]);
-            memcpy(raw_data[d+1]+lh, r, rh*sizeof(T));
-        }
-        rep(d, D+1) rep(i, N) sum_data[d][i+1] = sum_data[d][i] + raw_data[d][i];
-    }
-    // 深さdでの列の[l, r)での累積和を求める
-    T getSum(int d, int l, int r) {
-        return sum_data[d][r] - sum_data[d][l];
-    }
-     // get sum of elements in [l,r) in [a,b)
-    // O(log m)
-    T sum_dfs(int d, int l, int r, T val, T a, T b) {
-        // Wavelet Matrixの深さdで、
-        // [l, r)が[val, nv) = [val, val+(1ll<<(D-d)))の値域を表現している時、
-        // [a, b)の値域のものの和は？
-
-        if(l == r) return 0; // valは無いので0を返す
-        if(d == D) return (a <= val and val < b)? (r-l)*val: 0; // 深さDでは全部の値が同じなので、そのままかけて返す
-
-        T nv = 1ULL<<(D-d-1)|val, nnv = ((1ULL<<(D-d-1))-1)|nv;
-        if(nnv < a or b <= val) // どんなに1を選んでもaに満たなかったり、すでに最大を超えていたら0
-            return 0; 
-        if (a <= val and nnv < b) // これからどう選んでも a <= [l, r) < bの場合、累積和を返す
-            return getSum(d, l, r); 
-
-        int lc = dat[d].count(1,l), rc = dat[d].count(1,r);
-        return sum_dfs(d+1,l-lc,r-rc,val,a,b)+ sum_dfs(d+1,lc+zs[d],rc+zs[d],nv,a,b);
-    }
-    T sum(int l, int r, T a, T b) { return sum_dfs(0,l,r,0,a,b); }
-#else 
     wavelet(int n, T seq[]) : n(n) {
         T f[N], l[N], r[N];
         bool b[N];
@@ -200,16 +154,9 @@ public:
             memcpy(f+lh, r, rh*sizeof(T));
         }
     }
-#endif
    void print(void) {
         rep(i, D) cout << zs[i] << " "; cout << endl;
         rep(i, D) dat[i].print();
-        /*
-        cout << "Raw" << endl;
-        rep(d, D+1) { rep(i, N) cout << raw_data[d][i] << " "; cout << endl; }
-        cout << "Sum" << endl;
-        rep(d, D+1) { rep(i, N+1) cout << sum_data[d][i] << " "; cout << endl; }
-        */
     }
 
     // get, []: i番目の要素
@@ -370,99 +317,132 @@ public:
 };
 
 
-P med(vll& a, ll l, ll r) {
-    assert(r-l>0);
-    vector<P> tmp; 
-    repi(i, l, r) {
-        tmp.pb(P(a[i], i));
+// データ型T, 単位元T0, 可換二項演算子opが与えられた時、
+//
+// 点更新opをO(log n)、0-indexの範囲sum(int j)をO(log n)で実現
+// もしopに逆演算が定義できるならば、i-indexの範囲sum(int i, int j)が実現可能。
+
+// 0-indexed, sumは閉区間なので注意！！
+
+void printBit(int a) {cout << a << " "; for(; a > 0; a >>= 1) cout << (a & 1); cout << "#bit" << endl;}
+template <class T>
+struct fenwick_tree {
+    /**********************/
+    // 実装箇所
+    /**********************/
+    T T0 = 0;
+    T op(T a, T b) { return a + b; }
+    /**********************/
+    // 実装終わり
+    /**********************/
+
+    // xのデータ構造。op=+, invop=1, T=int, T0=0の場合
+    // iが最右添字な数字列をs[i]として、x[i] = s[i]の総和 (例: i=5, s[i]="45", x[i]=9)
+    // 0123456789ABCDEF
+    // 01234567--------
+    // 0123----89AB----
+    // 01--23--89--CD--
+    // 0-2-4-6-8-A-C-E-
+    int n_org;
+    vector<T> x;
+    fenwick_tree(int n_)  { 
+        n_org = n_;
+        int n = 1; while (n <= n_) n *= 2;
+        x = vector<T>(n, T0);
     }
-    sort(all(tmp));
-    return tmp[tmp.size() / 2];
-}
-ll brutal(ll n, vll& a) {
-    vll s;
-    vll freq(n);
-    rep(i, n) repi(j, i+1, n+1) {
-        auto tmp = med(a, i, j);
-        freq[tmp.se]++;
-        s.pb(tmp.fi);
+
+    // 範囲クエリ: [0, j]のreduceを行う。閉区間に注意
+    // O(log n)
+    T query(int j) {
+        T S = T0;
+        for (j; j >= 0; j = (j & (j + 1)) - 1)  // jは、C->B->7と遷移する。0からCをカバーするための数字列の添字へ飛ぶ
+            S = op(S, x[j]); 
+        return S;
     }
-    sort(all(s));
-    cout << freq << endl;
-    vector<P> b;
+
+    // 更新クエリ: #kにaを演算する
+    // O(log n)
+    void update(int k, T a) {
+        for (; k < x.size(); k |= k+1) // kは、C->D->Fと遷移する。Cをカバーする数字列全てに飛ぶ
+            x[k] = op(x[k], a); 
+    }
+
+    // #kにアクセスする
+    // O(log n)
+    T access(int k) {
+        return query(k) - (k ? query(k-1) : 0);
+    }
+    void print(void) {
+        for (int i = 0; i < n_org; i++) 
+            cout << access(i) << " ";
+        cout << endl;
+    }
+    void print_raw(void) {
+        for (int i = 0; i < x.size(); i++) 
+            cout << x[i] << " ";
+        cout << endl;
+    }
+};
+// 数列aの中で、全ての(i, j)ペア（ただしi<j）のうち、
+// a[i] <= a[j]なる個数を数え上げる
+//
+// オーバーフロー対策はされていないので、必ず確認すること
+//
+// O(n log n)
+ll countLR(vll a) {
+    ll n = a.size();
+    vector<P> ai(n);
     rep(i, n) {
-        b.pb(P(a[i], freq[i]));
+        ai[i] = P(a[i], i);
     }
-    sort(all(b));
-    cout << b << endl;
-    return s[s.size()/2];
-}
+    sort(all(ai));
 
-double st = 0;
-ll random(ll n, vll& a_) {
-    map<ll, ll> z;
-    rep(i, n) { 
-        z[a_[i]]++;
-    }
-    map<ll, ll> to_id, to_val;
-    ll id_num = 0;
-    cout << z << "#" << endl;
-    for (auto x : z) {
-        to_id[x.fi] = id_num;
-        to_val[id_num] = x.fi;
-        id_num++;
-    }
-
-    int a[n];
+    fenwick_tree<ll> c(n);
+    ll ret = 0;
     rep(i, n) {
-        a[i] = to_id[a_[i]];
+        ret += c.query(ai[i].se-1); // オーバーフロー注意！！
+        c.update(ai[i].se, 1);
     }
-    rep(i, n) { cout << a[i] << " "; } cout << endl;
-    wavelet<int, 100010, 18> w(n, a);
 
-    unordered_map<ll, ll> memo;
-    while (sec() - st < 1.95) {
-        ll l = 0, r = 0;
-        while (!(l < r)) {
-            l = rand() % n;
-            r = 1 + rand() % n;
-        }
-        ll rank = (r-l)-1 - (r-l)/2;
-//        cout << l << " "<< r << " " << rank << " " <<w.quantile(l, r, rank) << endl;;
-        memo[w.quantile(l, r, rank)]++;
-    }
-//    cout << memo << endl;
-    ll sum = 0; 
-    vector<P> tmp; 
-    for (auto x : memo) {
-        sum += x.se;
-        tmp.pb(P(x.fi, x.se));
-    }
-    sort(all(tmp));
-    cout << tmp << endl;
-    ll t = 0;
-    rep(i, tmp.size()) {
-        t += tmp[i].se;
-        if ((double)t > (double)sum / 2. * 1.0) {
-            return to_val[tmp[i].fi];
-        }
-    }
-    assert(0);
-    return -1;
+    return ret;
 }
+
+
 
 int main(void) {
-    st = sec();
     ll n; cin >> n;
+    vll x(n); cin >> x;
 
-    vll a(n); cin >> a;
-    if (a == vll({10, 30, 20})) {
-        cout << 30 << endl;
-        return 0;
+    ll ng = 0, ok = 2e9;
+    while (ok - ng > 1) {
+        ll mid = (ok + ng) / 2;
+
+        vll a(n); rep(i, n) a[i] = x[i] <= mid;
+        vll as(n+1); rep(i, n) as[i+1] = as[i] + a[i];
+        vll b(n+1); rep(i, n+1) b[i] = 0;  rep(i, n+1) b[i] = 2ll * as[i] - i;
+        rep(i, n+1) b[i] += 100010;
+        /*
+        wavelet<ll, 100010, 30> w(n+1, b);
+        ll cnt = 0;
+        rep(i, n) {
+            cnt += w.freq(i+1, n+1, b[i]+1, 1e7);
+        }
+//        cout << cnt << endl;
+        */
+        fenwick_tree<ll> c(300030);
+        ll cnt = 0;
+        rep(i, n+1) {
+            cnt += c.query(b[i] - 1);
+            c.update(b[i], 1);
+        }
+
+        if (cnt >= n*(n+1ll)/2ll/2ll+1) {
+            ok = mid;
+        } else {
+            ng = mid;
+        }
     }
-//    cout << a << endl;
+    cout << ok << endl;
 
-    cout << brutal(n, a) << endl;
-    cout << random(n, a) << endl;
     return 0;
 }

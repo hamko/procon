@@ -48,34 +48,74 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
+ll corr(ll a, ll b, ll x, ll i) {
+    if (i < a) {
+        if (1 + x - i < b) {
+            return 1 + x - i;
+        } else {
+            return 2 + x - i;
+        }
+    } else {
+        if (3 + x - i > b) {
+            return 3 + x - i;
+        } else {
+            return 2 + x - i;
+        }
+    }
+}
+
+// 最大値 >= abとなるxである
+bool f(ll a, ll b, ll x) {
+    ll range = x;
+    if (x >= a) {
+        range += 1;
+    } 
+    // i in [1, range]がvalid
+    ll m = 0;
+    ll d = 100;
+    for (ll i = range/2-d; i < range/2+d; i++) if (i != a && 1 <= i && i <= range) {
+//        cout << i << " " << corr(a, b, x, i)<<endl;
+        chmax(m, i * corr(a, b, x, i));
+        assert(corr(a, b, x, i) != b);
+    }
+//    cout << mt(a, b, x) << " " << m << " " << a * b << endl;
+    return m >= a * b;
+}
+
 int main(void) {
     ll q; cin >> q;
     rep(_, q) {
         ll a, b; cin >> a >> b;
         if (a > b) swap(a, b);
-        ll ok = 0, ng = a + b + 10;
-        while (ng - ok > 1) {
-            ll x = (ng - ok) / 2;
-            bool f = 0; // xがokなら1
 
-            vll arr_x;
-            vll arr_y;
-            if (x-(b-1)<a-1) {
-                ll len;
-                len = min(a-1, x-b+1)`
-                arr_x.pb({1, len});
-                arr_y.pb({x+1, len});
-
-                len = min(x-a+1, b-1)`
-                arr_x.pb({x, len});
-                arr_y.pb({x+1, len});
-            } else {
+        /*
+        ll x = 10;
+        ll cnt = x;
+        ll i = 1;
+        while (cnt) {
+            if (i != a) {
+                cout << i << " " << corr(a, b, x, i) <<endl;
+                cnt--;
             }
-            
-
-            (f ? ok : ng) = x;
+            i++;
         }
-        cout << ok << endl;
+        */
+        /*
+        while (1) {
+            ll x; cin >> x;
+            cout << f(a, b, x) << endl;
+        }
+        */
+        ll ng = 0, ok = 5e9;
+        while (ok - ng > 1) {
+            ll mid = (ok + ng) / 2;
+            if (f(a, b, mid)) {
+                ok = mid;
+            } else {
+                ng = mid;
+            }
+        }
+        cout << ng << endl;
     }
 
     return 0;

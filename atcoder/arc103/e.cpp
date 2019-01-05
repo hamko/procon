@@ -44,159 +44,30 @@ size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-vvll generateTree(ll n) {
-    vll p(n);
-    p[0] = -1;
-    repi(i, 1, n) {
-        p[i] = rand() % i;
-    }
-    vvll g(n);
-    rep(i, n) if (p[i] != -1) {
-        g[i].pb(p[i]);
-    }
-    return g;
-}
-
-struct UnionFind {
-    vector<int> data;
-    UnionFind(int size) : data(size, -1) { }
-    // x, yをマージ, O(A^-1)
-    bool unite(int x, int y) {
-        x = root(x); y = root(y);
-        if (x != y) {
-            if (data[y] < data[x]) swap(x, y);
-            data[x] += data[y]; data[y] = x;
-        }
-        return x != y;
-    }
-    // x, yが同じ集合なら1, O(A^-1)
-    bool find(int x, int y) {
-        return root(x) == root(y);
-    }
-    // xの根を探す。同じ集合なら同じ根が帰る, O(A^-1)
-    int root(int x) {
-        return data[x] < 0 ? x : data[x] = root(data[x]);
-    }
-    // xが含まれる集合の大きさを返す, O(A^-1)
-    int size(int x) {
-        return -data[root(x)];
-    }
-    // 分離されている集合の数を返す, O(n)
-    int getSetNum(void) {
-        unordered_map<int, int> c;
-        rep(i, data.size()) {
-            c[root(i)]++;
-        }
-        return c.size();
-    }
-    // 頂点vと連結な集合を返す, O(n)
-    vector<int> getContainingSet(int v) {
-        vector<int> ret;
-        for (int i = 0; i < data.size(); i++) 
-            if (root(i) == root(v))
-                ret.push_back(i);
-        return ret;
-    }
-
-    // 集合ごとに全部の要素を出力, O(n)
-    vector<vector<int>> getUnionList(void) {
-        map<int, vector<int>> c;
-        for (int i = 0; i < data.size(); i++) 
-            c[root(i)].pb(i);
-        vector<vector<int>> v;
-        for (auto x : c) 
-            v.push_back(x.second);
-        return v;
-    }
-};
-ostream &operator<<(ostream &o, struct UnionFind v) {  v.getUnionList(); int i = 0; for (auto x : v.getUnionList()) { o << i << "\t"; for (auto y : x) o << y << " "; o << endl; i++;} return o; }
-
-string getString(vvll g) {
-    ll n = g.size();
-
-    string t(n, '0');
-
-    rep(skip, n-1) { 
-        UnionFind uf(n);
-        ll cnt = 0;
-        rep(i, n) for (auto x : g[i]) {
-            if (skip != cnt) {
-                uf.unite(i, x);
-            }
-            cnt++;
-        }
-        rep(i, n) {
-            t[uf.size(i)-1] = '1';
-        }
-    }
-
-    return t;
-}
-
-void Assert(bool f) {
-    if (!f) {
-        cout << -1 << endl;
-        exit(0);
-    }
-}
-
 int main(void) {
     string s; cin >> s;
     ll n = s.size();
-    while (1) {
-        cout << "############" << endl;
-        auto g = generateTree(n);
-        string t = getString(g);
-        if (s == t) {
-            vizGraph(g);
-            return 0;
+    if (s[0] == '0') return cout << -1 << endl, 0;
+    if (s[n-1] == '1') return cout << -1 << endl, 0;
+    
+    vll a;
+    rep(i, n-1) {
+        if (s[i] != s[n-2-i]) {
+            return cout << -1 << endl, 0;
+        }
+        if (i && s[i] == '1') {
+            a.pb(i + 1);
         }
     }
-    /*
-
-    Assert(s[0] == '1');
-    Assert(s[n-1] == '0');
-    Assert(s[n-2] == '1');
-
-    string pal;
-    repi(i, 0, n-1) {
-        pal +=s[i];
-    }
-    string pal_rev = pal; reverse(all(pal));
-    Assert(pal == pal_rev);
-
-    vvll g(n);
-
-    vll need;
-    rep(i, (n+1ll)/2ll) {
-        if (s[i] == '1') need.pb(i+1);
-    }
-
-    ll cnt = 0;
-    ll prev = -1;
-    for (auto x : need) {
-        if (prev == -1) {
-            cnt++;
-        } else {
-            ll tmp = cnt;
-            rep(i, x - prev) {
-                cnt++;
-                g[tmp].pb(cnt);
-            }
+    cout << 1 << " " << 2 << endl;
+    ll cnt = 2;
+    for (auto x : a) {
+        rep(i, x-cnt) {
+            cout << cnt << " " << cnt + i + 1 << endl;
         }
-        prev = x;
+        cout << cnt << " " << x + 1 << endl;
+        cnt = x + 1;
     }
-    vizGraph(g);
-    ll rem = n - cnt;
-    ll tmp = cnt;
-    rep(i, rem) {
-        g[tmp].pb(cnt + i + 1);
-    }
-
-    rep(i, n) for (auto x : g[i]) {
-        cout << i << " " << x << endl;
-    }
-    */
 
     return 0;
 }

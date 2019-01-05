@@ -230,16 +230,11 @@ int main(int argc, char** argv)
 {
     init(argc, argv);
     ll n = args[0];
-//    printRandomTree(n);
-//    printRandomForest(n, args[1]);
-//    printRandomConnectedGraph(n, args[1]);
-//    printRandomTreeParentStyle(n);
 
-    vll a = rvector(n, 0,(1<<28)-1); 
-    vll b = rvector(n, 0,(1<<28)-1); 
     cout << n << endl;
-    rep(i, n) cout << a[i] << " "; cout << endl;
-    rep(i, n) cout << b[i] << " "; cout << endl;
+    rep(i, n) cout << rint(1, 10) << " " << rint(1, 10) << endl;
+    rep(i, n) cout << rint(1, 10) << " " << rint(1, 10) << endl;
+
 
     return 0;
 }

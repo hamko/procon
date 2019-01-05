@@ -1,5 +1,7 @@
 #include <bits/stdc++.h>
 #include <sys/time.h>
+#include <boost/multiprecision/cpp_int.hpp>
+namespace mp = boost::multiprecision;
 using namespace std;
 
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
@@ -13,7 +15,7 @@ using namespace std;
 template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
+using ll = boost::multiprecision; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
 ll ugauss(ll a, ll b) { if (!a) return 0; if (a>0^b>0) return a/b; else return (a+(a>0?-1:1))/b+1; }
 ll lgauss(ll a, ll b) { if (!a) return 0; if (a>0^b>0) return (a+(a>0?-1:1))/b-1; else return a/b; }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
@@ -44,46 +46,35 @@ size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0
 #define INF (ll)8e18
 #define mo  (ll)(1e9+7)
 
-ll cost[2010][2010];
-ll dp[2010];
 int main(void) {
     ll n, x; cin >> n >> x;
     vll a(n); cin >> a;
-
-    rep(i, 2010) rep(j, 2010) cost[i][j] = INF;
-    rep(i, 2010) dp[i] = INF;
-
-    rep(j, n) {
-        // [i, j]
-        ll k = 1;
-        cost[j][j] = a[j];
-        for (ll i = j - 1; i >= 0; i--) {
-            k++;
-            if (1. * cost[i+1][j] + 1.* k * 1. * k * 1. * (a[i+1] - a[i]) > INF) break;
-            cost[i][j] = cost[i+1][j] + k * k * (a[i+1] - a[i]);
-//            cout << mt(i, j, cost[i][j]) << endl;
-        }
-    }
-    rep(i, n) repi(j, i, n) if (cost[i][j] != INF) {
-        cost[i][j] += (j - i + 2ll) * (j - i + 2ll) * a[i];
-        chmin(cost[i][j], INF);
-    }
-
+    sort(all(a));
+    reverse(all(a));
+    vll as(n+1);
     rep(i, n) {
-        rep(j, n) {
-            cout << cost[i][j] << " ";
-        }
-        cout << endl;
+        as[i+1] = as[i] + a[i];
+    }
+    vll costs = {5};
+    rep(i, 3e5) {
+        costs.pb(5ll+2ll*i);
     }
 
-
-    dp[0] = 0;
-    rep(i, n) {
-        repi(j, 1, n - i + 1) { 
-            chmin(dp[i+j], dp[i] + cost[i][i+j-1] + x);
+    ll ret = INF;
+    repi(k, 1, n+1) {
+        ll tmp = k * x;
+        ll cnt = 0;
+        for (ll i = 0; i < n; i += k, cnt++) {
+            // [i, min(n, i + k))
+            if (1.*tmp + 1.*costs[cnt]*1.*(as[min(n, i+k)] - 1.*as[i]) > INF) {
+                goto SKIP;
+            }
+            tmp += costs[cnt] * (as[min(n, i+k)] - as[i]);
         }
+        chmin(ret, tmp);
+        SKIP:;
     }
-    cout << dp[n] + n * x << endl;
+    cout << ret + n * x << endl;
 
 
     return 0;

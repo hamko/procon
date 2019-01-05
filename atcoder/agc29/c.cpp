@@ -44,67 +44,80 @@ size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-bool check(vll& a, ll b) {
-//    cout << b << "######" << endl;
-    map<ll, ll> memo;
-    ll prev = INF;
-    for (auto x : a) {
-        if (prev >= x) {
-
-//        cout << memo << endl;
-        auto from = memo.upper_bound(x);
-        auto en = memo.end();
-        memo.erase(from, en);
-
-        if (!memo.count(x)) {
-            memo[x] = 0;
+bool check(vll& a, ll x) {
+    ll n = a.size();
+    map<ll, ll> m;
+    ll z = a[0];
+    ll msize = 0;
+//    cout << x << "#############################" << endl;
+    repi(i, 1, n) {
+//        cout << x << " " << i << " : " << m << " (" << msize << ") + 0 x " << z << endl;
+        if (a[i-1] < a[i]) {
+//            cout <<  "mode 1" << endl;
+            z += a[i] - a[i-1];
+        } else if (a[i] > msize) {
+//            cout <<  "mode 2" << endl;
+            z = msize + z - a[i];
+            msize = a[i];
+            m[a[i]-1] = 1;
         } else {
-            memo[x]++;
-        }
-        auto now = memo.lower_bound(x);
-        while (1) {
-            if (now->first <= 0) {
-//                cout << "NG" << endl;
-                return false;
-            }
-            if (now->second >= b) {
-                now->second -= b;
-                if (!memo.count(now->first-1)) {
-                    memo[now->first-1] = 0;
+//            cout << "mode 3" << endl;
+            auto it = m.lower_bound(a[i]);
+            m.erase(it, m.end());
+//            cout << m << endl;
+            msize = a[i];
+            ll id = a[i] - 1;
+            z = 0;
+            while (1) {
+//                cout << m << endl;
+                if (m[id] + 1 < x) {
+//                    cout << "A" << endl;
+                    m[id]++;
+                    break;
                 } else {
-                    memo[now->first-1]++;
+//                    cout << "B" << endl;
+                    m[id] = 0;
+                    id--;
+                    if (id < 0) {
+                        return false;
+                    }
                 }
-                now = memo.lower_bound(now->first-1);
-            } else {
-                break;
             }
         }
-        }
-        prev = x;
     }
-//                cout << "OK" << endl;
+//        cout << "end : " << m << " (" << msize << ") + 0 x " << z << endl;
+
     return true;
 }
 
-ll f(vll& tmp) {
-    ll ng = 0, ok = tmp.size()+10;
+int main(void) {
+    ll n; cin >> n;
+    vll a(n); cin >> a;
+    ll faf = 1;
+    rep(i, n-1) {
+        faf &= a[i] < a[i+1];
+    }
+    if (faf) {
+        cout << 1 << endl;
+        return 0;
+    }
+
+    /*
+    check(a, 2);
+    return 0;
+    */
+
+    ll ng = 1, ok = 200010;
     while (ok - ng > 1) {
-        ll mid = (ok + ng) / 2ll;
-        // mid進数でいけますか？
-        if (check(tmp, mid)) {
+//        cout << ng << " " << ok << endl;
+        ll mid = (ok + ng) / 2;
+        if (check(a, mid)) {
             ok = mid;
         } else {
             ng = mid;
         }
     }
-    return ok;
-}
-int main(void) {
-    ll n; cin >> n;
-    vll a(n); cin >> a;
-
-    ll ret = f(a);
-    cout << ret << endl;
+    cout << ok << endl;
 
     return 0;
 }
