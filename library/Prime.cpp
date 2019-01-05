@@ -379,11 +379,11 @@ int isPrime(uint64_t n){
 // 1e+15 0.038690 0.673158
 using ull = uint64_t;
 #ifdef UINT128ENV
-using u64 = uint32_t;
-using u128 = uint64_t;
-#else
 using u64 = uint64_t;
 using u128 = uint128_t;
+#else
+using u64 = uint32_t;
+using u128 = uint64_t;
 #endif
 uint64_t mul(uint64_t a, uint64_t b, uint64_t m) { return u128(a) * b % m; };
 map<ull,int> rho_ret; // {p, k}, pの素因数がk個存在
