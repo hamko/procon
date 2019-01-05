@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <sys/time.h>
 using namespace std;
 
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
@@ -36,7 +37,8 @@ string bits_to_string(ll input, ll n=64) { string s; rep(i, n) s += '0' + !!(inp
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
 string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n(n) { } bool operator==(const ci& x) { return n == x.n; } bool operator!=(const ci& x) { return !(*this == x); } ci &operator++() { n++; return *this; } ll operator*() const { return n; } };
-
+struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
+size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
 static const long long mo = 1e9+7;
@@ -139,22 +141,6 @@ unordered_map<ll, ll> factorize(ll n) {
             divisors_list[prime]++, n /= prime;
     if (n != 1) 
         divisors_list[n]++;
-    return divisors_list;
-}
-
-// constructPrimeが不要な素因数分解
-// O(sqrt(n))
-unordered_map<ll, ll> factorizeWithoutConstruction(ll n) {
-    unordered_map<ll, ll> divisors_list;
-    for (ll p = 2; p * p <= n; p++) {
-        while (n % p == 0) {
-            divisors_list[p]++;
-            n /= p;
-        }
-    }
-    if (n > 1) {
-        divisors_list[n]++;
-    }
     return divisors_list;
 }
 
@@ -356,12 +342,49 @@ int isPrime(uint64_t n){
 #endif
 }
 
-// O(n^0.25)
-// ローのアルゴリズム
+// ローのアルゴリズム。整数nを素因数分解する。
+// 1e6 <= n <= 1e10くらいの範囲で愚直より高速
+// （特に効果があるのは1e7-1e9で、約2-7倍速）
+//
 // 計算結果はrho_retに保存される
+// 体感平均計算量 O(n^{1/2} log n / 10)
+// 体感最悪計算量 O(n^{1/2} log n * 10)
+//
+// ロー法による素因数分解は意外と時間がかかる。
+// n     平均秒   最悪秒
+// 1e+05 5.42e-06 2e-05
+// 1e+06 6.82e-06 3.3e-05
+// 1e+07 8.82e-06 6.6e-05
+// 1e+08 1.11e-05 7.9e-05
+// 1e+09 0.000013 0.00008
+// 1e+10 0.000212 0.03607
+// 1e+11 0.001177 0.22825
+// 1e+12 0.003593 0.31959
+// 1e+13 0.014982 1.26338
+// 1e+14 0.042568 4.53350
+// 1e+15 0.157090 28.5738
+//
+// 構築なし素因数分解はこんな感じ。
+// n     平均秒   最悪秒
+// 1e+05 4.55e-06 8e-06
+// 1e+06 7.56e-06 3.8e-05
+// 1e+07 1.58e-05 8.1e-05 
+// 1e+08 3.30e-05 0.000218
+// 1e+09 0.000087 0.000576
+// 1e+10 0.000237 0.002122
+// 1e+11 0.000653 0.005520
+// 1e+12 0.001602 0.015735
+// 1e+13 0.004801 0.053189
+// 1e+14 0.014975 0.190736
+// 1e+15 0.038690 0.673158
 using ull = uint64_t;
+#ifdef UINT128ENV
 using u64 = uint32_t;
 using u128 = uint64_t;
+#else
+using u64 = uint64_t;
+using u128 = uint128_t;
+#endif
 uint64_t mul(uint64_t a, uint64_t b, uint64_t m) { return u128(a) * b % m; };
 map<ull,int> rho_ret; // {p, k}, pの素因数がk個存在
 ull find_factor(ull z) {
@@ -391,6 +414,23 @@ void rho(ull z) {
     rho_ret.clear();
     rhofact_rec(z);
 }
+
+// constructPrimeが不要な素因数分解
+// O(sqrt(n))
+unordered_map<ll, ll> factorizeWithoutConstruction(ll n) {
+    unordered_map<ll, ll> divisors_list;
+    for (ll p = 2; p * p <= n; p++) {
+        while (n % p == 0) {
+            divisors_list[p]++;
+            n /= p;
+        }
+    }
+    if (n > 1) {
+        divisors_list[n]++;
+    }
+    return divisors_list;
+}
+
 
 // ガウス素数＝複素数の素数判定
 bool isGaussianPrime(ll a, ll b) {
@@ -465,11 +505,39 @@ int main(void) {
     set<ll> a = {2, 3, 4, 6, 8, 10};
     cout << lcmSmall(a) << endl;
 
-    // 大きい数字の素因数分解
-    repi(i, 1e12, 1e12+10) {
-        rho(i);
-        cout << rho_ret << endl;
+    {
+        // 大きい数字の素因数分解
+        repi(d, 5, 10) {
+            ll range = 1000;
+            double total_time = 0;
+            double max_time = 0;
+            repi(i, pow(10, d), pow(10, d) +range) {
+                double time = sec();
+                auto f = factorizeWithoutConstruction(i);
+                total_time += sec() - time;
+                max_time = max(max_time, sec() - time);
+                //            cout << i << " " << sec() - time << " " << f << endl;
+            }
+            cout << pow(10, d) << " "<< total_time / range << " " << max_time << " #Brutal" << endl;
+        }
+
+        // 大きい数字の素因数分解
+        repi(d, 5, 10) {
+            ll range = 1000;
+            double total_time = 0;
+            double max_time = 0;
+            repi(i, pow(10, d), pow(10, d) +range) {
+                double time = sec();
+                rho(i);
+                total_time += sec() - time;
+                max_time = max(max_time, sec() - time);
+                //            cout << i << " " << sec() - time << " " << rho_ret << endl;
+            }
+            cout << pow(10, d) << " "<< total_time / range << " " << max_time << " #Rho" << endl;
+        }
+
     }
+
 
     return 0;
 }
