@@ -342,41 +342,44 @@ int isPrime(uint64_t n){
 #endif
 }
 
-// ローのアルゴリズム。整数nを素因数分解する。
-// 1e6 <= n <= 1e10くらいの範囲で愚直より高速
-// （特に効果があるのは1e7-1e9で、約2-7倍速）
-//
+// ローのアルゴリズム。整数nを素因数分解する。n>1e6で有利。
 // 計算結果はrho_retに保存される
-// 体感平均計算量 O(n^{1/2} log n / 10)
-// 体感最悪計算量 O(n^{1/2} log n * 10)
+// 爆速
+//
+// 体感平均計算量 O(n^{1/4} log n)
+// 体感最悪計算量 O(n^{1/4} log n * 40)
 //
 // ロー法による素因数分解は意外と時間がかかる。
-// n     平均秒   最悪秒
-// 1e+05 5.42e-06 2e-05
-// 1e+06 6.82e-06 3.3e-05
-// 1e+07 8.82e-06 6.6e-05
-// 1e+08 1.11e-05 7.9e-05
-// 1e+09 0.000013 0.00008
-// 1e+10 0.000212 0.03607
-// 1e+11 0.001177 0.22825
-// 1e+12 0.003593 0.31959
-// 1e+13 0.014982 1.26338
-// 1e+14 0.042568 4.53350
-// 1e+15 0.157090 28.5738
+// n     平均[s]   最悪[s]
+// 1e+05 5.503e-06 1.9e-05
+// 1e+06 7.368e-06 3.6e-05
+// 1e+07 8.532e-06 6.9e-05
+// 1e+08 1.119e-05 7.9e-05
+// 1e+09 1.321e-05 9.2e-05
+// 1e+10 1.957e-05 0.0002 
+// 1e+11 2.741e-05 0.000448
+// 1e+12 4.105e-05 0.000531
+// 1e+13 6.371e-05 0.0011
+// 1e+14 9.047e-05 0.002067
+// 1e+15 0.0001481 0.005108
+// 1e+16 0.0002636 0.007285
+// 1e+17 0.0003511 0.014201
+// 1e+18 0.0007315 0.029478
 //
-// 構築なし素因数分解はこんな感じ。
-// n     平均秒   最悪秒
-// 1e+05 4.55e-06 8e-06
-// 1e+06 7.56e-06 3.8e-05
-// 1e+07 1.58e-05 8.1e-05 
-// 1e+08 3.30e-05 0.000218
-// 1e+09 0.000087 0.000576
-// 1e+10 0.000237 0.002122
-// 1e+11 0.000653 0.005520
-// 1e+12 0.001602 0.015735
-// 1e+13 0.004801 0.053189
-// 1e+14 0.014975 0.190736
-// 1e+15 0.038690 0.673158
+// ちなみに愚直は以下
+// n     平均[s]   最悪[s]
+// 1e+05 4.493e-06 1.8e-05
+// 1e+06 7.203e-06 1.8e-05 
+// 1e+07 1.3819e-05 6.8e-05 
+// 1e+08 3.1382e-05 0.000157 
+// 1e+09 8.5458e-05 0.000654 
+// 1e+10 0.00023045 0.001561
+// 1e+11 0.000650537 0.0049 
+// 1e+12 0.00159413 0.016844
+// 1e+13 0.00490753 0.048909
+// 1e+14 0.014042 0.16523
+// 1e+15 0.0370076 0.515478
+//
 using ull = uint64_t;
 #ifdef UINT128ENV
 using u64 = uint64_t;
@@ -385,11 +388,13 @@ using u128 = uint128_t;
 using u64 = uint32_t;
 using u128 = uint64_t;
 #endif
+std::random_device rd;
+std::mt19937 gen(rd());
 uint64_t mul(uint64_t a, uint64_t b, uint64_t m) { return u128(a) * b % m; };
 map<ull,int> rho_ret; // {p, k}, pの素因数がk個存在
 ull find_factor(ull z) {
     if (!(z&1)) return 2;
-    ull c = rand() % z, x = 2, y = 2, d = 1;
+    ull c = gen() % z, x = 2, y = 2, d = 1;
     while (d == 1) {
         ull tp = (mul(y,y,z) + c) % z;
         y = (mul(tp,tp,z) + c) % z;
@@ -411,6 +416,9 @@ void rhofact_rec(ull z) {
     }
 }
 void rho(ull z) {
+#ifndef UINT128ENV
+    assert(z <= (1ll << 32));
+#endif
     rho_ret.clear();
     rhofact_rec(z);
 }
@@ -506,8 +514,23 @@ int main(void) {
     cout << lcmSmall(a) << endl;
 
     {
+        ll l = 5, r = 18;
         // 大きい数字の素因数分解
-        repi(d, 5, 10) {
+        repi(d, l, r+1) {
+            ll range = 1000;
+            double total_time = 0;
+            double max_time = 0;
+            repi(i, pow(10, d), pow(10, d) +range) {
+                double time = sec();
+                rho(i);
+                total_time += sec() - time;
+                max_time = max(max_time, sec() - time);
+//                cout << i << " " << sec() - time << " " << rho_ret << endl;
+            }
+            cout << pow(10, d) << " "<< total_time / range << " " << max_time << " #Rho" << endl;
+        }
+        // 大きい数字の素因数分解
+        repi(d, l, r+1) {
             ll range = 1000;
             double total_time = 0;
             double max_time = 0;
@@ -520,25 +543,7 @@ int main(void) {
             }
             cout << pow(10, d) << " "<< total_time / range << " " << max_time << " #Brutal" << endl;
         }
-
-        // 大きい数字の素因数分解
-        repi(d, 5, 10) {
-            ll range = 1000;
-            double total_time = 0;
-            double max_time = 0;
-            repi(i, pow(10, d), pow(10, d) +range) {
-                double time = sec();
-                rho(i);
-                total_time += sec() - time;
-                max_time = max(max_time, sec() - time);
-                //            cout << i << " " << sec() - time << " " << rho_ret << endl;
-            }
-            cout << pow(10, d) << " "<< total_time / range << " " << max_time << " #Rho" << endl;
-        }
-
     }
-
 
     return 0;
 }
-
