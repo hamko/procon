@@ -7,7 +7,7 @@ struct SegmentTreeMin {
     T inf;
     vector<T> dat;
     SegmentTreeMin(int n_ = 0) : n(n_){
-        inf = numeric_limits<T>::max();
+        inf = 1e18;
         for(n = 1; n < n_; n <<= 1);
         dat.resize(n*2, inf);
     }
@@ -32,7 +32,7 @@ struct SegmentTreeMax {
     T inf;
     vector<T> dat;
     SegmentTreeMax(int n_ = 0) : n(n_){
-        inf = numeric_limits<T>::min();
+        inf = -1e18;
         for(n = 1; n < n_; n <<= 1);
         dat.resize(n*2, inf);
     }

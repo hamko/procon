@@ -4,35 +4,9 @@ using namespace std;
 
 #define rep(i,n) for(long long i = 0; i < (long long)(n); i++)
 #define repi(i,a,b) for(long long i = (long long)(a); i < (long long)(b); i++)
-#define pb push_back
 #define all(x) (x).begin(), (x).end()
-#define fi first
-#define se second
-#define mt make_tuple
-#define mp make_pair
-template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, true); }
-template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
-
-using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
-using ld = long double;  using vld = vector<ld>; 
-using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
-
-inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; } // これを使うならば、tieとかを消して！！
-template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
-template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
-template<class Ch, class Tr, class Tuple, size_t... Is>
-void print_tuple(basic_ostream<Ch,Tr>& os, Tuple const& t, seq<Is...>){ using s = int[]; (void)s{0, (void(os << (Is == 0? "" : ", ") << get<Is>(t)), 0)...}; }
-template<class Ch, class Tr, class... Args> 
-auto operator<<(basic_ostream<Ch, Tr>& os, tuple<Args...> const& t) -> basic_ostream<Ch, Tr>& { os << "("; print_tuple(os, t, gen_seq<sizeof...(Args)>()); return os << ")"; }
-ostream &operator<<(ostream &o, const vvll &v) { rep(i, v.size()) { rep(j, v[i].size()) o << v[i][j] << " "; o << endl; } return o; }
-template <typename T> ostream &operator<<(ostream &o, const vector<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
-template <typename T> ostream &operator<<(ostream &o, const deque<T> &v) { o << '['; rep(i, v.size()) o << v[i] << (i != v.size()-1 ? ", " : ""); o << "]";  return o; }
-template <typename T>  ostream &operator<<(ostream &o, const set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-template <typename T>  ostream &operator<<(ostream &o, const unordered_set<T> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-template <typename T, typename U>  ostream &operator<<(ostream &o, const map<T, U> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it << (next(it) != m.end() ? ", " : ""); o << "]";  return o; }
-template <typename T, typename U, typename V>  ostream &operator<<(ostream &o, const unordered_map<T, U, V> &m) { o << '['; for (auto it = m.begin(); it != m.end(); it++) o << *it; o << "]";  return o; }
-vector<int> range(const int x, const int y) { vector<int> v(y - x + 1); iota(v.begin(), v.end(), x); return v; }
 template <typename T> istream& operator>>(istream& i, vector<T>& o) { rep(j, o.size()) i >> o[j]; return i;}
+<<<<<<< HEAD
 template <typename T, typename S, typename U> ostream &operator<<(ostream &o, const priority_queue<T, S, U> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} return o; }
 template <typename T> ostream &operator<<(ostream &o, const queue<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.front(); tmp.pop(); o << x << " ";} return o; }
 template <typename T> ostream &operator<<(ostream &o, const stack<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} return o; }
@@ -48,81 +22,11 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
+using ll = long long; using vll = vector<ll>; 
 int main(void) {
-    ll n, l, t; cin >> n >> l >> t;
-    vll a(n), w(n);
-    rep(i, n) {
-        cin >> a[i] >> w[i];
-    }
-    ll faf = 1;
-    rep(i, n-1) {
-        faf &= w[i] == w[i+1];
-    }
-    if (faf) {
-        rep(i, n) {
-            if (w[i] == 1) {
-                cout << (a[i] + t) % l << endl;
-            } else {
-                cout << ((a[i] - t) % l + l) % l << endl;
-            }
-        }
-        return 0;
-    }
-    ll id = 0;
-    rep(i, n) {
-        if (w[i] == 1) {
-            id = i;
-            break;
-        }
-    }
-//    cout << id << "#id" << endl;
-
-    ll s = 0;
-    rep(i, n) {
-        if (w[i] == 2) {
-            if (a[i] > a[id]) {
-                s += (l + 2ll * t - (a[i] - a[id])) / l;
-            } else {
-                s += (l + 2ll * t - (a[i] + (l -  a[id]))) / l;
-            }
-        }
-    }
-
-    vector<P> b;
-    rep(i, n) {
-        ll x = a[i];
-        if (w[i] == 1) {
-            x += t;
-        } else {
-            x -= t;
-        }
-        x %= l;
-        x += l;
-        x %= l;
-        b.pb(P(x, w[i]));
-    }
-    sort(all(b));
-//    cout << s << endl;
-//    cout << b << endl;
-//    cout << P((a[id]+t)%l, 1) << endl;
-    if (find(all(b), P((a[id]+t)%l, 2)) != b.end()) {
-        s += n - 1;
-        s %= n;
-    }
-//    cout << s << endl;
-    rep(i, n) {
-        if (b[i] == P((a[id]+t)%l, 1)) {
-            vll ret(n);
-            rep(j, n) {
-                ret[(id+s+j)%n] = b[(i+j)%n].fi;
-                ll m = ((j+i-id-s)%n+n)%n;
-                cout << b[m].fi << endl;
-            }
-//            cout << ret << endl;
-            return 0;
-        }
-    }
-
-
-    return 0;
+    ll n; cin >> n; vll a(n); cin >> a;
+    bitset<4000010> dp; dp[0] = 1; rep(i, n) dp |= (dp << a[i]);
+    ll s = accumulate(all(a), 0ll);
+    repi(i, s/2+(s&1), 4000010) if (dp[i]) 
+        return cout << i << endl, 0;
 }
