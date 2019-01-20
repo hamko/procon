@@ -49,80 +49,31 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define mo  (ll)(1e9+7)
 
 int main(void) {
-    ll n, l, t; cin >> n >> l >> t;
-    vll a(n), w(n);
+    string s; cin >> s;
+    ll n = s.size();
     rep(i, n) {
-        cin >> a[i] >> w[i];
+        s[i] -= 'W';
     }
-    ll faf = 1;
-    rep(i, n-1) {
-        faf &= w[i] == w[i+1];
+    ll gi, gj; cin >> gi >> gj;
+    if (gi == 0 && gj == 0) {
+                cout << "Yes" << endl;
+                return 0;
     }
-    if (faf) {
+
+    vll id = {0, 1, 2, 3};
+    vll di = {0, 0, 1, -1};
+    vll dj = {1, -1, 0, 0};
+    do {
+        ll pi = 0, pj = 0;
         rep(i, n) {
-            if (w[i] == 1) {
-                cout << (a[i] + t) % l << endl;
-            } else {
-                cout << ((a[i] - t) % l + l) % l << endl;
+            pi += di[id[s[i]]];
+            pj += dj[id[s[i]]];
+            if (pi == gi && pj == gj) {
+                cout << "Yes" << endl;
+                return 0;
             }
         }
-        return 0;
-    }
-    ll id = 0;
-    rep(i, n) {
-        if (w[i] == 1) {
-            id = i;
-            break;
-        }
-    }
-//    cout << id << "#id" << endl;
-
-    ll s = 0;
-    rep(i, n) {
-        if (w[i] == 2) {
-            if (a[i] > a[id]) {
-                s += (l + 2ll * t - (a[i] - a[id])) / l;
-            } else {
-                s += (l + 2ll * t - (a[i] + (l -  a[id]))) / l;
-            }
-        }
-    }
-
-    vector<P> b;
-    rep(i, n) {
-        ll x = a[i];
-        if (w[i] == 1) {
-            x += t;
-        } else {
-            x -= t;
-        }
-        x %= l;
-        x += l;
-        x %= l;
-        b.pb(P(x, w[i]));
-    }
-    sort(all(b));
-//    cout << s << endl;
-//    cout << b << endl;
-//    cout << P((a[id]+t)%l, 1) << endl;
-    if (find(all(b), P((a[id]+t)%l, 2)) != b.end()) {
-        s += n - 1;
-        s %= n;
-    }
-//    cout << s << endl;
-    rep(i, n) {
-        if (b[i] == P((a[id]+t)%l, 1)) {
-            vll ret(n);
-            rep(j, n) {
-                ret[(id+s+j)%n] = b[(i+j)%n].fi;
-                ll m = ((j+i-id-s)%n+n)%n;
-                cout << b[m].fi << endl;
-            }
-//            cout << ret << endl;
-            return 0;
-        }
-    }
-
-
+    } while (next_permutation(all(id)));
+    cout << "No" << endl;
     return 0;
 }

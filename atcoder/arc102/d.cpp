@@ -14,10 +14,8 @@ template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, t
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
-using ld = long double;  using vld = vector<ld>; 
-using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
-
-inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; } // これを使うならば、tieとかを消して！！
+ll ugauss(ll a, ll b) { if (!a) return 0; if (a>0^b>0) return a/b; else return (a+(a>0?-1:1))/b+1; }
+ll lgauss(ll a, ll b) { if (!a) return 0; if (a>0^b>0) return (a+(a>0?-1:1))/b-1; else return a/b; }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -37,91 +35,54 @@ template <typename T, typename S, typename U> ostream &operator<<(ostream &o, co
 template <typename T> ostream &operator<<(ostream &o, const queue<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.front(); tmp.pop(); o << x << " ";} return o; }
 template <typename T> ostream &operator<<(ostream &o, const stack<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} return o; }
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
-string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
-void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
-size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
+void vizGraph(vector<vector<P>>& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { ofs << "    " << i << " -> " << g[i][j].fi << " [label=\"" << g[i][j].se<< "\"];" << endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
-struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
+size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 #define ldout fixed << setprecision(40) 
 
 #define EPS (double)1e-14
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
+vector<vector<P>> construct(ll n, vector<vll> edges) {
+    vector<vector<P>> g(n);
+    rep(i, edges.size()) {
+        g[edges[i][0]].pb(P(edges[i][1], edges[i][2]));
+    }
+    return g;
+}
+
 int main(void) {
-    ll n, l, t; cin >> n >> l >> t;
-    vll a(n), w(n);
-    rep(i, n) {
-        cin >> a[i] >> w[i];
-    }
-    ll faf = 1;
-    rep(i, n-1) {
-        faf &= w[i] == w[i+1];
-    }
-    if (faf) {
-        rep(i, n) {
-            if (w[i] == 1) {
-                cout << (a[i] + t) % l << endl;
-            } else {
-                cout << ((a[i] - t) % l + l) % l << endl;
-            }
-        }
-        return 0;
-    }
-    ll id = 0;
-    rep(i, n) {
-        if (w[i] == 1) {
-            id = i;
-            break;
-        }
-    }
-//    cout << id << "#id" << endl;
+    ll l; cin >> l;
+    ll n = 1;
+    vector<vll> edges;
 
-    ll s = 0;
-    rep(i, n) {
-        if (w[i] == 2) {
-            if (a[i] > a[id]) {
-                s += (l + 2ll * t - (a[i] - a[id])) / l;
-            } else {
-                s += (l + 2ll * t - (a[i] + (l -  a[id]))) / l;
-            }
+    ll p2 = 1;
+    while (1) {
+        if (p2 > l) break;
+        if (p2 > 1) {
+            edges.pb({n-1, n, 0});
+            edges.pb({n-1, n, p2/2});
+            n++;
         }
+        p2 *= 2;
+    }
+    p2 /= 2;
+//    cout << l - p2 << endl;
+    ll rem = l-p2;
+    ll s = p2;
+    rep(i, 30) if (rem & (1ll << i)) {
+        edges.pb({i, n-1, s});
+        s += (1ll << i);
     }
 
-    vector<P> b;
-    rep(i, n) {
-        ll x = a[i];
-        if (w[i] == 1) {
-            x += t;
-        } else {
-            x -= t;
-        }
-        x %= l;
-        x += l;
-        x %= l;
-        b.pb(P(x, w[i]));
+    cout << n << " " << edges.size() << endl;
+    rep(i, edges.size()) {
+        cout << edges[i][0] + 1 << " " << edges[i][1] + 1 << " " << edges[i][2] << endl;
     }
-    sort(all(b));
-//    cout << s << endl;
-//    cout << b << endl;
-//    cout << P((a[id]+t)%l, 1) << endl;
-    if (find(all(b), P((a[id]+t)%l, 2)) != b.end()) {
-        s += n - 1;
-        s %= n;
-    }
-//    cout << s << endl;
-    rep(i, n) {
-        if (b[i] == P((a[id]+t)%l, 1)) {
-            vll ret(n);
-            rep(j, n) {
-                ret[(id+s+j)%n] = b[(i+j)%n].fi;
-                ll m = ((j+i-id-s)%n+n)%n;
-                cout << b[m].fi << endl;
-            }
-//            cout << ret << endl;
-            return 0;
-        }
-    }
+
+    auto g = construct(n, edges);
+    vizGraph(g);
 
 
     return 0;

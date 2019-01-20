@@ -33,8 +33,14 @@ digraph graph_name {
     問題 -> マンハッタン距離;
     問題 -> "約数, gcd";
     問題 -> 共通;
+    問題 -> 手をつけようがない;
 
-    week_samples [label = "ARC99D", shape = box, color = 7];
+
+    手をつけようがない -> 実験;
+    experiment [label = "ARC101D", shape = box, color = 7];
+    実験 -> experiment;
+
+    week_sample [label = "ARC99D", shape = box, color = 7];s
     共通 -> サンプルが弱い -> week_samples;
     グラフ -> クリーク;
 
@@ -45,6 +51,13 @@ digraph graph_name {
     k番目 -> "i番目が満たすかを二分探索";
 
     列 -> 累積和を折れ線として見る;
+    plot_two_d [label = "ARC95F", shape = box, color = 7]; 
+    列 -> 二次元プロット;
+    二次元プロット -> plot_two_d
+    列 -> 階段は前処理で引いておく;
+    preproc_stepwise_cost [label = "Codeforces 477 D1B, ARC102C ", shape = box, color = 7]; 
+    階段は前処理で引いておく -> preproc_stepwise_cost;
+
 
     共通 -> 問題制約を減らして解いてみる;
     共通 -> "小さいものから見ていく（）";
@@ -53,7 +66,10 @@ digraph graph_name {
     共通 -> 対称;
     共通 -> 環状;
     共通 -> 被覆 -> "後ろから見て塗り剥がして?を埋めておく";
-    共通 -> 固定するなら真ん中 [label="DoFが3以上で連結性が限定"]; 
+
+    fix_the_middle [label = "ARC99C MUJIN2018C", shape = box, color = 7];
+    共通 -> 固定するなら真ん中 [label="DoFが3以上で連結性が限定"];
+    固定するなら真ん中-> fix_the_middle; 
     共通 -> 操作を逆順に見る;
     共通 -> コスト;
     共通 -> "ちょうど1回操作";
@@ -75,6 +91,10 @@ digraph graph_name {
 
     環状 -> 環状を切る部分を全探索;
     環状 -> 環状を切って始めを固定;
+    環状 -> やり取りをしない場所を固定して全探索;
+
+    fix_no_interaction [label = "672D1E 683D1E", shape = box, color = 7];
+    やり取りをしない場所を固定して全探索 -> fix_no_interaction;
 
     区間 -> 終端でソート;
     区間 -> 始点を固定;

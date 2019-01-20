@@ -14,10 +14,8 @@ template<class T1, class T2> bool chmin(T1 &a, T2 b) { return b < a && (a = b, t
 template<class T1, class T2> bool chmax(T1 &a, T2 b) { return a < b && (a = b, true); }
 
 using ll = long long; using vll = vector<ll>; using vvll = vector<vll>; using P = pair<ll, ll>;
-using ld = long double;  using vld = vector<ld>; 
-using vi = vector<int>; using vvi = vector<vi>; vll conv(vi& v) { vll r(v.size()); rep(i, v.size()) r[i] = v[i]; return r; }
-
-inline void input(int &v){ v=0;char c=0;int p=1; while(c<'0' || c>'9'){if(c=='-')p=-1;c=getchar();} while(c>='0' && c<='9'){v=(v<<3)+(v<<1)+c-'0';c=getchar();} v*=p; } // これを使うならば、tieとかを消して！！
+ll ugauss(ll a, ll b) { if (!a) return 0; if (a>0^b>0) return a/b; else return (a+(a>0?-1:1))/b+1; }
+ll lgauss(ll a, ll b) { if (!a) return 0; if (a>0^b>0) return (a+(a>0?-1:1))/b-1; else return a/b; }
 template <typename T, typename U> ostream &operator<<(ostream &o, const pair<T, U> &v) {  o << "(" << v.first << ", " << v.second << ")"; return o; }
 template<size_t...> struct seq{}; template<size_t N, size_t... Is> struct gen_seq : gen_seq<N-1, N-1, Is...>{}; template<size_t... Is> struct gen_seq<0, Is...> : seq<Is...>{};
 template<class Ch, class Tr, class Tuple, size_t... Is>
@@ -37,92 +35,150 @@ template <typename T, typename S, typename U> ostream &operator<<(ostream &o, co
 template <typename T> ostream &operator<<(ostream &o, const queue<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.front(); tmp.pop(); o << x << " ";} return o; }
 template <typename T> ostream &operator<<(ostream &o, const stack<T> &v) { auto tmp = v; while (tmp.size()) { auto x = tmp.top(); tmp.pop(); o << x << " ";} return o; }
 template <typename T> unordered_map<T, ll> counter(vector<T> vec){unordered_map<T, ll> ret; for (auto&& x : vec) ret[x]++; return ret;};
-string substr(string s, P x) {return s.substr(x.fi, x.se - x.fi); }
 void vizGraph(vvll& g, int mode = 0, string filename = "out.png") { ofstream ofs("./out.dot"); ofs << "digraph graph_name {" << endl; set<P> memo; rep(i, g.size())  rep(j, g[i].size()) { if (mode && (memo.count(P(i, g[i][j])) || memo.count(P(g[i][j], i)))) continue; memo.insert(P(i, g[i][j])); ofs << "    " << i << " -> " << g[i][j] << (mode ? " [arrowhead = none]" : "")<< endl;  } ofs << "}" << endl; ofs.close(); system(((string)"dot -T png out.dot >" + filename).c_str()); }
-size_t random_seed; namespace std { using argument_type = P; template<> struct hash<argument_type> { size_t operator()(argument_type const& x) const { size_t seed = random_seed; seed ^= hash<ll>{}(x.fi); seed ^= (hash<ll>{}(x.se) << 1); return seed; } }; }; // hash for various class
 struct timeval start; double sec() { struct timeval tv; gettimeofday(&tv, NULL); return (tv.tv_sec - start.tv_sec) + (tv.tv_usec - start.tv_usec) * 1e-6; }
-struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
+size_t random_seed; struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&start, NULL); struct timeval myTime; struct tm *time_st; gettimeofday(&myTime, NULL); time_st = localtime(&myTime.tv_sec); srand(myTime.tv_usec); random_seed = RAND_MAX / 2 + rand() / 2; }} init__;
 #define ldout fixed << setprecision(40) 
 
 #define EPS (double)1e-14
 #define INF (ll)1e18
-#define mo  (ll)(1e9+7)
+#define mo  (ll)(998244353)
 
-int main(void) {
-    ll n, l, t; cin >> n >> l >> t;
-    vll a(n), w(n);
-    rep(i, n) {
-        cin >> a[i] >> w[i];
-    }
-    ll faf = 1;
-    rep(i, n-1) {
-        faf &= w[i] == w[i+1];
-    }
-    if (faf) {
-        rep(i, n) {
-            if (w[i] == 1) {
-                cout << (a[i] + t) % l << endl;
-            } else {
-                cout << ((a[i] - t) % l + l) % l << endl;
+template<int MOD>
+struct ModInt {
+	static const int Mod = MOD;
+	unsigned x;
+	ModInt() : x(0) {}
+	ModInt(signed sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	ModInt(signed long long sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	int get() const { return (int)x; }
+
+	ModInt &operator+=(ModInt that) { if((x += that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator-=(ModInt that) { if((x += MOD - that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator*=(ModInt that) { x = (unsigned long long)x * that.x % MOD; return *this; }
+	ModInt &operator/=(ModInt that) { return *this *= that.inverse(); }
+
+	ModInt operator+(ModInt that) const { return ModInt(*this) += that; }
+	ModInt operator-(ModInt that) const { return ModInt(*this) -= that; }
+	ModInt operator*(ModInt that) const { return ModInt(*this) *= that; }
+	ModInt operator/(ModInt that) const { return ModInt(*this) /= that; }
+
+	ModInt inverse() const {
+		signed a = x, b = MOD, u = 1, v = 0;
+		while(b) {
+			signed t = a / b;
+			a -= t * b; std::swap(a, b);
+			u -= t * v; std::swap(u, v);
+		}
+		if(u < 0) u += Mod;
+		ModInt res; res.x = (unsigned)u;
+		return res;
+	}
+
+	bool operator==(ModInt that) const { return x == that.x; }
+	bool operator!=(ModInt that) const { return x != that.x; }
+	ModInt operator-() const { ModInt t; t.x = x == 0 ? 0 : Mod - x; return t; }
+};
+typedef ModInt<mo> mint;
+ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
+
+ll brutal(string s) {
+    ll n = s.size();
+    set<string> memo;
+    memo.insert(s);
+    rep(_, 10000) {
+        set<string> next_memo = memo;
+        for (auto x : memo) {
+            ll i = rand() % (n - 1);
+            if (x[i] != x[i+1]) {
+                x[i] = x[i+1] = 'a' + (3 - (x[i] - 'a') - (x[i+1] - 'a'));
             }
+            next_memo.insert(x);
         }
+        swap(memo, next_memo);
+    }
+//    cout << memo << endl;
+    return memo.size();
+}
+ll brutal2(string s) {
+    ll n = s.size();
+    ll m = 0;
+    rep(i, n) {
+        (m += s[i] - 'a') %= 3;
+    }
+    ll ret = 0;
+    rep(i, round(pow(3, s.size()))) {
+        vll id;
+        ll tmp = i;
+        ll mtmp = 0;
+        rep(_, n) {
+            id.pb(tmp % 3);
+            (mtmp += tmp) %= 3;
+            tmp /= 3;
+        }
+        if (mtmp != m) {
+            continue;
+        }
+        ll faf = 1;
+        rep(i, n-1) {
+            faf &= id[i] != id[i+1];
+        }
+        if (faf) continue;
+        cout << id << endl;
+        ret++;
+    }
+    return ret;
+}
+
+mint dp[200010][3][2][4] = {}; // i個みてsum = j mod 3で連続する部分がh個で最後がlである
+int main(void) {
+    string s; cin >> s;
+    ll n = s.size();
+    ll m = 0;
+    rep(i, n) {
+        (m += s[i] - 'a') %= 3;
+    }
+
+    if (n <= 5) {
+        cout << brutal(s) << endl;
         return 0;
     }
-    ll id = 0;
-    rep(i, n) {
-        if (w[i] == 1) {
-            id = i;
-            break;
-        }
+    bool tef = 0; 
+    rep(i, n - 1) {
+        tef |= s[i] == s[i+1];
     }
-//    cout << id << "#id" << endl;
+    bool faf = 1; 
+    rep(i, n - 1) {
+        faf &= s[i] == s[i+1];
+    }
+    if (faf) {
+        cout << 1 << endl;
+        return 0;
+    }
 
-    ll s = 0;
+
+    dp[0][0][0][3] = 1;
     rep(i, n) {
-        if (w[i] == 2) {
-            if (a[i] > a[id]) {
-                s += (l + 2ll * t - (a[i] - a[id])) / l;
-            } else {
-                s += (l + 2ll * t - (a[i] + (l -  a[id]))) / l;
+        rep(j, 3) rep(h, 2) rep(l, 4) if (dp[i][j][h][l] != mint(0)) {
+            rep(k, 3) { // i文字目にk = 0, 1, 2を置く
+                dp[i+1][(j+k)%3][h|(l==k)][k] += dp[i][j][h][l];
             }
         }
+        ll o = 0;
+        rep(j, 3) rep(h, 2) rep(l, 3) {
+//            cout << mt(i+1, j, h, l) << " " << dp[i+1][j][h][l] << endl;
+            o += dp[i+1][j][h][l].x;
+        }
+//        cout << o << endl;
     }
 
-    vector<P> b;
-    rep(i, n) {
-        ll x = a[i];
-        if (w[i] == 1) {
-            x += t;
-        } else {
-            x -= t;
-        }
-        x %= l;
-        x += l;
-        x %= l;
-        b.pb(P(x, w[i]));
-    }
-    sort(all(b));
-//    cout << s << endl;
-//    cout << b << endl;
-//    cout << P((a[id]+t)%l, 1) << endl;
-    if (find(all(b), P((a[id]+t)%l, 2)) != b.end()) {
-        s += n - 1;
-        s %= n;
-    }
-//    cout << s << endl;
-    rep(i, n) {
-        if (b[i] == P((a[id]+t)%l, 1)) {
-            vll ret(n);
-            rep(j, n) {
-                ret[(id+s+j)%n] = b[(i+j)%n].fi;
-                ll m = ((j+i-id-s)%n+n)%n;
-                cout << b[m].fi << endl;
-            }
-//            cout << ret << endl;
-            return 0;
-        }
-    }
 
+
+    mint ret = 0;
+    rep(i, 3) ret += dp[n][m][1][i];
+    cout << ret + mint((ll)(!tef)) << endl;
+
+//    cout << brutal2(s) << endl;
 
     return 0;
 }

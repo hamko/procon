@@ -49,80 +49,8 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define mo  (ll)(1e9+7)
 
 int main(void) {
-    ll n, l, t; cin >> n >> l >> t;
-    vll a(n), w(n);
-    rep(i, n) {
-        cin >> a[i] >> w[i];
-    }
-    ll faf = 1;
-    rep(i, n-1) {
-        faf &= w[i] == w[i+1];
-    }
-    if (faf) {
-        rep(i, n) {
-            if (w[i] == 1) {
-                cout << (a[i] + t) % l << endl;
-            } else {
-                cout << ((a[i] - t) % l + l) % l << endl;
-            }
-        }
-        return 0;
-    }
-    ll id = 0;
-    rep(i, n) {
-        if (w[i] == 1) {
-            id = i;
-            break;
-        }
-    }
-//    cout << id << "#id" << endl;
-
-    ll s = 0;
-    rep(i, n) {
-        if (w[i] == 2) {
-            if (a[i] > a[id]) {
-                s += (l + 2ll * t - (a[i] - a[id])) / l;
-            } else {
-                s += (l + 2ll * t - (a[i] + (l -  a[id]))) / l;
-            }
-        }
-    }
-
-    vector<P> b;
-    rep(i, n) {
-        ll x = a[i];
-        if (w[i] == 1) {
-            x += t;
-        } else {
-            x -= t;
-        }
-        x %= l;
-        x += l;
-        x %= l;
-        b.pb(P(x, w[i]));
-    }
-    sort(all(b));
-//    cout << s << endl;
-//    cout << b << endl;
-//    cout << P((a[id]+t)%l, 1) << endl;
-    if (find(all(b), P((a[id]+t)%l, 2)) != b.end()) {
-        s += n - 1;
-        s %= n;
-    }
-//    cout << s << endl;
-    rep(i, n) {
-        if (b[i] == P((a[id]+t)%l, 1)) {
-            vll ret(n);
-            rep(j, n) {
-                ret[(id+s+j)%n] = b[(i+j)%n].fi;
-                ll m = ((j+i-id-s)%n+n)%n;
-                cout << b[m].fi << endl;
-            }
-//            cout << ret << endl;
-            return 0;
-        }
-    }
-
+    ll n; cin >> n;
+    vll a(n); cin >> a;
 
     return 0;
 }

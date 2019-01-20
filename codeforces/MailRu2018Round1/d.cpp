@@ -48,81 +48,102 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
-int main(void) {
-    ll n, l, t; cin >> n >> l >> t;
-    vll a(n), w(n);
-    rep(i, n) {
-        cin >> a[i] >> w[i];
-    }
-    ll faf = 1;
-    rep(i, n-1) {
-        faf &= w[i] == w[i+1];
-    }
-    if (faf) {
-        rep(i, n) {
-            if (w[i] == 1) {
-                cout << (a[i] + t) % l << endl;
-            } else {
-                cout << ((a[i] - t) % l + l) % l << endl;
-            }
-        }
-        return 0;
-    }
-    ll id = 0;
-    rep(i, n) {
-        if (w[i] == 1) {
-            id = i;
-            break;
-        }
-    }
-//    cout << id << "#id" << endl;
+ll g(ll x) {
+    return x * (x - 1ll) / 2ll;
+}
+ll get(ll n, ll d, vll a) {
+    map<ll, ll> freq;
 
-    ll s = 0;
+    ll x = 0;
     rep(i, n) {
-        if (w[i] == 2) {
-            if (a[i] > a[id]) {
-                s += (l + 2ll * t - (a[i] - a[id])) / l;
-            } else {
-                s += (l + 2ll * t - (a[i] + (l -  a[id]))) / l;
-            }
-        }
+        x ^= a[i];
+        freq[x]++;
     }
 
-    vector<P> b;
-    rep(i, n) {
-        ll x = a[i];
-        if (w[i] == 1) {
-            x += t;
+    set<ll> used;
+    ll ret = 0;
+    for (auto xf : freq) {
+        ll x = xf.fi;
+        ll f = xf.se;
+        ll xr = x ^ ((1ll << d) - 1ll);
+        ll fr = (freq.count(xr) == 0 ? 0 : freq[xr]);
+        
+        if (x > xr) {
+            swap(x, xr);
+            swap(f, fr);
+        }
+        if (used.count(x)) continue;
+        used.insert(x);
+
+        // x = 0の場合は一個は必ず0にしないといけない
+        if (!x) f++;
+
+        ll tmp = f + fr;
+        if (tmp % 2ll == 0) {
+            ret += g(tmp / 2ll) + g(tmp / 2ll);
         } else {
-            x -= t;
-        }
-        x %= l;
-        x += l;
-        x %= l;
-        b.pb(P(x, w[i]));
-    }
-    sort(all(b));
-//    cout << s << endl;
-//    cout << b << endl;
-//    cout << P((a[id]+t)%l, 1) << endl;
-    if (find(all(b), P((a[id]+t)%l, 2)) != b.end()) {
-        s += n - 1;
-        s %= n;
-    }
-//    cout << s << endl;
-    rep(i, n) {
-        if (b[i] == P((a[id]+t)%l, 1)) {
-            vll ret(n);
-            rep(j, n) {
-                ret[(id+s+j)%n] = b[(i+j)%n].fi;
-                ll m = ((j+i-id-s)%n+n)%n;
-                cout << b[m].fi << endl;
-            }
-//            cout << ret << endl;
-            return 0;
+            ret += g(tmp / 2ll) + g(tmp / 2ll + 1ll);
         }
     }
 
+    return n * (n + 1ll) / 2ll - ret;
+}
+
+ll getBrutal(ll n, ll d, vll a) {
+    ll ans = 0;
+    rep(mask, 1 << n) {
+        vll b = a;
+        rep(i, n) if (mask & (1ll << i)) {
+            b[i] ^= (1ll << d) - 1ll;
+        }
+        ll ret = 0;
+        rep(i, n) {
+            repi(j, i+1, n+1) {
+                ll x = 0;
+                repi(h, i, j) {
+                    x ^= b[h];
+                }
+                if (x) {
+                    ret++;
+                }
+            }
+        }
+//        cout << b << " " << ret << endl;
+        chmax(ans, ret);
+    }
+    return ans;
+}
+int main(void) {
+        ll n, d; cin >> n >> d;
+        vll a(n); cin >> a;
+        ll s = get(n, d, a);
+        cout << s << endl;
+        return 0;
+
+    while (1) {
+#if 0
+        ll n, d; cin >> n >> d;
+        vll a(n); cin >> a;
+#else
+        ll n = 4;
+        ll d = 1 + rand() % 4;
+        vll a(n); 
+        rep(i, n) a[i] = rand() % (1 << d);
+#endif
+
+        ll s = get(n, d, a);
+        ll b = getBrutal(n, d, a);
+
+        if (s != b) {
+            cout << n << " " << d << endl;
+            cout << a << endl;
+            cout << s << endl;
+            cout << b << endl;
+        } else {
+            cout << "OK" << endl;
+        }
+
+    }
 
     return 0;
 }

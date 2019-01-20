@@ -48,81 +48,136 @@ struct init_{init_(){ ios::sync_with_stdio(false); cin.tie(0); gettimeofday(&sta
 #define INF (ll)1e18
 #define mo  (ll)(1e9+7)
 
+template<int MOD>
+struct ModInt {
+	static const int Mod = MOD;
+	unsigned x;
+	ModInt() : x(0) {}
+	ModInt(signed sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	ModInt(signed long long sig) { int sigt = sig % MOD; if(sigt < 0) sigt += MOD; x = sigt; }
+	int get() const { return (int)x; }
+
+	ModInt &operator+=(ModInt that) { if((x += that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator-=(ModInt that) { if((x += MOD - that.x) >= MOD) x -= MOD; return *this; }
+	ModInt &operator*=(ModInt that) { x = (unsigned long long)x * that.x % MOD; return *this; }
+	ModInt &operator/=(ModInt that) { return *this *= that.inverse(); }
+
+	ModInt operator+(ModInt that) const { return ModInt(*this) += that; }
+	ModInt operator-(ModInt that) const { return ModInt(*this) -= that; }
+	ModInt operator*(ModInt that) const { return ModInt(*this) *= that; }
+	ModInt operator/(ModInt that) const { return ModInt(*this) /= that; }
+
+	ModInt inverse() const {
+		signed a = x, b = MOD, u = 1, v = 0;
+		while(b) {
+			signed t = a / b;
+			a -= t * b; std::swap(a, b);
+			u -= t * v; std::swap(u, v);
+		}
+		if(u < 0) u += Mod;
+		ModInt res; res.x = (unsigned)u;
+		return res;
+	}
+
+	bool operator==(ModInt that) const { return x == that.x; }
+	bool operator!=(ModInt that) const { return x != that.x; }
+	ModInt operator-() const { ModInt t; t.x = x == 0 ? 0 : Mod - x; return t; }
+};
+template<int MOD> ModInt<MOD> operator^(ModInt<MOD> a, unsigned long long k) {
+	ModInt<MOD> r = 1;
+	while(k) {
+		if(k & 1) r *= a;
+		a *= a;
+		k >>= 1;
+	}
+	return r;
+}
+typedef ModInt<1000000007> mint;
+typedef vector<mint> vmint;
+ostream &operator<<(ostream &o, const mint v) {  o << v.x; return o; }
+
+// n!と1/n!のテーブルを作る。
+// nCrを高速に計算するためのもの。
+//
+// O(n + log mo)
+vector<mint> fact, rfact;
+void constructFactorial(const long long n) {
+    fact.resize(n);
+    rfact.resize(n);
+    fact[0] = rfact[0] = 1;
+    for (int i = 0; i < n - 1; i++) {
+        fact[i+1] = fact[i] * (i+1);
+    }
+    rfact[n-1] = mint(1) / fact[n-1]; 
+    for (int i = n - 1; i >= 1; i--) 
+        rfact[i-1] = rfact[i] * i; // ((n-1)!)^-1 = (n!)^-1 * n
+}
+
+// O(1)
+// constructFactorialしておけば、n, r=1e7くらいまではいけます
+mint nCr(const long long n, const long long r) {
+    if (n < 0 || r < 0) return 0;
+    if (n < r) return 0;
+    return fact[n] * rfact[r] * rfact[n-r];
+}
+
+// O(r.size())
+// sum(r)! / r[0]! / r[1]! / ...
+mint nCr(const vector<long long> r) {
+    ll sum = accumulate(r.begin(), r.end(), 0ll);
+    mint ret = fact[sum];
+    rep(i, r.size()) 
+        ret *= rfact[r[i]];
+    return ret;
+}
+
+// O(k log mo) 
+mint nCrWithoutConstruction(const long long n, const long long k) {
+    if (n < 0) return 0;
+    if (k < 0) return 0;
+    mint ret = 1;
+    for (int i = 0; i < k; i++) {
+        ret *= (mint)n - (mint)i;
+        ret /= mint(i+1);
+    }
+    return ret;
+}
+
+
 int main(void) {
-    ll n, l, t; cin >> n >> l >> t;
-    vll a(n), w(n);
+    constructFactorial(2e6);
+    string s; cin >> s;
+    ll n = s.size();
+    ll w; cin >> w;
+    ll h = s.size() - w;
+
+    s += s[0];
+
     rep(i, n) {
-        cin >> a[i] >> w[i];
+        w -= s[i] == 'W';
+        h -= s[i] == 'F';
     }
-    ll faf = 1;
-    rep(i, n-1) {
-        faf &= w[i] == w[i+1];
-    }
-    if (faf) {
-        rep(i, n) {
-            if (w[i] == 1) {
-                cout << (a[i] + t) % l << endl;
+//    cout << h << " " << w << endl;
+    mint ret = 0;
+    rep(i, n) {
+        ll wnum = (s[i] == 'W') + (s[i+1] == 'W');
+        ll hnum = (s[i] == 'F') + (s[i+1] == 'F');
+        ll qnum = (s[i] == '?') + (s[i+1] == '?');
+        mint tmp = 0;
+        if (wnum == 1 && hnum == 1) {
+            tmp = nCr(w + h, w);
+        } else if (qnum == 1) {
+            if (wnum == 1) {
+                tmp = nCr(w + h - 1, w);
             } else {
-                cout << ((a[i] - t) % l + l) % l << endl;
+                tmp = nCr(w + h - 1, h);
             }
+        } else if (qnum == 2) {
+            tmp = mint(2) * nCr(w + h - 2, h - 1);
         }
-        return 0;
+//        cout << i << " " << tmp << endl;
+        ret += tmp;
     }
-    ll id = 0;
-    rep(i, n) {
-        if (w[i] == 1) {
-            id = i;
-            break;
-        }
-    }
-//    cout << id << "#id" << endl;
-
-    ll s = 0;
-    rep(i, n) {
-        if (w[i] == 2) {
-            if (a[i] > a[id]) {
-                s += (l + 2ll * t - (a[i] - a[id])) / l;
-            } else {
-                s += (l + 2ll * t - (a[i] + (l -  a[id]))) / l;
-            }
-        }
-    }
-
-    vector<P> b;
-    rep(i, n) {
-        ll x = a[i];
-        if (w[i] == 1) {
-            x += t;
-        } else {
-            x -= t;
-        }
-        x %= l;
-        x += l;
-        x %= l;
-        b.pb(P(x, w[i]));
-    }
-    sort(all(b));
-//    cout << s << endl;
-//    cout << b << endl;
-//    cout << P((a[id]+t)%l, 1) << endl;
-    if (find(all(b), P((a[id]+t)%l, 2)) != b.end()) {
-        s += n - 1;
-        s %= n;
-    }
-//    cout << s << endl;
-    rep(i, n) {
-        if (b[i] == P((a[id]+t)%l, 1)) {
-            vll ret(n);
-            rep(j, n) {
-                ret[(id+s+j)%n] = b[(i+j)%n].fi;
-                ll m = ((j+i-id-s)%n+n)%n;
-                cout << b[m].fi << endl;
-            }
-//            cout << ret << endl;
-            return 0;
-        }
-    }
-
-
+    cout << ret << endl;
     return 0;
 }
