@@ -19,7 +19,7 @@ struct SegmentTreeMin {
     }
     void update(int i, const T &x){
         dat[i+=n] = x;
-        for(; i!=1; i/=2) dat[i/2] = min(dat[i], dat[i^1]);
+        for(; i!=1; i/=2) dat[i/2] = min(dat[i], dat[i^1]); // このデータ構造では可換を前提としている！！！
     }
     T query(int l, int r){ return query(1,n,l,r); }
     size_t size() const { return n; }
@@ -44,7 +44,7 @@ struct SegmentTreeMax {
     }
     void update(int i, const T &x){
         dat[i+=n] = x;
-        for(; i!=1; i/=2) dat[i/2] = max(dat[i], dat[i^1]);
+        for(; i!=1; i/=2) dat[i/2] = max(dat[i], dat[i^1]); // このデータ構造では可換を前提としている！！！
     }
     T query(int l, int r){ return query(1,n,l,r); }
     size_t size() const { return n; }
