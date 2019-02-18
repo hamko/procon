@@ -59,17 +59,6 @@ ll get(ll m, ll ant, ll n, vll& a) {
                 ((as[n]-as[lo])-(n-lo)*i) + 
                 ((lo-0)*i-(as[lo]-as[0]));
         chmin(ret, whole - tmp);
-        /*
-        cout << i << " " << a << endl;
-        cout << whole << endl;
-        cout << lo << endl;
-        cout << tmp << endl;
-        cout << "E" << endl;
-        cout <<(as[n]-as[lo])<< endl;
-        cout << (n-lo)*i << endl;
-        cout << (lo-0)*i << endl;
-        cout << as[lo]-as[0] << endl;
-        */
     }
     return ret;
 }

@@ -1,0 +1,16 @@
+何を実装すべきか
+
+- 全部盛りの遅延セグ木
+  - LazySegmentTreeSumMinMax.cpp 
+  - 高速性が全然いらない時のためにさぼる用途
+  - min, max, sumを全部計算する奴
+  - 本当は作用素をax+bにしたい
+
+- 軽量なセグ木 (not lazy) Abstract
+  - SegmentTreeAbstract.cpp
+  - Abstractの具体例として+, +/Z, min, max, matrixを実装
+- 軽量なセグ木 (lazy) Abstract
+  - LazySegmentTreeAbstract.cpp
+  - Abstractの具体例として+, +/Z, min, max, *を実装 (*はmemoが必要)
+
+- 二次元Seg木
