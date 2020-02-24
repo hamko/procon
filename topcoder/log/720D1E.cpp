@@ -42,9 +42,9 @@ struct ci : public iterator<forward_iterator_tag, ll> { ll n; ci(const ll n) : n
 
 static const double EPS = 1e-14;
 static const long long INF = 1e18;
+static const long long mo = 1e9+7;
 #define ldout fixed << setprecision(40) 
 
-static const long long mo = 1e9+7;
 class Mod {
     public:
         int num;
@@ -107,79 +107,85 @@ Mod operator/=(Mod &a, const Mod b) { assert(b.num != 0); return a = a * inv(b);
 // n!と1/n!のテーブルを作る。
 // nCrを高速に計算するためのもの。
 //
-// O(n + log mo)
+// assertでnを超えていないかをきちんとテストすること。
+//
+// O(n log mo)
 vector<Mod> fact, rfact;
 void constructFactorial(const long long n) {
     fact.resize(n);
     rfact.resize(n);
     fact[0] = rfact[0] = 1;
-    for (int i = 0; i < n - 1; i++) {
-        fact[i+1] = fact[i] * (i+1);
+    for (int i = 1; i < n; i++) {
+        fact[i] = fact[i-1] * i;
+        rfact[i] = Mod(1) / fact[i];
     }
-    rfact[n-1] = Mod(1) / fact[n-1]; 
-    for (int i = n - 1; i >= 1; i--) 
-        rfact[i-1] = rfact[i] * i; // ((n-1)!)^-1 = (n!)^-1 * n
 }
 
 // O(1)
-// constructFactorialしておけば、n, r=1e7くらいまではいけます
 Mod nCr(const long long n, const long long r) {
+//    assert(n < (long long)fact.size());
     if (n < 0 || r < 0) return 0;
     return fact[n] * rfact[r] * rfact[n-r];
 }
 
-// O(r.size())
-// sum(r)! / r[0]! / r[1]! / ...
-Mod nCr(const vector<long long> r) {
-    ll sum = accumulate(all(r), 0ll);
-    Mod ret = fact[sum];
-    rep(i, r.size()) 
-        ret *= rfact[r[i]];
-    return ret;
-}
 
-// O(k log mo) 
-Mod nCrWithoutConstruction(const long long n, const long long k) {
-    if (n < 0) return 0;
-    if (k < 0) return 0;
-    Mod ret = 1;
-    for (int i = 0; i < k; i++) {
-        ret *= n - (Mod)i;
-        ret /= Mod(i+1);
-    }
-    return ret;
-}
-// n*mの盤面を左下から右上に行く場合の数
-// O(1)
-Mod nBm(const long long n, const long long m) {
-    if (n < 0 || m < 0) return 0;
-    return nCr(n + m, n);
-}
-
-
+vector<Mod> _111(1000);
 class SumProduct {
     public:
-        int findSum(vector <int> a_, int b1, int b2) {
-            vll a = conv(a_);
-            constructFactorial(1000);
-            vector<Mod> m10(1000); m10[0] = 1; rep(i, 999) m10[i+1] = m10[i] * 10;
-            ll s = 0; rep(ix, b1) rep(iy, b2) s += m10[ix + iy];
+        vll a;
+        ll n;
+        ll b1, b2;
+        Mod dp[20][110][110] = {};
+        bool used[20][110][110] = {};
+        Mod dfs(ll i, ll rem_b1, ll rem_b2) {
+            if (rem_b1 == 0 && rem_b2 == 0) return 0;
+            if (i >= 10) return 0;
 
-            ll n = a.size();
-            Mod ret = 0;
-            rep(x, 10) rep(y, 10) {
-                a[x]--, a[y]--;
-                if (a[x] >= 0 && a[y] >= 0) {
-                    vector<Mod> dp(b1+b2-2+1); dp[0] = 1;
-                    rep(i, 10) 
-                        for (int len = b1+b2-2; len >= 0; len--) 
-                            repi(k, 1, min<ll>(a[i]+1, b1 + b2 - 1 - len)) 
-                                dp[len + k] += nCr(len+k, k) * dp[len];
-                    ret += x * y * dp[b1+b2-2];
-                }
-                a[x]++, a[y]++;
+            ll tmp = 0;
+            repi(k, i, 10) {
+                tmp += a[k]; 
             }
-            return ret * s;
+            if (tmp < rem_b1 + rem_b2) {
+                used[i][rem_b1][rem_b2] = 1;
+                return dp[i][rem_b1][rem_b2] = 0;
+            }
+
+
+//            cout << i << " " << rem_b1<< " " << rem_b2 << endl;
+
+            if (used[i][rem_b1][rem_b2] == 1) return dp[i][rem_b1][rem_b2];
+            used[i][rem_b1][rem_b2] = 1;
+
+            Mod ret = 0;
+            rep(use_b1, rem_b1+1) {
+                rep(use_b2, rem_b2+1) if (use_b1 + use_b2 <= a[i]) {
+                    ret += dfs(i+1, rem_b1-use_b1, rem_b2-use_b2);
+                    ret += i * nCr(rem_b1, use_b1) * _111[b1] +  i * nCr(rem_b1, use_b1) * _111[b2];
+//                    cout << i << " " << rem_b1 << " " << rem_b2 << " : " << use_b1 << " "<< use_b2 << " " <<i * nCr(rem_b1, use_b1) * _111[b1] +  i * nCr(rem_b1, use_b1) * _111[b2] << endl;
+                }
+            }
+
+            return dp[i][rem_b1][rem_b2] = ret;
+        }
+        int findSum(vector <int> a_, int b1_, int b2_) {
+            constructFactorial(1000);
+            a = conv(a_);
+            b1 = b1_, b2 = b2_;
+            n = a.size();
+
+            _111[0] = 0;
+            _111[1] = 1;
+            repi(i, 2, n) {
+                _111[i] = (_111[i-1] * 10 + (Mod)1) % mo;
+            }
+
+
+            Mod ret = dfs(0, b1, b2);
+            rep(i, 20) rep(j, 110) rep(h, 110) if (used[i][j][h]) {
+                cout << i << " " << j << " " << h << ": " << dp[i][j][h] << endl;;
+            }
+
+            return ret;
         }
 };
 
@@ -192,73 +198,73 @@ class SumProduct {
 #include <cmath>
 using namespace std;
 bool KawigiEdit_RunTest(int testNum, vector <int> p0, int p1, int p2, bool hasAnswer, int p3) {
-    cout << "Test " << testNum << ": [" << "{";
-    for (int i = 0; int(p0.size()) > i; ++i) {
-        if (i > 0) {
-            cout << ",";
-        }
-        cout << p0[i];
-    }
-    cout << "}" << "," << p1 << "," << p2;
-    cout << "]" << endl;
-    SumProduct *obj;
-    int answer;
-    obj = new SumProduct();
-    clock_t startTime = clock();
-    answer = obj->findSum(p0, p1, p2);
-    clock_t endTime = clock();
-    delete obj;
-    bool res;
-    res = true;
-    cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
-    if (hasAnswer) {
-        cout << "Desired answer:" << endl;
-        cout << "\t" << p3 << endl;
-    }
-    cout << "Your answer:" << endl;
-    cout << "\t" << answer << endl;
-    if (hasAnswer) {
-        res = answer == p3;
-    }
-    if (!res) {
-        cout << "DOESN'T MATCH!!!!" << endl;
-    } else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
-        cout << "FAIL the timeout" << endl;
-        res = false;
-    } else if (hasAnswer) {
-        cout << "Match :-)" << endl;
-    } else {
-        cout << "OK, but is it right?" << endl;
-    }
-    cout << "" << endl;
-    return res;
+	cout << "Test " << testNum << ": [" << "{";
+	for (int i = 0; int(p0.size()) > i; ++i) {
+		if (i > 0) {
+			cout << ",";
+		}
+		cout << p0[i];
+	}
+	cout << "}" << "," << p1 << "," << p2;
+	cout << "]" << endl;
+	SumProduct *obj;
+	int answer;
+	obj = new SumProduct();
+	clock_t startTime = clock();
+	answer = obj->findSum(p0, p1, p2);
+	clock_t endTime = clock();
+	delete obj;
+	bool res;
+	res = true;
+	cout << "Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
+	if (hasAnswer) {
+		cout << "Desired answer:" << endl;
+		cout << "\t" << p3 << endl;
+	}
+	cout << "Your answer:" << endl;
+	cout << "\t" << answer << endl;
+	if (hasAnswer) {
+		res = answer == p3;
+	}
+	if (!res) {
+		cout << "DOESN'T MATCH!!!!" << endl;
+	} else if (double(endTime - startTime) / CLOCKS_PER_SEC >= 2) {
+		cout << "FAIL the timeout" << endl;
+		res = false;
+	} else if (hasAnswer) {
+		cout << "Match :-)" << endl;
+	} else {
+		cout << "OK, but is it right?" << endl;
+	}
+	cout << "" << endl;
+	return res;
 }
 int main() {
-    bool all_right;
-    bool disabled;
-    bool tests_disabled;
-    all_right = true;
-    tests_disabled = false;
-
-    vector <int> p0;
-    int p1;
-    int p2;
-    int p3;
-
-    // ----- test 0 -----
-    disabled = false;
-    p0 = {0,2,1,1,0,0,0,0,0,0};
-    p1 = 2;
-    p2 = 2;
-    p3 = 4114;
-    all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, p2, true, p3) ) && all_right;
-    tests_disabled = tests_disabled || disabled;
-    // ------------------
-
-    // ----- test 1 -----
-    disabled = false;
-    p0 = {1,6,0,0,0,0,0,0,0,0};
-    p1 = 1;
+	bool all_right;
+	bool disabled;
+	bool tests_disabled;
+	all_right = true;
+	tests_disabled = false;
+	
+	vector <int> p0;
+	int p1;
+	int p2;
+	int p3;
+	
+	// ----- test 0 -----
+	disabled = false;
+	p0 = {0,2,1,1,0,0,0,0,0,0};
+	p1 = 2;
+	p2 = 2;
+	p3 = 4114;
+	all_right = (disabled || KawigiEdit_RunTest(0, p0, p1, p2, true, p3) ) && all_right;
+	tests_disabled = tests_disabled || disabled;
+	// ------------------
+	
+	// ----- test 1 -----
+	disabled = false;
+	p0 = {1,6,0,0,0,0,0,0,0,0};
+	p1 = 1;
 	p2 = 2;
 	p3 = 22;
 	all_right = (disabled || KawigiEdit_RunTest(1, p0, p1, p2, true, p3) ) && all_right;

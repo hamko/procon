@@ -57,16 +57,13 @@ static const long long mo = 1e9+7;
 
 int main(void) {
     ll n; cin >> n;
-    vll a(n); cin >> a;
-    vector<bool> memo(3e5);
-    ll ret = 1;
+    vll memo(3e5);
+    memo[0] = 1;
     rep(i, n) {
-        if (memo[a[i]]) {
-            ret++;
-        } else {
-            memo[a[i]] = 1;
-        }
+        ll x; cin >> x;
+        if (memo[x]) memo[x] = 0;
+        memo[i+1] = 1;
     }
-    cout << ret << endl;
+    cout << count(all(memo), 1) << endl;
     return 0;
 }
