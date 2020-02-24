@@ -35,13 +35,13 @@ digraph graph_name {
     問題 -> 共通;
     問題 -> 手をつけようがない;
 
+    weak_samples [label = "ARC99D", shape = box, color = 7];
+    共通 -> サンプルが弱い -> weak_samples;
 
     手をつけようがない -> 実験;
     experiment [label = "ARC101D", shape = box, color = 7];
     実験 -> experiment;
-
-    week_sample [label = "ARC99D", shape = box, color = 7];s
-    共通 -> サンプルが弱い -> week_samples;
+  
     グラフ -> クリーク;
 
     complement_graph [label = "ARC99E", shape = box, color = 7]; 
